@@ -163,7 +163,7 @@ fun CreateAccountEmployeeScreen(
 
             // --- Form Fields ---
             
-            ModernInputField(
+            EmployeeInputField(
                 label = "OFFICIAL EMPLOYEE ID",
                 value = employeeId,
                 onValueChange = { employeeId = it.uppercase() },
@@ -173,7 +173,7 @@ fun CreateAccountEmployeeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            ModernInputField(
+            EmployeeInputField(
                 label = "FULL NAME",
                 value = fullName,
                 onValueChange = { fullName = it },
@@ -183,7 +183,7 @@ fun CreateAccountEmployeeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            ModernInputField(
+            EmployeeInputField(
                 label = "JOB ROLE / DEPARTMENT",
                 value = jobRole,
                 onValueChange = { jobRole = it },
@@ -270,7 +270,7 @@ fun CreateAccountEmployeeScreen(
 }
 
 @Composable
-fun ModernInputField(
+fun EmployeeInputField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
