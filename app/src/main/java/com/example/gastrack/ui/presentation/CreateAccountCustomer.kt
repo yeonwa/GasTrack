@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -163,7 +164,7 @@ fun CreateAccountCustomerScreen(
             // First Name & Last Name
             Row(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.weight(1f)) {
-                    ModernInputField(
+                    CustomerInputField(
                         label = "FIRST NAME",
                         value = firstName,
                         onValueChange = { firstName = it },
@@ -172,7 +173,7 @@ fun CreateAccountCustomerScreen(
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Box(modifier = Modifier.weight(1f)) {
-                    ModernInputField(
+                    CustomerInputField(
                         label = "LAST NAME",
                         value = lastName,
                         onValueChange = { lastName = it },
@@ -184,7 +185,7 @@ fun CreateAccountCustomerScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Email Address
-            ModernInputField(
+            CustomerInputField(
                 label = "EMAIL ADDRESS",
                 value = email,
                 onValueChange = { email = it },
@@ -300,7 +301,7 @@ fun CreateAccountCustomerScreen(
             // Region & Province
             Row(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.weight(1f)) {
-                    ModernInputField(
+                    CustomerInputField(
                         label = "REGION",
                         value = region,
                         onValueChange = { region = it },
@@ -309,7 +310,7 @@ fun CreateAccountCustomerScreen(
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Box(modifier = Modifier.weight(1f)) {
-                    ModernInputField(
+                    CustomerInputField(
                         label = "PROVINCE",
                         value = province,
                         onValueChange = { province = it },
@@ -323,7 +324,7 @@ fun CreateAccountCustomerScreen(
             // City & Barangay
             Row(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.weight(1f)) {
-                    ModernInputField(
+                    CustomerInputField(
                         label = "CITY / MUNICIPALITY",
                         value = city,
                         onValueChange = { city = it },
@@ -332,7 +333,7 @@ fun CreateAccountCustomerScreen(
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Box(modifier = Modifier.weight(1f)) {
-                    ModernInputField(
+                    CustomerInputField(
                         label = "BARANGAY",
                         value = barangay,
                         onValueChange = { barangay = it },
@@ -344,7 +345,7 @@ fun CreateAccountCustomerScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // House No. / Street
-            ModernInputField(
+            CustomerInputField(
                 label = "HOUSE NO. / STREET / BUILDING",
                 value = houseNoStreet,
                 onValueChange = { houseNoStreet = it },
@@ -524,7 +525,7 @@ fun OtpVerificationDialog(
 }
 
 @Composable
-fun ModernInputField(
+fun CustomerInputField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
