@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,12 +35,13 @@ val CardDark = Color(0xFF161D27)
 val RefillGradient = listOf(Color(0xFFFFB87A), Color(0xFFFF8E3C))
 val BuyTankGradient = listOf(Color(0xFF8D99D5), Color(0xFF5C6BC0))
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerHomeScreen(
-    onNavigateToOrder: () -> Unit,
+    onNavigateToOrder: (String) -> Unit,
     onNavigateToAR: () -> Unit,
     onNavigateToMenu: () -> Unit,
-    onNavigateToCheckout: () -> Unit = {},
+    onNavigateToCart: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {}
 ) {
@@ -47,7 +50,7 @@ fun CustomerHomeScreen(
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = "home",
-                onOrderClick = onNavigateToOrder,
+                onOrderClick = { onNavigateToOrder("New Tank") },
                 onMenuClick = onNavigateToMenu
             )
         }
@@ -56,21 +59,22 @@ fun CustomerHomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // --- Modern Header ---
             HomeHeader(
                 onAddressClick = onNavigateToAddresses,
-                onNotificationClick = onNavigateToNotifications
+                onNotificationClick = onNavigateToNotifications,
+                onCartClick = onNavigateToCart
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- Smart Refill Card ---
-            SmartRefillCard(onReorderClick = onNavigateToCheckout)
+            SmartRefillCard(onReorderClick = onNavigateToCart)
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -94,7 +98,7 @@ fun CustomerHomeScreen(
                     gradient = RefillGradient,
                     icon = Icons.Default.Refresh,
                     modifier = Modifier.weight(1f),
-                    onClick = onNavigateToOrder
+                    onClick = { onNavigateToOrder("Refill") }
                 )
                 ActionTile(
                     text = "New\nTank",
@@ -102,7 +106,7 @@ fun CustomerHomeScreen(
                     gradient = BuyTankGradient,
                     icon = Icons.Default.Add,
                     modifier = Modifier.weight(1f),
-                    onClick = onNavigateToOrder
+                    onClick = { onNavigateToOrder("New Tank") }
                 )
             }
 
@@ -116,16 +120,22 @@ fun CustomerHomeScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeHeader(
     onAddressClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    onCartClick: () -> Unit = {}
 ) {
+    // Reference shared state for the badge count
+    val totalItems = SharedCartState.cart.values.sum()
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        // ... (existing Deliver To section) ...
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -170,13 +180,42 @@ fun HomeHeader(
             }
         }
 
-        IconButton(
-            onClick = onNotificationClick,
-            modifier = Modifier
-                .background(Color.White, CircleShape)
-                .shadow(2.dp, CircleShape)
-        ) {
-            Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextDark)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Cart Icon Button
+            IconButton(
+                onClick = onCartClick,
+            ) {
+                Box {
+                    Icon(
+                        imageVector = Icons.Outlined.ShoppingCart,
+                        contentDescription = "Cart",
+                        tint = TextDark,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    if (totalItems > 0) {
+                        Surface(
+                            color = GasTrackRed,
+                            shape = CircleShape,
+                            modifier = Modifier
+                                .size(8.dp)
+                                .align(Alignment.TopEnd)
+                                .offset(x = 2.dp, y = (-2).dp)
+                        ) {}
+                    }
+                }
+            }
+
+            // Notifications Icon Button
+            IconButton(
+                onClick = onNotificationClick,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Notifications,
+                    contentDescription = "Notifications",
+                    tint = TextDark,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
         }
     }
 }
@@ -366,6 +405,7 @@ fun BottomNavigationBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
