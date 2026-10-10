@@ -3,24 +3,31 @@ package com.example.gastrack
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.gastrack.ui.presentation.*
 import com.example.gastrack.ui.theme.GasTrackTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             GasTrackTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     AppNavigation()
@@ -36,16 +43,20 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = "startup"
+        startDestination = "startup",
     ) {
         composable("startup") {
             StartUpScreen(
                 onNavigateToCustomer = {
                     navController.navigate("login_customer")
+                },
+                onNavigateToEmployee = {
+                    navController.navigate("login_employee")
+                },
+                onNavigateToRegisterCompany = {
+                    navController.navigate("register_company")
                 }
-            ) {
-                navController.navigate("login_employee")
-            }
+            )
         }
         composable("login_employee") {
             LogInEmployeeScreen(
@@ -56,6 +67,27 @@ fun AppNavigation() {
                     navController.navigate("create_account_employee")
                 },
                 onNavigateToHome = {
+                    navController.navigate("employee_menu") {
+                        popUpTo("startup") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("register_company") {
+            RegisterLPGCompanyScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+            ) {
+                navController.navigate("register_account")
+            }
+        }
+        composable("register_account") {
+            RegisterAccountEmployeeScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onRegisterComplete = {
                     navController.navigate("employee_menu") {
                         popUpTo("startup") { inclusive = true }
                     }
@@ -94,9 +126,6 @@ fun AppNavigation() {
             InventoryEmployeeScreen(
                 onBack = {
                     navController.popBackStack()
-                },
-                onNavigateToAdjustment = {
-                    navController.navigate("employee_manage_stock")
                 }
             )
         }
@@ -135,8 +164,8 @@ fun AppNavigation() {
                 }
             )
         }
-        composable("employee_reports") {
-            ReportsComplianceEmployeeScreen(
+        composable("employee_system_management") {
+            SystemDataManagementScreen(
                 onBack = {
                     navController.popBackStack()
                 }
@@ -149,15 +178,18 @@ fun AppNavigation() {
                 }
             )
         }
-        composable("employee_restocking") {
-            RestockingEmployeeScreen(
+        composable("employee_user_modify") {
+            UserModifyEmployeeScreen(
                 onBack = {
+                    navController.popBackStack()
+                },
+                onModifyComplete = {
                     navController.popBackStack()
                 }
             )
         }
-        composable("employee_manage_stock") {
-            ManageStockScreen(
+        composable("employee_restocking") {
+            RestockingEmployeeScreen(
                 onBack = {
                     navController.popBackStack()
                 }
@@ -167,9 +199,6 @@ fun AppNavigation() {
             OrdersEmployeeScreen(
                 onBack = {
                     navController.popBackStack()
-                },
-                onNavigateToMaps = { _ ->
-                    navController.navigate("map_tracking")
                 }
             )
         }
@@ -198,9 +227,6 @@ fun AppNavigation() {
                 onNavigateToSuppliers = {
                     navController.navigate("employee_suppliers")
                 },
-                onNavigateToData = {
-                    navController.navigate("employee_data")
-                },
                 onNavigateToRestocking = {
                     navController.navigate("employee_restocking")
                 },
@@ -208,9 +234,30 @@ fun AppNavigation() {
                     navController.navigate("employee_users")
                 },
                 onNavigateToReports = {
-                    navController.navigate("employee_reports")
+                    navController.navigate("employee_data")
+                },
+                onNavigateToSystemDataManagement = {
+                    navController.navigate("employee_system_management")
                 },
                 onNavigateToLogout = {
+                    navController.navigate("startup") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToProfile = {
+                    navController.navigate("employee_profile")
+                }
+            )
+        }
+        composable("employee_profile") {
+            ProfileEmployeeScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToEdit = {
+                    navController.navigate("employee_user_modify")
+                },
+                onLogout = {
                     navController.navigate("startup") {
                         popUpTo(0) { inclusive = true }
                     }
@@ -246,8 +293,8 @@ fun AppNavigation() {
         }
         composable("customer_home") {
             CustomerHomeScreen(
-                onNavigateToOrder = {
-                    navController.navigate("order_tab")
+                onNavigateToOrder = { targetTab ->
+                    navController.navigate("order_tab/$targetTab")
                 },
                 onNavigateToAR = {
                     navController.navigate("ar_loading")
@@ -255,8 +302,8 @@ fun AppNavigation() {
                 onNavigateToMenu = {
                     navController.navigate("menu")
                 },
-                onNavigateToCheckout = {
-                    navController.navigate("checkout")
+                onNavigateToCart = {
+                    navController.navigate("cart")
                 },
                 onNavigateToAddresses = {
                     navController.navigate("addresses")
@@ -281,7 +328,7 @@ fun AppNavigation() {
                     }
                 },
                 onNavigateToOrder = {
-                    navController.navigate("order_tab")
+                    navController.navigate("order_tab/New Tank")
                 },
                 onNavigateToLogout = {
                     navController.navigate("logout_customer")
@@ -340,14 +387,19 @@ fun AppNavigation() {
         composable("ar_scan") {
             ARScanScreen(
                 onScanComplete = {
-                    navController.navigate("order_tab") {
+                    navController.navigate("order_tab/New Tank") {
                         popUpTo("customer_home")
                     }
                 }
             )
         }
-        composable("order_tab") {
+        composable(
+            route = "order_tab/{initialTab}",
+            arguments = listOf(navArgument("initialTab") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val initialTab = backStackEntry.arguments?.getString("initialTab") ?: "New Tank"
             OrderTabScreen(
+                initialTab = initialTab,
                 onNavigateToHome = {
                     navController.navigate("customer_home") {
                         popUpTo("customer_home") { inclusive = true }
@@ -387,6 +439,9 @@ fun AppNavigation() {
                 },
                 onNavigateToAddresses = {
                     navController.navigate("addresses")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
                 }
             )
         }

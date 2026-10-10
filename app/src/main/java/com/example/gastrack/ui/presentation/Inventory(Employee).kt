@@ -1,17 +1,13 @@
 package com.example.gastrack.ui.presentation
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,697 +18,697 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.gastrack.ui.theme.*
 
-enum class InventoryScreenState {
-    OVERVIEW, STOCK_IN, STOCK_OUT
-}
+// Data Models based on Dashboard Screenshots
+data class InventoryItemData(
+    val id: String,
+    val productID: String,
+    val warehouseName: String,
+    val stockOnHand: Int,
+    val reorderLimit: Int,
+    val status: String // Normal, Critical, Low Stock
+)
+
+data class InventoryTransactionData(
+    val transactionId: String,
+    val productId: String,
+    val productName: String,
+    val warehouseName: String,
+    val transactionType: String, // In, Out, Adjust
+    val quantity: Int,
+    val reference: String, // Supplier, POS, etc.
+    val transactionDate: String,
+    val processedBy: String
+)
 
 @Composable
 fun InventoryEmployeeScreen(
-    onBack: () -> Unit = {},
-    onNavigateToAdjustment: () -> Unit = {}
+    onBack: () -> Unit = {}
 ) {
-    var currentState by remember { mutableStateOf(InventoryScreenState.OVERVIEW) }
+    var selectedTab by remember { mutableStateOf("Inventory") }
+    var showStockInForm by remember { mutableStateOf(false) }
+    var showStockOutForm by remember { mutableStateOf(false) }
+    var showAdjustmentForm by remember { mutableStateOf(false) }
+    
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var successMessage by remember { mutableStateOf("") }
 
-    Crossfade(targetState = currentState, label = "InventoryTransition") { state ->
-        when (state) {
-            InventoryScreenState.OVERVIEW -> {
-                InventoryOverviewScreen(
-                    onStockInClick = { currentState = InventoryScreenState.STOCK_IN },
-                    onStockOutClick = { currentState = InventoryScreenState.STOCK_OUT },
-                    onAdjustmentClick = onNavigateToAdjustment,
-                    onBack = onBack
-                )
-            }
-            InventoryScreenState.STOCK_IN -> {
-                StockInOutScreen(
-                    isStockIn = true,
-                    onToggle = { currentState = InventoryScreenState.STOCK_OUT },
-                    onBack = { currentState = InventoryScreenState.OVERVIEW }
-                )
-            }
-            InventoryScreenState.STOCK_OUT -> {
-                StockInOutScreen(
-                    isStockIn = false,
-                    onToggle = { currentState = InventoryScreenState.STOCK_IN },
-                    onBack = { currentState = InventoryScreenState.OVERVIEW }
-                )
-            }
-        }
-    }
-}
+    var selectedItemForDetail by remember { mutableStateOf<InventoryItemData?>(null) }
+    var selectedItemForEdit by remember { mutableStateOf<InventoryItemData?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var itemToDelete by remember { mutableStateOf<InventoryItemData?>(null) }
 
-@Composable
-fun InventoryOverviewScreen(
-    onStockInClick: () -> Unit,
-    onStockOutClick: () -> Unit,
-    onAdjustmentClick: () -> Unit,
-    onBack: () -> Unit
-) {
+    val inventoryItems = remember { mutableStateListOf(
+        InventoryItemData("P-001", "P-001", "Pasig", 50, 10, "Normal"),
+        InventoryItemData("P-002", "P-002", "San Juan", 100, 10, "Normal"),
+        InventoryItemData("P-003", "P-003", "Pasig", 20, 20, "Critical"),
+        InventoryItemData("P-004", "P-004", "San Juan", 34, 10, "Normal"),
+        InventoryItemData("P-005", "P-005", "San Juan", 60, 20, "Low Stock")
+    ) }
+
+    val transactions = remember { mutableStateListOf(
+        InventoryTransactionData("T-001", "P-001", "Gas LPG 2.7kg", "Pasig", "In", 10, "Supplier", "01/15/2026", "U-001"),
+        InventoryTransactionData("T-002", "P-002", "Gas LPG 7kg", "San Juan", "Out", 2, "POS", "01/06/2026", "U-003"),
+        InventoryTransactionData("T-003", "P-003", "Gas LPG 11kg", "Pasig", "Adjust", 30, "Supplier", "01/03/2026", "U-002"),
+        InventoryTransactionData("T-004", "P-004", "Cylinder 2.7kg", "San Juan", "Out", 5, "POS", "01/02/2026", "U-003"),
+        InventoryTransactionData("T-005", "P-005", "Cylinder 7kg", "San Juan", "Out", 20, "POS", "01/01/2026", "U-003")
+    ) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color(0xFFE2E8F0))
     ) {
-        // --- Header ---
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerShape(bottomEnd = 48.dp))
-                .background(StaffPortalButtonBlue, RoundedCornerShape(bottomEnd = 48.dp))
-                .padding(horizontal = 24.dp, vertical = 40.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-
-                Column(modifier = Modifier.weight(1f).padding(start = 16.dp)) {
-                    Text(
-                        text = "Inventory",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
-                    )
-                    Text(
-                        text = "Admin",
-                        fontSize = 18.sp,
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .background(Color.White.copy(alpha = 0.2f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Profile",
-                        modifier = Modifier.size(50.dp),
-                        tint = Color.White.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
+        EmployeePortalHeader(
+            title = "Inventory",
+            subtitle = "Operations Management",
+            onBack = onBack
+        )
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
+                // --- Stats Dashboard Row ---
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    InventoryActionButton(
-                        text = "Stock In",
-                        icon = Icons.Default.ArrowDownward,
-                        onClick = onStockInClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                    InventoryActionButton(
-                        text = "Stock Out",
-                        icon = Icons.Default.ArrowUpward,
-                        onClick = onStockOutClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-            item {
-                InventoryActionButton(
-                    text = "Stock Adjustment",
-                    icon = Icons.Default.Tune,
-                    onClick = onAdjustmentClick,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            item {
-                Text(
-                    text = "Current Stock",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = TextDark,
-                )
-            }
-            
-            item {
-                StockItemCard(
-                    name = "11kg Standard",
-                    status = "Low Stock Alert",
-                    quantity = "15",
-                    isLowStock = true
-                )
-            }
-            item {
-                StockItemCard(
-                    name = "50kg Commercial",
-                    status = "Normal",
-                    quantity = "42",
-                    isLowStock = false
-                )
-            }
-            item {
-                StockItemCard(
-                    name = "Regulators",
-                    status = "Normal",
-                    quantity = "123",
-                    isLowStock = false
-                )
-            }
-
-            item {
-                Button(
-                    onClick = { /* Handle AI */ },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                        .height(56.dp)
-                        .shadow(4.dp, RoundedCornerShape(16.dp)),
-                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
-                    shape = RoundedCornerShape(16.dp)
+                        .padding(16.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Ai Recommendation",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontStyle = FontStyle.Italic
-                        )
-                    }
+                    InventoryStatCard("Critical Items", inventoryItems.count { it.status == "Critical" }.toString(), GasTrackRed)
+                    InventoryStatCard("Low Stock Items", inventoryItems.count { it.status == "Low Stock" }.toString(), Color(0xFFFFA000))
+                    InventoryStatCard("Normal Items", inventoryItems.count { it.status == "Normal" }.toString(), Color(0xFF2E7D32))
+                }
+            }
+
+            item {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    EmployeeTabSelector(
+                        tabs = listOf("Inventory", "Inventory Transactions"),
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    )
+                }
+            }
+
+            item {
+                // --- Quick Action Buttons (Blue Theme) ---
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    InventoryQuickAction("Import Data", Icons.Default.CloudDownload) { /* Handle Import */ }
+                    InventoryQuickAction("Add Stock In", Icons.Default.Add) { showStockInForm = true }
+                    InventoryQuickAction("Add Stock Out", Icons.Default.Remove) { showStockOutForm = true }
+                    InventoryQuickAction("Adjustment", Icons.Default.Settings) { showAdjustmentForm = true }
+                }
+            }
+
+            item {
+                // --- Filter Controls ---
+                InventoryFiltersSection()
+            }
+
+            if (selectedTab == "Inventory") {
+                items(inventoryItems) { item ->
+                    InventoryCardMobile(
+                        item = item,
+                        onView = { selectedItemForDetail = it },
+                        onEdit = { selectedItemForEdit = it },
+                        onDelete = {
+                            itemToDelete = it
+                            showDeleteConfirm = true
+                        }
+                    )
+                }
+            } else {
+                items(transactions) { trx ->
+                    TransactionCardMobile(trx)
                 }
             }
         }
     }
+
+    // Modal Forms implementation
+    if (showStockInForm) {
+        StockInDialog(onDismiss = { showStockInForm = false }) {
+            showStockInForm = false
+            successMessage = "Stock In successfully processed."
+            showSuccessDialog = true
+        }
+    }
+
+    if (showStockOutForm) {
+        StockOutDialog(onDismiss = { showStockOutForm = false }) {
+            showStockOutForm = false
+            successMessage = "Stock Out successfully processed."
+            showSuccessDialog = true
+        }
+    }
+    
+    if (showAdjustmentForm) {
+        // Shared logic with other forms or specific adjustment UI
+        showAdjustmentForm = false
+        successMessage = "Stock Adjustment applied successfully."
+        showSuccessDialog = true
+    }
+
+    if (selectedItemForDetail != null) {
+        InventoryDetailDialog(item = selectedItemForDetail!!, onDismiss = { selectedItemForDetail = null })
+    }
+
+    if (selectedItemForEdit != null) {
+        InventoryEditDialog(
+            item = selectedItemForEdit!!, 
+            onDismiss = { selectedItemForEdit = null },
+            onSave = { updated ->
+                val index = inventoryItems.indexOfFirst { it.id == updated.id }
+                if (index != -1) inventoryItems[index] = updated
+                selectedItemForEdit = null
+                successMessage = "Inventory record updated."
+                showSuccessDialog = true
+            }
+        )
+    }
+
+    if (showDeleteConfirm && itemToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Inventory Item", fontWeight = FontWeight.Black) },
+            text = { Text("Are you sure you want to remove ${itemToDelete!!.productID} from ${itemToDelete!!.warehouseName}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    inventoryItems.remove(itemToDelete)
+                    showDeleteConfirm = false
+                }) { Text("Delete", color = GasTrackRed, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+            },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = Color.White
+        )
+    }
+
+    if (showSuccessDialog) {
+        PortalSuccessDialog(message = successMessage, onDismiss = { showSuccessDialog = false })
+    }
 }
 
 @Composable
-fun InventoryActionButton(text: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier
-            .shadow(4.dp, RoundedCornerShape(16.dp))
-            .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White
+fun InventoryQuickAction(text: String, icon: ImageVector, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+        modifier = Modifier.height(38.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(28.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = text, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
+        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(text = text, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun InventoryFiltersSection() {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedTextField(
+            value = "", onValueChange = {},
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            placeholder = { Text("Search Inventory by Product", color = Color.LightGray, fontSize = 13.sp) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = Color.White, 
+                focusedContainerColor = Color.White, 
+                unfocusedBorderColor = Color(0xFFE9ECEF), 
+                focusedBorderColor = GasTrackBlue
+            ),
+            singleLine = true
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterDropdown("All Warehouse", Modifier.weight(1f))
+            FilterDropdown("Inventory Status", Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-fun StockItemCard(name: String, status: String, quantity: String, isLowStock: Boolean) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isLowStock) Color(0xFFFFEBEE) else Color.White
-        )
+fun FilterDropdown(text: String, modifier: Modifier) {
+    Surface(
+        modifier = modifier.height(40.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+        color = Color.White
     ) {
         Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
-                Text(text = name, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color.Black)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isLowStock) {
-                        Icon(
-                            Icons.Default.Warning, 
-                            contentDescription = null, 
-                            tint = Color.Red, 
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
-                    Text(
-                        text = status, 
-                        fontSize = 14.sp, 
-                        color = if (isLowStock) Color.Red else Color.Gray,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-            Text(
-                text = quantity, 
-                fontSize = 32.sp, 
-                fontWeight = FontWeight.ExtraBold, 
-                color = if (isLowStock) Color.Red else Color.Black
-            )
+            Text(text = text, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1)
+            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray, modifier = Modifier.size(16.dp))
         }
     }
 }
 
 @Composable
-fun StockInOutScreen(
-    isStockIn: Boolean,
-    onToggle: () -> Unit,
-    onBack: () -> Unit
+fun InventoryCardMobile(
+    item: InventoryItemData,
+    onView: (InventoryItemData) -> Unit,
+    onEdit: (InventoryItemData) -> Unit,
+    onDelete: (InventoryItemData) -> Unit
 ) {
-    var quantity by remember { mutableIntStateOf(15) }
-    var reference by remember { mutableStateOf("") }
-    var assignee by remember { mutableStateOf("") }
-    var showDetailDialog by remember { mutableStateOf(false) }
-
-    Column(
+    Surface(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
+        color = Color.White,
+        shape = RoundedCornerShape(12.dp)
     ) {
-        // --- Header ---
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 16.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
-                }
-                Text(
-                    text = "Inventory",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.Black,
-                    fontStyle = FontStyle.Italic
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // --- Toggle ---
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .shadow(2.dp, RoundedCornerShape(28.dp)),
-                shape = RoundedCornerShape(28.dp),
-                color = Color(0xFFF5F5F5)
-            ) {
-                Row(modifier = Modifier.fillMaxSize()) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .padding(4.dp)
-                            .background(
-                                if (isStockIn) StaffPortalButtonBlue else Color.Transparent,
-                                RoundedCornerShape(24.dp)
-                            )
-                            .clickable { if (!isStockIn) onToggle() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Stock In",
-                            color = if (isStockIn) Color.White else Color.Gray,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .padding(4.dp)
-                            .background(
-                                if (!isStockIn) StaffPortalButtonBlue else Color.Transparent,
-                                RoundedCornerShape(24.dp)
-                            )
-                            .clickable { if (isStockIn) onToggle() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Stock Out",
-                            color = if (!isStockIn) Color.White else Color.Gray,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "Inv ID: ${item.id}", fontSize = 13.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Surface(
+                    color = when(item.status) {
+                        "Critical" -> GasTrackRed.copy(alpha = 0.1f)
+                        "Low Stock" -> Color(0xFFFFF3E0)
+                        else -> Color(0xFFE8F5E9)
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, when(item.status) {
+                        "Critical" -> GasTrackRed
+                        "Low Stock" -> Color(0xFFFFA000)
+                        else -> Color(0xFF2E7D32)
+                    })
+                ) {
+                    Text(
+                        text = item.status, 
+                        color = when(item.status) {
+                            "Critical" -> GasTrackRed
+                            "Low Stock" -> Color(0xFFFFA000)
+                            else -> Color(0xFF2E7D32)
+                        }, 
+                        fontSize = 9.sp, fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // --- Product Selection ---
-            Text(
-                text = if (isStockIn) "Select Product" else "Select Product to Dispatch",
-                modifier = Modifier.align(Alignment.Start),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text(text = "Product ID", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = item.productID, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Warehouse", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = item.warehouseName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = "Current Stock / Limit", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = "${item.stockOnHand} / ${item.reorderLimit}", fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = Color(0xFFF1F3F4))
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = "11kg Standard",
-                onValueChange = {},
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // --- Quantity Selector ---
-            Text(
-                text = "Quantity",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
-                modifier = Modifier
-                    .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                    .padding(8.dp)
-            ) {
-                IconButton(
-                    onClick = { if (quantity > 0) quantity-- },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = StaffPortalBlue)
-                }
-                Text(text = quantity.toString(), fontSize = 32.sp, fontWeight = FontWeight.Black, color = TextDark)
-                IconButton(
-                    onClick = { quantity++ },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Increase", tint = StaffPortalBlue)
-                }
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                IconButton(onClick = { onView(item) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Visibility, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(18.dp)) }
+                Spacer(modifier = Modifier.width(16.dp))
+                IconButton(onClick = { onEdit(item) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(16.dp)) }
+                Spacer(modifier = Modifier.width(16.dp))
+                IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp)) }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // --- Reference / Assignee ---
-            if (isStockIn) {
-                Text(
-                    text = "Reference / DR Number",
-                    modifier = Modifier.align(Alignment.Start),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = reference,
-                    onValueChange = { reference = it },
-                    placeholder = { Text("Enter DR Number") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            } else {
-                Text(
-                    text = "Dispatch To / Assignee",
-                    modifier = Modifier.align(Alignment.Start),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = "Delivery Truck #3",
-                    onValueChange = { assignee = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    supportingText = { Text("Driver: Juan Dela Cruz") }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // --- Warning Info ---
-            if (!isStockIn) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFEF6C00))
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Ensure empty cylinders are received before releasing new commercial stock to customers.",
-                            fontSize = 12.sp,
-                            color = Color(0xFFEF6C00),
-                            lineHeight = 16.sp
-                        )
-                    }
-                }
-            }
-
-            // --- Confirm Button ---
-            Button(
-                onClick = { showDetailDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .shadow(4.dp, RoundedCornerShape(16.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isStockIn) Color(0xFF2E7D32) else Color(0xFFC62828)
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (isStockIn) Icons.Default.CheckCircle else Icons.Default.LocalShipping, 
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isStockIn) "Confirm Stock In" else "Confirm Stock Out",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontStyle = FontStyle.Italic
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-
-    if (showDetailDialog) {
-        if (isStockIn) {
-            StockInDetailDialog(onDismiss = { showDetailDialog = false })
-        } else {
-            StockOutDetailDialog(onDismiss = { showDetailDialog = false })
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StockInDetailDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier.fillMaxWidth(0.95f),
-        content = {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+fun InventoryDetailDialog(item: InventoryItemData, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.85f), 
+            shape = RoundedCornerShape(16.dp), 
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Inventory Item Details", fontSize = 20.sp, fontWeight = FontWeight.Black, color = TextDark)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                DetailValueRow("Inventory ID", item.id)
+                DetailValueRow("Product ID", item.productID, isBold = true)
+                DetailValueRow("Warehouse", item.warehouseName, isBold = true)
+                DetailValueRow("Current Stock", item.stockOnHand.toString(), isBold = true, color = StaffPortalButtonBlue)
+                DetailValueRow("Reorder Limit", item.reorderLimit.toString(), color = GasTrackRed)
+                DetailValueRow("Current Status", item.status, color = if(item.status == "Normal") Color(0xFF2E7D32) else GasTrackRed)
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = onDismiss, 
+                    modifier = Modifier.fillMaxWidth().height(48.dp), 
+                    shape = RoundedCornerShape(10.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                ) {
+                    Text("Close Overview", fontSize = 15.sp, fontWeight = FontWeight.Black)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: (InventoryItemData) -> Unit) {
+    var stock by remember { mutableStateOf(item.stockOnHand.toString()) }
+    var limit by remember { mutableStateOf(item.reorderLimit.toString()) }
+    var status by remember { mutableStateOf(item.status) }
+    var statusExpanded by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.95f).wrapContentHeight(), 
+            shape = RoundedCornerShape(16.dp), 
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Edit Inventory Item", fontSize = 20.sp, fontWeight = FontWeight.Black, color = TextDark)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                EmployeeInputField(label = "STOCK ON HAND", value = stock, onValueChange = { if(it.all { char -> char.isDigit() }) stock = it }, placeholder = "0", icon = Icons.Default.Inventory)
+                Spacer(modifier = Modifier.height(16.dp))
+                EmployeeInputField(label = "REORDER LIMIT", value = limit, onValueChange = { if(it.all { char -> char.isDigit() }) limit = it }, placeholder = "0", icon = Icons.Default.NotificationsActive)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("STATUS", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                Spacer(modifier = Modifier.height(6.dp))
+                Box {
+                    OutlinedButton(
+                        onClick = { statusExpanded = true }, 
+                        modifier = Modifier.fillMaxWidth().height(48.dp), 
+                        shape = RoundedCornerShape(12.dp), 
+                        border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(status, color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
+                        }
+                    }
+                    DropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
+                        listOf("Normal", "Critical", "Low Stock").forEach { s ->
+                            DropdownMenuItem(text = { Text(s, fontSize = 14.sp) }, onClick = { status = s; statusExpanded = false })
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(
+                        onClick = onDismiss, 
+                        modifier = Modifier.weight(1f).height(44.dp), 
+                        shape = RoundedCornerShape(10.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)
+                    ) { 
+                        Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold) 
+                    }
+                    Button(
+                        onClick = { onSave(item.copy(stockOnHand = stock.toIntOrNull() ?: 0, reorderLimit = limit.toIntOrNull() ?: 0, status = status)) }, 
+                        modifier = Modifier.weight(1f).height(44.dp), 
+                        shape = RoundedCornerShape(10.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                    ) { 
+                        Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Black) 
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun TransactionCardMobile(trx: InventoryTransactionData) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
+        color = Color.White,
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = trx.transactionId, fontSize = 13.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Surface(
+                    color = when(trx.transactionType) {
+                        "In" -> Color(0xFFE8F5E9)
+                        "Out" -> Color(0xFFFFEBEE)
+                        else -> Color(0xFFE3F2FD)
+                    },
+                    shape = RoundedCornerShape(4.dp)
+                ) {
                     Text(
-                        "Add Stock In", 
-                        fontSize = 22.sp, 
-                        fontWeight = FontWeight.ExtraBold,
-                        fontStyle = FontStyle.Italic
+                        text = trx.transactionType.uppercase(), 
+                        color = when(trx.transactionType) {
+                            "In" -> Color(0xFF2E7D32)
+                            "Out" -> GasTrackRed
+                            else -> StaffPortalButtonBlue
+                        }, 
+                        fontSize = 9.sp, fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = trx.productName, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextDark)
+            Text(text = "PID: ${trx.productId} • WH: ${trx.warehouseName}", fontSize = 11.sp, color = TextGray)
+            
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                Column {
+                    Text(text = "Qty: ${trx.quantity} • ${trx.reference}", fontSize = 12.sp, color = TextDark, fontWeight = FontWeight.Medium)
+                    Text(text = "By: ${trx.processedBy}", fontSize = 10.sp, color = Color.LightGray, fontWeight = FontWeight.Bold)
+                }
+                Text(text = trx.transactionDate, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.9f), shape = RoundedCornerShape(12.dp), color = Color.White) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Add Stock In", fontSize = 24.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Spacer(modifier = Modifier.height(20.dp))
+                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    StockFormField("Stock In ID", "SI-001")
                     
-                    DetailField("Stock In ID", "SI-001")
-                    DetailField("Supplier", "Supplier Name")
-                    DetailField("Invoice No", "INV-001")
-                    DetailField("Received by", "User Name")
-                    DetailField("Date", "01/01/2026 2:14:05 PM")
-                    DetailField("Status", "Pending")
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "Items", 
-                            fontWeight = FontWeight.ExtraBold,
-                            fontStyle = FontStyle.Italic
-                        )
-                        Button(onClick = {}, shape = RoundedCornerShape(4.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp), modifier = Modifier.height(24.dp)) {
-                            Text("Add Item", fontSize = 10.sp)
+                    var supplierId by remember { mutableStateOf("Select Supplier") }
+                    var showSupplierDropdown by remember { mutableStateOf(false) }
+                    Box {
+                        StockFormField("Supplier", supplierId, isDropdown = true, onClick = { showSupplierDropdown = true })
+                        DropdownMenu(expanded = showSupplierDropdown, onDismissRequest = { showSupplierDropdown = false }, modifier = Modifier.fillMaxWidth(0.6f).background(Color.White)) {
+                            listOf("S-001 (Petron)", "S-002 (Shell)", "S-003 (Phoenix)").forEach { s ->
+                                DropdownMenuItem(text = { Text(s) }, onClick = { supplierId = s; showSupplierDropdown = false })
+                            }
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    TableBox(isStockIn = true)
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Total Items: 50", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text("Estimated Cost: ₱ 45,675.00", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancel") }
-                        OutlinedButton(onClick = {}, modifier = Modifier.weight(1f)) { Text("Save Draft") }
-                        Button(onClick = onDismiss, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) { Text("Received") }
-                    }
-                }
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StockOutDetailDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier.fillMaxWidth(0.95f),
-        content = {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        "Add Stock Out", 
-                        fontSize = 22.sp, 
-                        fontWeight = FontWeight.ExtraBold,
-                        fontStyle = FontStyle.Italic
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    DetailField("Stock Out ID", "SO-001")
-                    DetailField("Stock Out Type", "Supplier Return")
-                    DetailField("Reference ID", "Reference ID")
-                    DetailField("Reason", "Damaged")
-                    DetailField("Processed by", "User Name")
-                    DetailField("Date", "01/01/2026 2:14:05 PM")
-                    DetailField("Status", "Pending")
+                    StockFormField("Invoice No", "INV-001")
+                    StockFormField("Received by", "User Name", isDropdown = true)
+                    StockFormField("Date", "01/01/2026 2:14:05 PM")
+                    StockFormField("Status", "Pending", isDropdown = true)
                     
                     Spacer(modifier = Modifier.height(16.dp))
-                    
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "Items", 
-                            fontWeight = FontWeight.ExtraBold,
-                            fontStyle = FontStyle.Italic
-                        )
-                        Button(onClick = {}, shape = RoundedCornerShape(4.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp), modifier = Modifier.height(24.dp)) {
-                            Text("Add Item", fontSize = 10.sp)
+                        Text("Items", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                        Button(onClick = {}, colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue), shape = RoundedCornerShape(6.dp), modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
+                            Text("Add Item", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    TableBox(isStockIn = false)
+                    // --- Stock In Table ---
+                    Box(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                        Column(modifier = Modifier.width(500.dp).border(1.dp, Color(0xFFE9ECEF), RoundedCornerShape(4.dp))) {
+                            // Header
+                            Row(modifier = Modifier.fillMaxWidth().background(StaffPortalBlue).padding(vertical = 8.dp, horizontal = 4.dp)) {
+                                TableText("#", Modifier.width(30.dp), isHeader = true)
+                                TableText("Product ID", Modifier.weight(1f), isHeader = true)
+                                TableText("Product Name", Modifier.weight(2f), isHeader = true)
+                                TableText("Qty", Modifier.weight(0.8f), isHeader = true)
+                                TableText("Cost Price", Modifier.weight(1.2f), isHeader = true)
+                                TableText("Expiry Date", Modifier.weight(1.2f), isHeader = true)
+                            }
+                            // Rows
+                            val mockItems = listOf(
+                                listOf("1", "P-001", "Gasul LPG 2.7 kg", "20", "₱ 4,860.00", "01/01/2027"),
+                                listOf("2", "P-003", "Gasul LPG 11kg", "15", "₱ 13,815.00", "01/01/2027"),
+                                listOf("3", "P-005", "Cylinder 7kg", "15", "₱ 27,000.00", "01/01/2027")
+                            )
+                            mockItems.forEachIndexed { index, row ->
+                                Row(modifier = Modifier.fillMaxWidth().background(if(index % 2 == 0) Color.White else Color(0xFFF8F9FA)).padding(vertical = 8.dp, horizontal = 4.dp)) {
+                                    TableText(row[0], Modifier.width(30.dp))
+                                    TableText(row[1], Modifier.weight(1f))
+                                    TableText(row[2], Modifier.weight(2f))
+                                    TableText(row[3], Modifier.weight(0.8f))
+                                    TableText(row[4], Modifier.weight(1.2f))
+                                    TableText(row[5], Modifier.weight(1.2f))
+                                }
+                            }
+                        }
+                    }
                     
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Total Stock Out Items: 50", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text("Stock Deduction: 50", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text("Note: Items will be returned to supplier warehouse", fontSize = 10.sp, color = Color.Gray)
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancel") }
-                        OutlinedButton(onClick = {}, modifier = Modifier.weight(1f)) { Text("Save Draft") }
-                        Button(onClick = onDismiss, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) { Text("Approved") }
-                    }
+                    Text(text = "Total Items: 50", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                    Text(text = "Estimated Cost: ₱ 45,675.00", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(onClick = onDismiss, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    Button(onClick = {}, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Save Draft", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    Button(onClick = onConfirm, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) { Text("Received", fontSize = 14.sp, fontWeight = FontWeight.Black) }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.9f), shape = RoundedCornerShape(12.dp), color = Color.White) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Add Stock Out", fontSize = 24.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Spacer(modifier = Modifier.height(20.dp))
+                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    StockFormField("Stock Out ID", "SO-001")
+                    
+                    var outType by remember { mutableStateOf("Supplier Return") }
+                    var showTypeDropdown by remember { mutableStateOf(false) }
+                    Box {
+                        StockFormField("Stock Out Type", outType, isDropdown = true, onClick = { showTypeDropdown = true })
+                        DropdownMenu(expanded = showTypeDropdown, onDismissRequest = { showTypeDropdown = false }, modifier = Modifier.fillMaxWidth(0.6f).background(Color.White)) {
+                            listOf("Supplier Return", "Damaged", "Expired", "Internal Use").forEach { type ->
+                                DropdownMenuItem(text = { Text(type) }, onClick = { outType = type; showTypeDropdown = false })
+                            }
+                        }
+                    }
+                    
+                    StockFormField("Reference ID", "REF-001")
+                    
+                    var reason by remember { mutableStateOf("Damaged") }
+                    var showReasonDropdown by remember { mutableStateOf(false) }
+                    Box {
+                        StockFormField("Reason", reason, isDropdown = true, onClick = { showReasonDropdown = true })
+                        DropdownMenu(expanded = showReasonDropdown, onDismissRequest = { showReasonDropdown = false }, modifier = Modifier.fillMaxWidth(0.6f).background(Color.White)) {
+                            listOf("Damaged", "Defective", "Expired", "Other").forEach { r ->
+                                DropdownMenuItem(text = { Text(r) }, onClick = { reason = r; showReasonDropdown = false })
+                            }
+                        }
+                    }
+                    
+                    StockFormField("Processed by", "User Name", isDropdown = true)
+                    StockFormField("Date", "01/01/2026 2:14:05 PM")
+                    StockFormField("Status", "Pending", isDropdown = true)
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("Items", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                        Button(onClick = {}, colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue), shape = RoundedCornerShape(6.dp), modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
+                            Text("Add Item", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    
+                    // --- Stock Out Table ---
+                    Box(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                        Column(modifier = Modifier.width(500.dp).border(1.dp, Color(0xFFE9ECEF), RoundedCornerShape(4.dp))) {
+                            // Header
+                            Row(modifier = Modifier.fillMaxWidth().background(StaffPortalBlue).padding(vertical = 8.dp, horizontal = 4.dp)) {
+                                TableText("#", Modifier.width(30.dp), isHeader = true)
+                                TableText("Product ID", Modifier.weight(1f), isHeader = true)
+                                TableText("Product Name", Modifier.weight(2f), isHeader = true)
+                                TableText("Qty", Modifier.weight(0.8f), isHeader = true)
+                                TableText("Condition", Modifier.weight(1.2f), isHeader = true)
+                                TableText("Action", Modifier.weight(1.2f), isHeader = true)
+                            }
+                            // Rows
+                            val mockItems = listOf(
+                                listOf("1", "P-001", "Gasul LPG 2.7 kg", "20", "Damaged", "Send Back"),
+                                listOf("2", "P-003", "Gasul LPG 11kg", "15", "Damaged", "Send Back"),
+                                listOf("3", "P-005", "Cylinder 7kg", "15", "Damaged", "Send Back")
+                            )
+                            mockItems.forEachIndexed { index, row ->
+                                Row(modifier = Modifier.fillMaxWidth().background(if(index % 2 == 0) Color.White else Color(0xFFF8F9FA)).padding(vertical = 8.dp, horizontal = 4.dp)) {
+                                    TableText(row[0], Modifier.width(30.dp))
+                                    TableText(row[1], Modifier.weight(1f))
+                                    TableText(row[2], Modifier.weight(2f))
+                                    TableText(row[3], Modifier.weight(0.8f))
+                                    TableText(row[4], Modifier.weight(1.2f))
+                                    TableText(row[5], Modifier.weight(1.2f))
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "Total Stock Out Items: 50", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                    Text(text = "Stock Deduction: 50", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                    Text(text = "Note: Items will be returned to supplier warehouse", fontSize = 12.sp, color = TextGray, fontStyle = FontStyle.Italic)
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(onClick = onDismiss, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    Button(onClick = {}, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Save Draft", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    Button(onClick = onConfirm, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) { Text("Approved", fontSize = 14.sp, fontWeight = FontWeight.Black) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TableText(text: String, modifier: Modifier = Modifier, isHeader: Boolean = false) {
+    Text(
+        text = text,
+        modifier = modifier.padding(horizontal = 2.dp),
+        fontSize = if(isHeader) 10.sp else 11.sp,
+        fontWeight = if(isHeader) FontWeight.Black else FontWeight.Bold,
+        color = if(isHeader) Color.White else TextDark,
+        textAlign = TextAlign.Start,
+        maxLines = 1
     )
 }
 
-@Composable
-fun DetailField(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, modifier = Modifier.weight(0.4f), fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-        Text(":", modifier = Modifier.width(16.dp), fontSize = 12.sp)
-        Box(modifier = Modifier.weight(0.6f).border(1.dp, Color.LightGray, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) {
-            Text(value, fontSize = 12.sp)
-        }
-    }
-}
-
-@Composable
-fun TableBox(isStockIn: Boolean) {
-    Column(modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray)) {
-        // Header
-        Row(modifier = Modifier.fillMaxWidth().background(StaffPortalButtonBlue.copy(alpha = 0.1f)).padding(4.dp)) {
-            Text("#", modifier = Modifier.weight(0.1f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text("Product ID", modifier = Modifier.weight(0.2f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text("Product Name", modifier = Modifier.weight(0.3f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text("Qty", modifier = Modifier.weight(0.1f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            if (isStockIn) {
-                Text("Cost Price", modifier = Modifier.weight(0.2f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                Text("Expiry Date", modifier = Modifier.weight(0.2f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            } else {
-                Text("Condition", modifier = Modifier.weight(0.2f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                Text("Action", modifier = Modifier.weight(0.2f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-        // Mock Row
-        Row(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-            Text("1", modifier = Modifier.weight(0.1f), fontSize = 9.sp)
-            Text("P-001", modifier = Modifier.weight(0.2f), fontSize = 9.sp)
-            Text("Gasul LPG 2.7kg", modifier = Modifier.weight(0.3f), fontSize = 9.sp)
-            Text("20", modifier = Modifier.weight(0.1f), fontSize = 9.sp)
-            if (isStockIn) {
-                Text("₱ 4,850.00", modifier = Modifier.weight(0.2f), fontSize = 9.sp)
-                Text("01/01/2027", modifier = Modifier.weight(0.2f), fontSize = 9.sp)
-            } else {
-                Text("Damaged", modifier = Modifier.weight(0.2f), fontSize = 9.sp)
-                Text("Send Back", modifier = Modifier.weight(0.2f), fontSize = 9.sp)
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
