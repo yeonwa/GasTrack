@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -24,12 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,8 +35,41 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
+data class POSCustomerData(
+    val id: Int, 
+    val name: String, 
+    val customerType: String, 
+    val phone: String, 
+    val address: String, 
+    val status: String, 
+    val registeredBy: String, 
+    val lastOrder: String, 
+    val initials: String
+)
+
+data class HeldCartData(
+    val id: String,
+    val timestamp: String,
+    val items: Map<Int, Int>,
+    val customerType: String,
+    val discountRate: Double,
+    val totalAmount: Double,
+    val pickupDate: String = "",
+    val pickupTime: String = "",
+    val deliveryAddress: String = "",
+    val deliveryInstructions: String = "",
+    val vehicleType: String = "",
+    val assignedRider: String = "",
+    val paymentMethod: String = "",
+    val selectedCustomer: POSCustomerData? = null
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun POSEmployeeScreen(
     onBack: () -> Unit = {}
@@ -46,123 +77,215 @@ fun POSEmployeeScreen(
     var selectedTab by remember { mutableStateOf("Products") }
     var showPayPopup by remember { mutableStateOf(false) }
     var showOrderDetails by remember { mutableStateOf(false) }
+
+    // Modal States for Customer Directory
     var showAddCustomerDialog by remember { mutableStateOf(false) }
+    var showEditCustomerDialog by remember { mutableStateOf(false) }
+    var showViewCustomerDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     
-    // Cart State: Map of Product ID to Quantity
+    var customerToEdit by remember { mutableStateOf<POSCustomerData?>(null) }
+    var customerToView by remember { mutableStateOf<POSCustomerData?>(null) }
+    var customerToDelete by remember { mutableStateOf<POSCustomerData?>(null) }
+
+    // Held Transactions State
+    val heldCarts = remember { mutableStateListOf<HeldCartData>() }
+    var showHeldModal by remember { mutableStateOf(false) }
+    
+    // Cart & Order Fulfillment States
     val cart = remember { mutableStateMapOf<Int, Int>() }
     var selectedCustomer by remember { mutableStateOf<POSCustomerData?>(null) }
-    
-    // Customers State
+    var customerType by remember { mutableStateOf("Walk-in") }
+    var discountRate by remember { mutableDoubleStateOf(0.0) } // 0.0, 0.05, 0.10
+
+    // Fulfillment Modal States
+    var showPickupModal by remember { mutableStateOf(false) }
+    var pickupDate by remember { mutableStateOf("2026-01-20") }
+    var pickupTime by remember { mutableStateOf("10:00 AM") }
+
+    var showDeliveryModal by remember { mutableStateOf(false) }
+    var deliveryAddress by remember { mutableStateOf("") }
+    var deliveryInstructions by remember { mutableStateOf("") }
+    var vehicleType by remember { mutableStateOf("Motor") }
+    var assignedRider by remember { mutableStateOf("EMP-005 (Juan)") }
+
+    // Customers Directory State
     val customers = remember { mutableStateListOf(
-        POSCustomerData(1, "Juan Dela Cruz", "0917-123-4567", "45 Mabini St, Brgy. San Jose, Navotas City", "LAST ORDER: 2 DAYS AGO", "JD"),
-        POSCustomerData(2, "Maria Clara", "0918-987-6543", "12 Rizal Ave, Brgy. Concepcion, Malabon City", "LAST ORDER: 1 WEEK AGO", "MC"),
-        POSCustomerData(3, "Andres Bonifacio", "0917-123-4567", "8 Bonifacio St, Monumento, Caloocan City", "LAST ORDER: 1 MONTH AGO", "AB")
+        POSCustomerData(1, "Juan Dela Cruz", "Residential", "0917-123-4567", "45 Mabini St, Navotas City", "Active", "EMP-001", "2 DAYS AGO", "JD"),
+        POSCustomerData(2, "Maria Clara", "Commercial", "0918-987-6543", "12 Rizal Ave, Malabon City", "Active", "EMP-002", "1 WEEK AGO", "MC"),
+        POSCustomerData(3, "Andres Bonifacio", "Residential", "0917-123-4567", "8 Bonifacio St, Caloocan City", "Inactive", "EMP-001", "1 MONTH AGO", "AB")
     ) }
     
+    // Master Product List (using POSProductData from OrderComponents)
     val products = listOf(
-        POSProductData(1, "11kg Standard", "Refill • Stock: 15", 950.0, R.drawable.tank_11kg, true),
-        POSProductData(2, "2.7kg Camping Cylinder", "Out of Stock", 280.0, R.drawable.tank_2_7kg, false),
-        POSProductData(3, "50kg Commercial Refill", "Out of Stock", 4500.0, R.drawable.tank_50kg, false)
+        POSProductData(1, "Gasul LPG 2.7 kg", 250.0, R.drawable.tank_2_7kg, 15, "Petron", "Gasul LPG", "Pasig Warehouse"),
+        POSProductData(2, "Gasul LPG 7 kg", 650.0, R.drawable.tank_11kg, 20, "Petron", "Gasul LPG", "Pasig Warehouse"),
+        POSProductData(3, "Gasul LPG 11 kg Elite", 1050.0, R.drawable.tank_11kg, 30, "Petron", "Gasul LPG", "San Juan Warehouse"),
+        POSProductData(4, "Gasul LPG 11 kg", 1000.0, R.drawable.tank_11kg, 50, "Petron", "Gasul LPG", "Pasig Warehouse"),
+        POSProductData(5, "Gasul LPG 22 kg", 2000.0, R.drawable.tank_50kg, 10, "Petron", "Gasul LPG", "Pasig Warehouse"),
+        POSProductData(6, "Gasul LPG 50 kg", 4500.0, R.drawable.tank_50kg, 8, "Petron", "Gasul LPG", "San Juan Warehouse"),
+        POSProductData(7, "Cylinder 2.7 kg", 1500.0, R.drawable.tank_2_7kg, 5, "Generic", "Cylinder", "Pasig Warehouse"),
+        POSProductData(8, "Cylinder LPG 7 kg", 2000.0, R.drawable.tank_11kg, 12, "Generic", "Cylinder", "San Juan Warehouse"),
+        POSProductData(9, "Cylinder 11 kg Elite", 2800.0, R.drawable.tank_11kg, 10, "Generic", "Cylinder", "Pasig Warehouse"),
+        POSProductData(10, "Cylinder 11 kg", 2500.0, R.drawable.tank_11kg, 18, "Generic", "Cylinder", "Pasig Warehouse"),
+        POSProductData(11, "Cylinder 22 kg", 4500.0, R.drawable.tank_50kg, 6, "Generic", "Cylinder", "San Juan Warehouse"),
+        POSProductData(12, "Cylinder 50 kg", 8000.0, R.drawable.tank_50kg, 4, "Generic", "Cylinder", "Pasig Warehouse"),
+        POSProductData(13, "LPG Hose Clamp", 50.0, R.drawable.tank_2_7kg, 100, "Generic", "Accessories", "Pasig Warehouse"),
+        POSProductData(14, "LPG Hose Clamp with 1.5m Hose", 250.0, R.drawable.tank_11kg, 45, "Generic", "Accessories", "San Juan Warehouse"),
+        POSProductData(15, "LPG Hose (Per Meter)", 100.0, R.drawable.tank_11kg, 200, "Generic", "Accessories", "Pasig Warehouse"),
+        POSProductData(16, "POL Regulator", 450.0, R.drawable.tank_11kg, 25, "Generic", "Accessories", "Pasig Warehouse"),
+        POSProductData(17, "TPA Regulator", 550.0, R.drawable.tank_11kg, 30, "Generic", "Accessories", "San Juan Warehouse"),
+        POSProductData(18, "Reyna Gas Stove", 1200.0, R.drawable.tank_50kg, 15, "Reyna", "Accessories", "Pasig Warehouse")
     )
 
-    val totalAmount = products.sumOf { product -> 
-        (cart[product.id] ?: 0) * product.price 
-    }
+    // Financial Calculation Breakdown
+    val subtotalInclusive = products.sumOf { product -> (cart[product.id] ?: 0) * product.price }
+    val discountAmount = subtotalInclusive * discountRate
+    val totalSalesInclusive = subtotalInclusive - discountAmount
+    val vatAmount = totalSalesInclusive * (0.12 / 1.12)
+    val amountNetOfVat = totalSalesInclusive - vatAmount
+    val totalAmountDue = totalSalesInclusive
 
-    Scaffold(
-        bottomBar = {
-            if (selectedTab == "Products") {
-                POSBottomBar(
-                    totalAmount = totalAmount,
-                    onCheckoutClick = { if (totalAmount > 0) showPayPopup = true }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE2E8F0)) // Darker background to make white cards pop
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            EmployeePortalHeader(
+                title = "Checkout Station",
+                onBack = onBack
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                EmployeeTabSelector(
+                    tabs = listOf("Products", "Cart (${cart.values.sum()})"),
+                    selectedTab = if (selectedTab.startsWith("Cart")) "Cart (${cart.values.sum()})" else selectedTab,
+                    onTabSelected = { tab ->
+                        selectedTab = if (tab.startsWith("Cart")) "Cart" else tab
+                    }
                 )
             }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(paddingValues)
-        ) {
-            // --- Header ---
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(StaffPortalButtonBlue, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-                    .padding(top = 16.dp, bottom = 8.dp)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                        }
-                        Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
-                            Text(
-                                text = "Point of Sale",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White,
-                                fontStyle = FontStyle.Italic
-                            )
-                            Text(
-                                text = "Admin",
-                                fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Profile",
-                            modifier = Modifier.size(48.dp).clip(CircleShape),
-                            tint = Color.White.copy(alpha = 0.5f)
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // --- Tabs ---
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        POSTabItem("Products", selectedTab == "Products") { selectedTab = "Products" }
-                        POSTabItem("Customers", selectedTab == "Customers") { selectedTab = "Customers" }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-
-            // --- Tab Content ---
             Box(modifier = Modifier.weight(1f)) {
                 if (selectedTab == "Products") {
                     POSProductsTab(
                         products = products,
                         cart = cart,
                         onUpdateQuantity = { id, qty -> 
-                            if (qty <= 0) cart.remove(id) else cart[id] = qty 
+                            val product = products.find { it.id == id }
+                            if (product != null) {
+                                val clampedQty = Math.max(0, Math.min(qty, product.stock))
+                                if (clampedQty <= 0) cart.remove(id) else cart[id] = clampedQty 
+                            }
                         }
                     )
                 } else {
-                    POSCustomersTab(
-                        customers = customers,
+                    POSCartTabView(
+                        cart = cart,
+                        products = products,
+                        discountRate = discountRate,
+                        customerType = customerType,
                         selectedCustomer = selectedCustomer,
-                        onCustomerSelected = { selectedCustomer = it },
-                        onAddNewClick = { showAddCustomerDialog = true }
+                        pickupDate = pickupDate,
+                        pickupTime = pickupTime,
+                        deliveryAddress = deliveryAddress,
+                        assignedRider = assignedRider,
+                        subtotalInclusive = subtotalInclusive,
+                        discountAmount = discountAmount,
+                        vatAmount = vatAmount,
+                        amountNetOfVat = amountNetOfVat,
+                        totalAmountDue = totalAmountDue,
+                        heldCount = heldCarts.size,
+                        onDiscountChange = { discountRate = it },
+                        onCustomerTypeChange = { newType ->
+                            customerType = newType
+                            if (newType == "Pickup") showPickupModal = true
+                            else if (newType == "Delivery") showDeliveryModal = true
+                        },
+                        onConfigureFulfillment = {
+                            if (customerType == "Pickup") showPickupModal = true
+                            else if (customerType == "Delivery") showDeliveryModal = true
+                        },
+                        onClearCart = { 
+                            cart.clear() 
+                            selectedCustomer = null
+                            pickupDate = ""
+                            pickupTime = ""
+                            deliveryAddress = ""
+                            deliveryInstructions = ""
+                        },
+                        onShowHeldClick = { showHeldModal = true }
                     )
                 }
             }
+            
+            POSBottomBar(
+                totalAmount = totalAmountDue,
+                onCheckoutClick = { 
+                    if (totalAmountDue > 0) {
+                        if (customerType == "Pickup" && selectedCustomer == null) {
+                            showPickupModal = true
+                        } else if (customerType == "Delivery" && (selectedCustomer == null || deliveryAddress.isEmpty())) {
+                            showDeliveryModal = true
+                        } else {
+                            showPayPopup = true
+                        }
+                    } 
+                },
+                onHoldClick = {
+                    if (cart.isNotEmpty()) {
+                        val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.US)
+                        val timestamp = sdf.format(Date())
+                        heldCarts.add(
+                            HeldCartData(
+                                id = "HOLD-${System.currentTimeMillis() % 10000}",
+                                timestamp = timestamp,
+                                items = HashMap(cart),
+                                customerType = customerType,
+                                discountRate = discountRate,
+                                totalAmount = totalAmountDue,
+                                pickupDate = pickupDate,
+                                pickupTime = pickupTime,
+                                deliveryAddress = deliveryAddress,
+                                deliveryInstructions = deliveryInstructions,
+                                vehicleType = vehicleType,
+                                assignedRider = assignedRider,
+                                paymentMethod = "",
+                                selectedCustomer = selectedCustomer
+                            )
+                        )
+                        cart.clear()
+                        selectedCustomer = null
+                        customerType = "Walk-in"
+                        pickupDate = ""
+                        pickupTime = ""
+                        deliveryAddress = ""
+                        deliveryInstructions = ""
+                        vehicleType = "Motor"
+                        assignedRider = ""
+                    }
+                }
+            )
         }
     }
 
+    // Checkout Flow
+    var selectedPaymentMethod by remember { mutableStateOf("Cash") }
+
     if (showPayPopup) {
         PayPopup(
-            totalAmount = totalAmount,
+            totalAmount = totalAmountDue,
+            subtotal = subtotalInclusive,
+            discount = discountAmount,
+            vat = vatAmount,
+            netOfVat = amountNetOfVat,
             onDismiss = { showPayPopup = false },
-            onConfirm = { 
+            onConfirm = { type, method ->
+                customerType = type
+                selectedPaymentMethod = method
                 showPayPopup = false
                 showOrderDetails = true
             }
@@ -174,9 +297,84 @@ fun POSEmployeeScreen(
             cart = cart,
             products = products,
             customer = selectedCustomer,
-            onDismiss = { 
+            orderType = customerType,
+            paymentMethod = selectedPaymentMethod,
+            subtotal = subtotalInclusive,
+            discount = discountAmount,
+            vat = vatAmount,
+            netOfVat = amountNetOfVat,
+            totalAmount = totalAmountDue,
+            onBackClick = {
+                showOrderDetails = false
+                showPayPopup = true
+            },
+            onDismiss = {
                 showOrderDetails = false
                 cart.clear()
+            }
+        )
+    }
+
+    if (showHeldModal) {
+        HeldCartsModalDialog(
+            heldCarts = heldCarts,
+            onDismiss = { showHeldModal = false },
+            onRestore = { held ->
+                cart.clear()
+                held.items.forEach { (k, v) -> cart[k] = v }
+                customerType = held.customerType
+                discountRate = held.discountRate
+                pickupDate = held.pickupDate
+                pickupTime = held.pickupTime
+                deliveryAddress = held.deliveryAddress
+                deliveryInstructions = held.deliveryInstructions
+                vehicleType = held.vehicleType
+                assignedRider = held.assignedRider
+                selectedCustomer = held.selectedCustomer
+                heldCarts.remove(held)
+                showHeldModal = false
+                selectedTab = "Cart (${cart.values.sum()})"
+            },
+            onDiscard = { held ->
+                heldCarts.remove(held)
+            }
+        )
+    }
+
+    if (showPickupModal) {
+        PickupDetailsModalDialog(
+            pickupDate = pickupDate,
+            pickupTime = pickupTime,
+            selectedCustomer = selectedCustomer,
+            customers = customers,
+            onCustomerSelect = { selectedCustomer = it },
+            onAddNewCustomer = { showAddCustomerDialog = true },
+            onDismiss = { showPickupModal = false },
+            onSave = { date, time ->
+                pickupDate = date
+                pickupTime = time
+                showPickupModal = false
+            }
+        )
+    }
+
+    if (showDeliveryModal) {
+        DeliveryDetailsModalDialog(
+            deliveryAddress = deliveryAddress,
+            instructions = deliveryInstructions,
+            vehicleType = vehicleType,
+            assignedRider = assignedRider,
+            selectedCustomer = selectedCustomer,
+            customers = customers,
+            onCustomerSelect = { selectedCustomer = it },
+            onAddNewCustomer = { showAddCustomerDialog = true },
+            onDismiss = { showDeliveryModal = false },
+            onSave = { addr, inst, vehicle, rider ->
+                deliveryAddress = addr
+                deliveryInstructions = inst
+                vehicleType = vehicle
+                assignedRider = rider
+                showDeliveryModal = false
             }
         )
     }
@@ -184,117 +382,254 @@ fun POSEmployeeScreen(
     if (showAddCustomerDialog) {
         AddCustomerDialog(
             onDismiss = { showAddCustomerDialog = false },
-            onAdd = { name, phone, address ->
+            onAdd = { name, phone, addr, type, status ->
                 val newId = (customers.maxOfOrNull { it.id } ?: 0) + 1
-                val initials = name.split(" ").filter { it.isNotEmpty() }.take(2).map { it[0] }.joinToString("").uppercase()
-                customers.add(POSCustomerData(newId, name, phone, address, "NEWLY ADDED", initials))
+                val newCustomer = POSCustomerData(newId, name, type, phone, addr, status, "EMP-001", "JUST NOW", name.take(2).uppercase())
+                customers.add(newCustomer)
+                
+                // Automatically assign the newly created customer
+                selectedCustomer = newCustomer
+                
                 showAddCustomerDialog = false
             }
         )
     }
+
+    if (showEditCustomerDialog && customerToEdit != null) {
+        AddCustomerDialog(
+            customer = customerToEdit,
+            onDismiss = { showEditCustomerDialog = false },
+            onAdd = { name, phone, addr, type, status ->
+                val index = customers.indexOfFirst { it.id == customerToEdit!!.id }
+                if (index != -1) {
+                    customers[index] = customerToEdit!!.copy(name = name, phone = phone, address = addr, customerType = type, status = status)
+                }
+                showEditCustomerDialog = false
+            }
+        )
+    }
+
+    if (showViewCustomerDialog && customerToView != null) {
+        ViewCustomerDialog(customer = customerToView!!, onDismiss = { showViewCustomerDialog = false })
+    }
+
+    if (showDeleteConfirm && customerToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Customer", fontWeight = FontWeight.Black) },
+            text = { Text("Are you sure you want to delete ${customerToDelete!!.name}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    customers.removeAll { it.id == customerToDelete!!.id }
+                    showDeleteConfirm = false
+                }) { Text("Delete", color = GasTrackRed, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+            },
+            shape = RoundedCornerShape(12.dp),
+            containerColor = Color.White
+        )
+    }
 }
 
-@Composable
-fun POSTabItem(text: String, isSelected: Boolean, onClick: () -> Unit) {
-    Text(
-        text = text,
-        color = Color.White,
-        fontSize = 16.sp,
-        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-        modifier = Modifier
-            .clickable { onClick() }
-            .padding(vertical = 8.dp),
-        style = if (isSelected) LocalTextStyle.current.copy(textDecoration = TextDecoration.Underline) else LocalTextStyle.current
-    )
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun POSProductsTab(
     products: List<POSProductData>,
     cart: Map<Int, Int>,
     onUpdateQuantity: (Int, Int) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Text(text = "Available Products", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, fontStyle = FontStyle.Italic)
-        }
-        items(products) { product ->
-            POSProductCard(
-                product = product,
-                quantity = cart[product.id] ?: 0,
-                onUpdateQuantity = { onUpdateQuantity(product.id, it) }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("All Categories") }
+    var selectedBrand by remember { mutableStateOf("All") }
+    
+    var expandedCategory by remember { mutableStateOf(false) }
+    var expandedBrand by remember { mutableStateOf(false) }
+    
+    val categories = listOf("All Categories", "Cylinder", "Accessories", "Gasul LPG")
+    val brands = listOf("All", "Petron", "Solane", "M-Gas", "Phoenix")
+
+    val filteredProducts = products.filter {
+        val matchesSearch = it.name.contains(searchQuery, ignoreCase = true)
+        val matchesCategory = if (selectedCategory == "All Categories") true else it.category == selectedCategory
+        val matchesBrand = if (selectedBrand == "All") true else it.brand == selectedBrand
+        matchesSearch && matchesCategory && matchesBrand
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Search Product
+            OutlinedTextField(
+                value = searchQuery, onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth().height(52.dp), 
+                placeholder = { Text("Search product name...", color = Color.LightGray, fontSize = 15.sp) },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold)
             )
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Filter By Category
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("CATEGORY", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 0.5.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { expandedCategory = true },
+                            modifier = Modifier.fillMaxWidth().height(42.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedCategory,
+                                    color = TextDark,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    maxLines = 1
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = TextGray,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        DropdownMenu(
+                            expanded = expandedCategory,
+                            onDismissRequest = { expandedCategory = false },
+                            modifier = Modifier.background(Color.White)
+                        ) {
+                            categories.forEach { cat ->
+                                DropdownMenuItem(
+                                    text = { Text(cat, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                                    onClick = {
+                                        selectedCategory = cat
+                                        expandedCategory = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Filter By Brand
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("BRAND", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 0.5.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { expandedBrand = true },
+                            modifier = Modifier.fillMaxWidth().height(42.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedBrand,
+                                    color = TextDark,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    maxLines = 1
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = TextGray,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        DropdownMenu(
+                            expanded = expandedBrand,
+                            onDismissRequest = { expandedBrand = false },
+                            modifier = Modifier.background(Color.White)
+                        ) {
+                            brands.forEach { brand ->
+                                DropdownMenuItem(
+                                    text = { Text(brand, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                                    onClick = {
+                                        selectedBrand = brand
+                                        expandedBrand = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(filteredProducts) { product ->
+                POSProductCard(
+                    product = product,
+                    quantity = cart[product.id] ?: 0,
+                    onUpdateQuantity = { onUpdateQuantity(product.id, it) }
+                )
+            }
         }
     }
 }
 
-data class POSProductData(val id: Int, val name: String, val status: String, val price: Double, val imageRes: Int, val inStock: Boolean)
-
 @Composable
-fun POSProductCard(
-    product: POSProductData,
-    quantity: Int,
-    onUpdateQuantity: (Int) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
+fun POSProductCard(product: POSProductData, quantity: Int, onUpdateQuantity: (Int) -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp), color = Color.White
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = product.imageRes),
-                contentDescription = null,
-                modifier = Modifier.size(64.dp).background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp)).padding(8.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = product.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text(
-                    text = product.status, 
-                    color = if (product.inStock) Color.Gray else Color.Red, 
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = String.format(Locale.US, "₱%,.2f", product.price), 
-                    color = StaffPortalButtonBlue, 
-                    fontWeight = FontWeight.Black, 
-                    fontSize = 20.sp
-                )
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                modifier = Modifier.size(64.dp), shape = RoundedCornerShape(10.dp),
+                color = if (product.stock > 0) StaffPortalButtonBlue.copy(alpha = 0.05f) else Color(0xFFF1F3F4)
+            ) {
+                Image(painter = painterResource(id = product.imageRes), contentDescription = null, modifier = Modifier.padding(8.dp).fillMaxSize())
             }
-            if (product.inStock) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = product.name, fontWeight = FontWeight.Black, fontSize = 16.sp, color = TextDark)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = "Stock: ${product.stock} • ${product.brand}", color = if (product.stock > 5) TextGray else GasTrackRed, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(text = String.format(Locale.US, "₱%,.2f", product.price), color = StaffPortalButtonBlue, fontWeight = FontWeight.Black, fontSize = 17.sp)
+            }
+            if (product.stock > 0) {
                 if (quantity > 0) {
-                    POSQuantitySelector(
-                        quantity = quantity,
-                        onUpdateQuantity = onUpdateQuantity
-                    )
+                    POSQuantitySelector(quantity = quantity, onUpdateQuantity = onUpdateQuantity)
                 } else {
                     Button(
                         onClick = { onUpdateQuantity(1) },
-                        modifier = Modifier.height(36.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                        modifier = Modifier.height(34.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                     ) {
-                        Text("ADD", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("ADD", fontSize = 11.sp, fontWeight = FontWeight.Black)
                     }
                 }
             } else {
-                OutlinedButton(
-                    enabled = false,
-                    onClick = {},
-                    modifier = Modifier.height(36.dp),
-                    shape = RoundedCornerShape(18.dp),
-                ) {
-                    Text("ADD", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Surface(color = Color(0xFFF1F3F4), shape = RoundedCornerShape(8.dp)) {
+                    Text("OUT OF STOCK", modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp), fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.Gray)
                 }
             }
         }
@@ -302,61 +637,254 @@ fun POSProductCard(
 }
 
 @Composable
-fun POSQuantitySelector(
-    quantity: Int,
-    onUpdateQuantity: (Int) -> Unit
+fun POSCartTabView(
+    cart: Map<Int, Int>,
+    products: List<POSProductData>,
+    discountRate: Double,
+    customerType: String,
+    selectedCustomer: POSCustomerData?,
+    pickupDate: String,
+    pickupTime: String,
+    deliveryAddress: String,
+    assignedRider: String,
+    subtotalInclusive: Double,
+    discountAmount: Double,
+    vatAmount: Double,
+    amountNetOfVat: Double,
+    totalAmountDue: Double,
+    heldCount: Int,
+    onDiscountChange: (Double) -> Unit,
+    onCustomerTypeChange: (String) -> Unit,
+    onConfigureFulfillment: () -> Unit,
+    onClearCart: () -> Unit,
+    onShowHeldClick: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    var expandedDiscount by remember { mutableStateOf(false) }
+
+    Column(
         modifier = Modifier
-            .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        IconButton(
-            onClick = { onUpdateQuantity(quantity - 1) },
-            modifier = Modifier.size(32.dp)
+        // Top Action Bar
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = StaffPortalBlue, modifier = Modifier.size(16.dp))
+            Button(
+                onClick = onClearCart,
+                modifier = Modifier.weight(1f).height(42.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GasTrackRed.copy(alpha = 0.1f), contentColor = GasTrackRed)
+            ) {
+                Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Clear Cart", fontWeight = FontWeight.Black, fontSize = 12.sp)
+            }
+            
+            Button(
+                onClick = onShowHeldClick,
+                modifier = Modifier.weight(1f).height(42.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue.copy(alpha = 0.1f), contentColor = StaffPortalButtonBlue)
+            ) {
+                Icon(Icons.Default.PauseCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Held (${heldCount})", fontWeight = FontWeight.Black, fontSize = 12.sp)
+            }
         }
-        Text(
-            text = quantity.toString(),
-            modifier = Modifier.padding(horizontal = 12.dp),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-        IconButton(
-            onClick = { onUpdateQuantity(quantity + 1) },
-            modifier = Modifier.size(32.dp)
+
+        // Fulfillment Type Bar
+        Surface(
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Increase", tint = StaffPortalBlue, modifier = Modifier.size(16.dp))
+            Column(modifier = Modifier.padding(14.dp)) {
+                Text("ORDER FULFILLMENT", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Walk-in", "Pickup", "Delivery").forEach { type ->
+                        val isSelected = customerType == type
+                        Surface(
+                            modifier = Modifier.weight(1f).height(40.dp).clickable { onCustomerTypeChange(type) },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) StaffPortalButtonBlue else Color(0xFFF1F3F4),
+                            border = BorderStroke(1.dp, if (isSelected) StaffPortalButtonBlue else Color(0xFFE9ECEF))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(type, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (isSelected) Color.White else TextGray)
+                            }
+                        }
+                    }
+                }
+
+                if (customerType != "Walk-in") {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().clickable { onConfigureFulfillment() },
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFE3F2FD),
+                        border = BorderStroke(1.dp, StaffPortalButtonBlue.copy(alpha = 0.3f))
+                    ) {
+                        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Column {
+                                Text(if (customerType == "Pickup") "Pickup: $pickupDate at $pickupTime" else "Delivery to: ${if (deliveryAddress.isEmpty()) "Set Address" else deliveryAddress}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue)
+                                Text("Customer: ${selectedCustomer?.name ?: "Select Customer"}", fontSize = 10.sp, color = TextGray)
+                            }
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = StaffPortalButtonBlue, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Selected Cart Items List
+        Surface(
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Text("ITEMS IN CART", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                if (cart.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(40.dp), tint = Color.LightGray)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Cart is empty", color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                } else {
+                    cart.forEach { (productId, qty) ->
+                        val product = products.find { it.id == productId }
+                        if (product != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(product.name, fontSize = 15.sp, fontWeight = FontWeight.Black, color = TextDark)
+                                    Text("₱${product.price} x $qty", fontSize = 12.sp, color = TextGray, fontWeight = FontWeight.Medium)
+                                }
+                                Text(String.format(Locale.US, "₱%,.2f", product.price * qty), fontSize = 16.sp, fontWeight = FontWeight.Black, color = TextDark)
+                            }
+                            HorizontalDivider(color = Color(0xFFF1F3F4))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Financial Summary & VAT Breakdown Card
+        Surface(
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Text("DISCOUNT & PAYMENT BREAKDOWN", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Discount Selector
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { expandedDiscount = true },
+                        modifier = Modifier.fillMaxWidth().height(42.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = when(discountRate) {
+                                    0.05 -> "Senior / PWD (5%)"
+                                    0.10 -> "Member (10%)"
+                                    else -> "No Discount (0%)"
+                                },
+                                fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark
+                            )
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
+                        }
+                    }
+                    DropdownMenu(expanded = expandedDiscount, onDismissRequest = { expandedDiscount = false }) {
+                        DropdownMenuItem(text = { Text("No Discount (0%)", fontSize = 12.sp) }, onClick = { onDiscountChange(0.0); expandedDiscount = false })
+                        DropdownMenuItem(text = { Text("Senior / PWD (5%)", fontSize = 12.sp) }, onClick = { onDiscountChange(0.05); expandedDiscount = false })
+                        DropdownMenuItem(text = { Text("Member (10%)", fontSize = 12.sp) }, onClick = { onDiscountChange(0.10); expandedDiscount = false })
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                DetailValueRow("Subtotal (VAT Inclusive)", String.format(Locale.US, "₱%,.2f", subtotalInclusive))
+                DetailValueRow("Less: Discount", String.format(Locale.US, "-₱%,.2f", discountAmount), color = GasTrackRed)
+                DetailValueRow("Less: VAT (12%)", String.format(Locale.US, "₱%,.2f", vatAmount))
+                DetailValueRow("Amount Net of VAT", String.format(Locale.US, "₱%,.2f", amountNetOfVat))
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFE9ECEF))
+                
+                DetailValueRow("TOTAL AMOUNT DUE", String.format(Locale.US, "₱%,.2f", totalAmountDue), isBold = true, color = StaffPortalButtonBlue)
+            }
         }
     }
 }
 
 @Composable
-fun POSBottomBar(totalAmount: Double, onCheckoutClick: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().shadow(16.dp),
-        color = Color.White
+fun POSQuantitySelector(quantity: Int, onUpdateQuantity: (Int) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.border(1.dp, Color(0xFFE9ECEF), RoundedCornerShape(10.dp)).background(Color(0xFFFBFBFE), RoundedCornerShape(10.dp)).padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
-        Button(
-            onClick = onCheckoutClick,
-            modifier = Modifier.fillMaxWidth().padding(24.dp).height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = if (totalAmount > 0) Color(0xFF0D1B6D) else Color.Gray),
-            enabled = totalAmount > 0
+        IconButton(onClick = { onUpdateQuantity(quantity - 1) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Remove, contentDescription = null, tint = StaffPortalBlue, modifier = Modifier.size(18.dp)) }
+        Text(text = quantity.toString(), modifier = Modifier.padding(horizontal = 10.dp), fontSize = 14.sp, fontWeight = FontWeight.Black, color = TextDark)
+        IconButton(onClick = { onUpdateQuantity(quantity + 1) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Add, contentDescription = null, tint = StaffPortalBlue, modifier = Modifier.size(18.dp)) }
+    }
+}
+
+@Composable
+fun POSBottomBar(totalAmount: Double, onCheckoutClick: () -> Unit, onHoldClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().shadow(12.dp, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+        color = Color.White, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            OutlinedButton(
+                onClick = onHoldClick,
+                modifier = Modifier.height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, ButtonOrange),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = ButtonOrange),
+                contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                Text(text = "Checkout", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, fontStyle = FontStyle.Italic)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = String.format(Locale.US, "Pay ₱%,.2f", totalAmount), fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                Text(text = "Hold", fontSize = 15.sp, fontWeight = FontWeight.Black)
+            }
+
+            Button(
+                onClick = onCheckoutClick,
+                modifier = Modifier.weight(1f).height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                contentPadding = PaddingValues(horizontal = 14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(), 
+                    horizontalArrangement = Arrangement.SpaceBetween, 
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Checkout", fontSize = 15.sp, fontWeight = FontWeight.Black)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = String.format(Locale.US, "Pay ₱%,.2f", totalAmount), fontSize = 15.sp, fontWeight = FontWeight.Black)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
         }
@@ -368,231 +896,351 @@ fun POSCustomersTab(
     customers: List<POSCustomerData>,
     selectedCustomer: POSCustomerData?,
     onCustomerSelected: (POSCustomerData?) -> Unit,
-    onAddNewClick: () -> Unit
+    onAddNewClick: () -> Unit,
+    onViewClick: (POSCustomerData) -> Unit,
+    onEditClick: (POSCustomerData) -> Unit,
+    onDeleteClick: (POSCustomerData) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-
+    var selectedTypeFilter by remember { mutableStateOf("All") }
+    
     val filteredCustomers = customers.filter { 
-        it.name.contains(searchQuery, ignoreCase = true) || it.phone.contains(searchQuery)
+        val matchesSearch = it.name.contains(searchQuery, ignoreCase = true) || it.phone.contains(searchQuery)
+        val matchesType = if (selectedTypeFilter == "All") true else it.customerType == selectedTypeFilter
+        matchesSearch && matchesType
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            placeholder = { Text("Search name or mobile...", fontSize = 14.sp) },
-            shape = RoundedCornerShape(26.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFF2F2F2), 
-                focusedContainerColor = Color(0xFFF2F2F2), 
-                unfocusedBorderColor = Color.Transparent, 
-                focusedBorderColor = Color.Transparent
-            ),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) }
+            value = searchQuery, onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth(), placeholder = { Text("Search customer...", color = Color.LightGray, fontSize = 13.sp) },
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
+            singleLine = true
         )
+        
         Spacer(modifier = Modifier.height(12.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(
-                onClick = { onCustomerSelected(null) }, 
-                modifier = Modifier.weight(1f), 
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, if (selectedCustomer == null) StaffPortalBlue else Color.LightGray)
-            ) {
-                Text("Walk-in", fontWeight = FontWeight.Bold, color = if (selectedCustomer == null) StaffPortalBlue else Color.Black)
-            }
-            Button(
-                onClick = onAddNewClick, 
-                modifier = Modifier.weight(1f), 
-                shape = RoundedCornerShape(12.dp), 
-                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue.copy(alpha = 0.2f))
-            ) {
-                Text("Add New", fontWeight = FontWeight.Bold, color = StaffPortalBlue)
+        
+        // Type Filter Dropdown
+        var expandedTypeFilter by remember { mutableStateOf(false) }
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text("CUSTOMER TYPE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 0.5.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { expandedTypeFilter = true },
+                    modifier = Modifier.fillMaxWidth().height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (selectedTypeFilter == "All") "All Customer Types" else selectedTypeFilter,
+                            color = TextDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = TextGray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                DropdownMenu(
+                    expanded = expandedTypeFilter,
+                    onDismissRequest = { expandedTypeFilter = false },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    listOf("All", "Residential", "Commercial").forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(if (type == "All") "All Customer Types" else type, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                            onClick = {
+                                selectedTypeFilter = type
+                                expandedTypeFilter = false
+                            }
+                        )
+                    }
+                }
             }
         }
+
         Spacer(modifier = Modifier.height(16.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedButton(onClick = { onCustomerSelected(null) }, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.5.dp, if (selectedCustomer == null) StaffPortalButtonBlue else Color(0xFFE9ECEF))) {
+                Text("Walk-in", fontWeight = FontWeight.Black, color = if (selectedCustomer == null) StaffPortalButtonBlue else TextGray, fontSize = 13.sp)
+            }
+            Button(onClick = onAddNewClick, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue.copy(alpha = 0.1f), contentColor = StaffPortalButtonBlue)) {
+                Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Add New", fontWeight = FontWeight.Black, fontSize = 13.sp)
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(text = "CUSTOMER DIRECTORY", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+        Spacer(modifier = Modifier.height(10.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
             items(filteredCustomers) { customer ->
                 POSCustomerCard(
                     customer = customer, 
-                    isSelected = selectedCustomer?.id == customer.id,
-                    onSelect = { onCustomerSelected(customer) }
+                    isSelected = selectedCustomer?.id == customer.id, 
+                    onSelect = { onCustomerSelected(customer) },
+                    onView = { onViewClick(customer) },
+                    onEdit = { onEditClick(customer) },
+                    onDelete = { onDeleteClick(customer) }
                 )
             }
         }
     }
 }
 
-data class POSCustomerData(val id: Int, val name: String, val phone: String, val address: String, val lastOrder: String, val initials: String)
-
 @Composable
-fun POSCustomerCard(customer: POSCustomerData, isSelected: Boolean, onSelect: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(16.dp))
-            .clickable { onSelect() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, if (isSelected) StaffPortalBlue else Color.LightGray.copy(alpha = 0.5f))
+fun POSCustomerCard(
+    customer: POSCustomerData, 
+    isSelected: Boolean, 
+    onSelect: () -> Unit,
+    onView: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)).clickable { onSelect() },
+        shape = RoundedCornerShape(12.dp), color = Color.White,
+        border = BorderStroke(1.5.dp, if (isSelected) StaffPortalButtonBlue else Color.Transparent)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(modifier = Modifier.size(40.dp), shape = RoundedCornerShape(8.dp), color = Color(0xFFE8EAF6)) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(text = customer.initials, color = StaffPortalBlue, fontWeight = FontWeight.Bold)
-                    }
+                Surface(modifier = Modifier.size(40.dp), shape = RoundedCornerShape(10.dp), color = StaffPortalButtonBlue.copy(alpha = 0.1f)) {
+                    Box(contentAlignment = Alignment.Center) { Text(text = customer.initials, color = StaffPortalButtonBlue, fontWeight = FontWeight.Black, fontSize = 14.sp) }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = customer.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(text = customer.phone, color = Color.Gray, fontSize = 12.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = customer.name, fontWeight = FontWeight.Black, fontSize = 15.sp, color = TextDark)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            color = if (customer.status == "Active") Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(customer.status.uppercase(), modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp), fontSize = 8.sp, fontWeight = FontWeight.Black, color = if (customer.status == "Active") Color(0xFF2E7D32) else GasTrackRed)
+                        }
+                    }
+                    Text(text = "${customer.customerType} • ${customer.phone}", color = TextGray, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                 }
-                RadioButton(selected = isSelected, onClick = onSelect)
+                RadioButton(selected = isSelected, onClick = onSelect, colors = RadioButtonDefaults.colors(selectedColor = StaffPortalButtonBlue))
             }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = customer.address, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1)
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = Color(0xFFF1F3F4))
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = customer.address, fontSize = 12.sp, color = Color.Gray)
-            Text(text = customer.lastOrder, fontSize = 9.sp, color = if (isSelected) StaffPortalBlue else Color.LightGray, fontWeight = FontWeight.Bold)
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "Last order: ${customer.lastOrder}", modifier = Modifier.weight(1f), fontSize = 9.sp, color = Color.LightGray, fontWeight = FontWeight.Bold)
+                
+                IconButton(onClick = onView, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Visibility, contentDescription = "View", tint = StaffPortalButtonBlue, modifier = Modifier.size(18.dp)) }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = onEdit, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF2E7D32), modifier = Modifier.size(18.dp)) }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, contentDescription = "Delete", tint = GasTrackRed, modifier = Modifier.size(18.dp)) }
+            }
         }
     }
 }
 
 @Composable
-fun PayPopup(totalAmount: Double, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+fun PayPopup(
+    totalAmount: Double,
+    subtotal: Double,
+    discount: Double,
+    vat: Double,
+    netOfVat: Double,
+    onDismiss: () -> Unit, 
+    onConfirm: (String, String) -> Unit
+) {
     var amountCollected by remember { mutableStateOf("") }
     val collected = amountCollected.toDoubleOrNull() ?: 0.0
     val change = if (collected >= totalAmount) collected - totalAmount else 0.0
 
+    var orderType by remember { mutableStateOf("Walk-in") }
+    var paymentMethod by remember { mutableStateOf("Cash") }
+    var expandedOrderType by remember { mutableStateOf(false) }
+    var expandedPaymentMethod by remember { mutableStateOf(false) }
+
+    val orderTypes = listOf("Walk-in", "Pickup", "Delivery")
+    val paymentMethods = listOf("Cash", "GCash", "Card", "Bank Transfer")
+
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text("Payment", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.fillMaxWidth(0.95f)) {
+            Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+                Text("Complete Payment", fontSize = 22.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                DetailValueRow("Subtotal (VAT Inc)", String.format(Locale.US, "₱%,.2f", subtotal))
+                DetailValueRow("Less Discount", String.format(Locale.US, "-₱%,.2f", discount), color = GasTrackRed)
+                DetailValueRow("Less VAT (12%)", String.format(Locale.US, "₱%,.2f", vat))
+                DetailValueRow("Amount Net of VAT", String.format(Locale.US, "₱%,.2f", netOfVat))
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFF1F3F4))
+                
+                DetailValueRow("TOTAL AMOUNT DUE", String.format(Locale.US, "₱%,.2f", totalAmount), isBold = true, color = StaffPortalButtonBlue)
                 Spacer(modifier = Modifier.height(16.dp))
-                PaymentDetailRow("Total Amount:", String.format(Locale.US, "₱ %,.2f", totalAmount), isBold = true)
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Amount Collected:", modifier = Modifier.weight(1f), fontSize = 14.sp)
+
+                // Order Type Dropdown
+                Text(text = "ORDER TYPE", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { expandedOrderType = true },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(orderType, color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
+                        }
+                    }
+                    DropdownMenu(expanded = expandedOrderType, onDismissRequest = { expandedOrderType = false }, modifier = Modifier.fillMaxWidth(0.7f)) {
+                        orderTypes.forEach { type ->
+                            DropdownMenuItem(text = { Text(type, fontSize = 14.sp, fontWeight = FontWeight.Medium) }, onClick = { orderType = type; expandedOrderType = false })
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Payment Method Dropdown
+                Text(text = "PAYMENT METHOD", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { expandedPaymentMethod = true },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(paymentMethod, color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
+                        }
+                    }
+                    DropdownMenu(expanded = expandedPaymentMethod, onDismissRequest = { expandedPaymentMethod = false }, modifier = Modifier.fillMaxWidth(0.7f)) {
+                        paymentMethods.forEach { method ->
+                            DropdownMenuItem(text = { Text(method, fontSize = 14.sp, fontWeight = FontWeight.Medium) }, onClick = { paymentMethod = method; expandedPaymentMethod = false })
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(text = "AMOUNT COLLECTED", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
-                        value = amountCollected,
-                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amountCollected = it },
-                        modifier = Modifier.width(120.dp),
-                        placeholder = { Text("0.00", fontSize = 14.sp) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End)
+                        value = amountCollected, onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amountCollected = it },
+                        modifier = Modifier.fillMaxWidth(), placeholder = { Text("0.00", color = Color.LightGray) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true,
+                        shape = RoundedCornerShape(12.dp), textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End, fontWeight = FontWeight.Black, fontSize = 18.sp),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = StaffPortalButtonBlue)
                     )
                 }
-                PaymentDetailRow("Change Due:", String.format(Locale.US, "₱ %,.2f", change), color = if (collected < totalAmount) Color.Gray else Color.Red, isBold = true)
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    var saveReceipt by remember { mutableStateOf(true) }
-                    Checkbox(checked = saveReceipt, onCheckedChange = { saveReceipt = it })
-                    Text("Save Receipt", fontSize = 12.sp)
-                }
+                Spacer(modifier = Modifier.height(12.dp))
+                DetailValueRow("Change to Return", String.format(Locale.US, "₱%,.2f", change), color = if (collected < totalAmount) TextGray else Color(0xFF2E7D32), isBold = true)
                 Spacer(modifier = Modifier.height(24.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) { Text("Cancel") }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(12.dp)) { Text("Cancel", color = TextGray) }
                     Button(
                         enabled = collected >= totalAmount && totalAmount > 0,
-                        onClick = onConfirm, 
-                        modifier = Modifier.weight(1f), 
-                        shape = RoundedCornerShape(8.dp), 
+                        onClick = { onConfirm(orderType, paymentMethod) },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
-                    ) { 
-                        Text("Okay") 
+                    ) {
+                        Text("Confirm Pay", fontWeight = FontWeight.Black)
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun PaymentDetailRow(label: String, value: String, color: Color = Color.Black, isBold: Boolean = false) {
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = label, fontSize = 16.sp, fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal)
-        Text(text = value, fontSize = 16.sp, color = color, fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal)
     }
 }
 
 @Composable
 fun OrderDetailsPopup(
-    cart: Map<Int, Int>,
-    products: List<POSProductData>,
-    customer: POSCustomerData?,
+    cart: Map<Int, Int>, 
+    products: List<POSProductData>, 
+    customer: POSCustomerData?, 
+    orderType: String,
+    paymentMethod: String,
+    subtotal: Double,
+    discount: Double,
+    vat: Double,
+    netOfVat: Double,
+    totalAmount: Double,
+    onBackClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.fillMaxWidth(0.9f)) {
-            Column(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text("Order Details", fontSize = 22.sp, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                DetailValueRow("Order ID:", "O-001")
-                DetailValueRow("Order Type:", if (customer == null) "Walk-in" else "Delivery")
-                DetailValueRow("Date:", "01/01/2026 2:14:05 PM")
-                DetailValueRow("Order Status:", "Completed")
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Table
-                Column(modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray)) {
-                    Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFE8EAF6)).padding(8.dp)) {
-                        Text("Product Name", modifier = Modifier.weight(0.4f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        Text("Qty", modifier = Modifier.weight(0.1f), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                        Text("Unit Price", modifier = Modifier.weight(0.25f), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.End)
-                        Text("Subtotal", modifier = Modifier.weight(0.25f), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.End)
+        Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.fillMaxWidth(0.92f)) {
+            Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Transaction Receipt", fontSize = 22.sp, fontWeight = FontWeight.Black, color = TextDark)
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = StaffPortalButtonBlue)
                     }
-                    var subtotal = 0.0
-                    var itemCount = 0
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                DetailValueRow("Sale ID", "SALE-1002")
+                DetailValueRow("Order Type", orderType, isBold = true, color = StaffPortalButtonBlue)
+                DetailValueRow("Payment Method", paymentMethod, isBold = true)
+                DetailValueRow("Fulfillment", if (customer == null) "Walk-in Store" else customer.name)
+                DetailValueRow("Timestamp", "2026-01-20 02:14 PM")
+                DetailValueRow("Status", "COMPLETED", color = Color(0xFF2E7D32))
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFF1F3F4), RoundedCornerShape(12.dp)).clip(RoundedCornerShape(12.dp))) {
+                    Row(modifier = Modifier.fillMaxWidth().background(Color(0xFFF8F9FA)).padding(10.dp)) {
+                        Text("Product", modifier = Modifier.weight(0.5f), fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray)
+                        Text("Qty", modifier = Modifier.weight(0.15f), fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, textAlign = TextAlign.Center)
+                        Text("Total", modifier = Modifier.weight(0.35f), fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, textAlign = TextAlign.End)
+                    }
                     products.filter { cart.containsKey(it.id) }.forEach { product ->
                         val qty = cart[product.id] ?: 0
                         val lineTotal = qty * product.price
-                        subtotal += lineTotal
-                        itemCount += qty
-                        Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                            Text(product.name, modifier = Modifier.weight(0.4f), fontSize = 10.sp)
-                            Text(qty.toString(), modifier = Modifier.weight(0.1f), fontSize = 10.sp, textAlign = TextAlign.Center)
-                            Text(String.format(Locale.US, "₱%,.2f", product.price), modifier = Modifier.weight(0.25f), fontSize = 10.sp, textAlign = TextAlign.End)
-                            Text(String.format(Locale.US, "₱%,.2f", lineTotal), modifier = Modifier.weight(0.25f), fontSize = 10.sp, textAlign = TextAlign.End)
+                        Row(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(product.name, modifier = Modifier.weight(0.5f), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                            Text(qty.toString(), modifier = Modifier.weight(0.15f), fontSize = 11.sp, textAlign = TextAlign.Center, fontWeight = FontWeight.Black)
+                            Text(String.format(Locale.US, "₱%,.2f", lineTotal), modifier = Modifier.weight(0.35f), fontSize = 11.sp, textAlign = TextAlign.End, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
                         }
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
-                DetailValueRow("Total Items:", cart.values.sum().toString())
-                DetailValueRow("Subtotal:", String.format(Locale.US, "₱ %,.2f", cart.entries.sumOf { entry -> (products.find { it.id == entry.key }?.price ?: 0.0) * entry.value }))
-                DetailValueRow("Delivery:", "₱ 0.00")
-                DetailValueRow("Total Amount:", String.format(Locale.US, "₱ %,.2f", cart.entries.sumOf { entry -> (products.find { it.id == entry.key }?.price ?: 0.0) * entry.value }), isBold = true)
+                DetailValueRow("Subtotal (VAT Inc)", String.format(Locale.US, "₱%,.2f", subtotal))
+                DetailValueRow("Less Discount", String.format(Locale.US, "-₱%,.2f", discount), color = GasTrackRed)
+                DetailValueRow("Less VAT (12%)", String.format(Locale.US, "₱%,.2f", vat))
+                DetailValueRow("Amount Net of VAT", String.format(Locale.US, "₱%,.2f", netOfVat))
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Customer Details", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text("Name: ${customer?.name ?: "Walk-in"}", fontSize = 12.sp)
-                if (customer != null) {
-                    Text("Phone: ${customer.phone}", fontSize = 12.sp)
-                    Text("Address: ${customer.address}", fontSize = 12.sp)
-                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = Color(0xFFF1F3F4))
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                DetailValueRow("Payment ID:", "PM-001")
-                DetailValueRow("Payment Method:", "Cash")
+                DetailValueRow("TOTAL AMOUNT DUE", String.format(Locale.US, "₱%,.2f", totalAmount), isBold = true, color = GasTrackRed)
                 
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = onDismiss, 
-                    modifier = Modifier.fillMaxWidth(), 
-                    shape = RoundedCornerShape(8.dp), 
-                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
-                ) {
-                    Text("Close & Print Receipt")
+                Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) {
+                    Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Close & Print Receipt", fontWeight = FontWeight.Black, fontSize = 14.sp)
                 }
             }
         }
@@ -600,69 +1248,997 @@ fun OrderDetailsPopup(
 }
 
 @Composable
-fun DetailValueRow(label: String, value: String, isBold: Boolean = false) {
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = label, fontSize = 13.sp, fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal)
-        Text(text = value, fontSize = 13.sp, fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal)
+fun HeldCartsModalDialog(
+    heldCarts: List<HeldCartData>,
+    onDismiss: () -> Unit,
+    onRestore: (HeldCartData) -> Unit,
+    onDiscard: (HeldCartData) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.fillMaxWidth(0.95f)) {
+            Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Held Transactions", fontSize = 20.sp, fontWeight = FontWeight.Black, color = TextDark)
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (heldCarts.isEmpty()) {
+                    Text("No held transactions.", fontSize = 13.sp, color = TextGray, modifier = Modifier.padding(vertical = 20.dp))
+                } else {
+                    heldCarts.forEach { held ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFF8F9FA),
+                            border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(held.timestamp, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                    Text(String.format(Locale.US, "₱%,.2f", held.totalAmount), fontSize = 13.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("${held.items.values.sum()} item(s) • ${held.customerType}", fontSize = 11.sp, color = TextGray)
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(onClick = { onRestore(held) }, modifier = Modifier.weight(1f).height(36.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) {
+                                        Text("Restore", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    OutlinedButton(onClick = { onDiscard(held) }, modifier = Modifier.weight(1f).height(36.dp), shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, GasTrackRed)) {
+                                        Text("Discard", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = GasTrackRed)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PickupDetailsModalDialog(
+    pickupDate: String,
+    pickupTime: String,
+    selectedCustomer: POSCustomerData?,
+    customers: List<POSCustomerData>,
+    onCustomerSelect: (POSCustomerData) -> Unit,
+    onAddNewCustomer: () -> Unit = {},
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var date by remember { mutableStateOf(pickupDate) }
+    var time by remember { mutableStateOf(pickupTime) }
+    var searchQuery by remember { mutableStateOf("") }
+    
+    // Automatically track updates to the selectedCustomer from the parent (e.g. when a new one is added)
+    var currentSelectedCustomer by remember(selectedCustomer) { mutableStateOf(selectedCustomer) }
+
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+
+    val filteredCustomers = if (searchQuery.trim().isEmpty()) {
+        emptyList()
+    } else {
+        customers.filter {
+            it.name.contains(searchQuery, ignoreCase = true) || it.phone.contains(searchQuery)
+        }
+    }
+
+    // Native Calendar Date Picker Dialog
+    val datePickerDialog = android.app.DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            date = String.format(Locale.US, "%02d/%02d/%04d", month + 1, dayOfMonth, year)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    // Native Clock Time Picker Dialog
+    val timePickerDialog = android.app.TimePickerDialog(
+        context,
+        { _, hourOfDay, minute ->
+            val amPm = if (hourOfDay >= 12) "PM" else "AM"
+            val hour12 = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
+            time = String.format(Locale.US, "%02d:%02d %s", hour12, minute, amPm)
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        false
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth(0.98f)
+                .shadow(12.dp, RoundedCornerShape(12.dp))
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Pickup Details",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = TextDark,
+                            maxLines = 1
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextDark,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Search Customer Section
+                Text(
+                    text = "Search Customer",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Search Customer...", color = Color(0xFF9CA3AF), fontSize = 12.sp) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = Color(0xFF9CA3AF),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                        focusedBorderColor = StaffPortalButtonBlue
+                    ),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                )
+
+                // Search Results Dropdown List
+                if (filteredCustomers.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFF9FAFB),
+                        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                    ) {
+                        Column {
+                            filteredCustomers.forEach { cust ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            currentSelectedCustomer = cust
+                                            onCustomerSelect(cust)
+                                            searchQuery = ""
+                                        }
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(cust.name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                        Text(cust.phone, fontSize = 10.sp, color = TextGray)
+                                    }
+                                    Surface(
+                                        color = StaffPortalButtonBlue.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text("Select", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue)
+                                    }
+                                }
+                                HorizontalDivider(color = Color(0xFFE5E7EB))
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Move Add New Customer Button here
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    TextButton(
+                        onClick = onAddNewCustomer,
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                        modifier = Modifier.height(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            tint = StaffPortalButtonBlue,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Add New Customer",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = StaffPortalButtonBlue
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // SELECTED CUSTOMER Card Box
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "SELECTED CUSTOMER",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF64748B),
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = currentSelectedCustomer?.name ?: "No customer selected",
+                            fontSize = 12.sp,
+                            fontWeight = if (currentSelectedCustomer != null) FontWeight.Bold else FontWeight.Normal,
+                            color = if (currentSelectedCustomer != null) TextDark else Color(0xFF94A3B8)
+                        )
+                        Text(
+                            text = currentSelectedCustomer?.phone ?: "—",
+                            fontSize = 11.sp,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Pickup Schedule Section
+                Text(
+                    text = "Pickup Schedule",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Date Column
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Date", fontSize = 11.sp, color = TextGray)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = date,
+                            onValueChange = {},
+                            readOnly = true,
+                            placeholder = { Text("mm/dd/yyyy", color = Color(0xFF9CA3AF), fontSize = 11.sp) },
+                            trailingIcon = {
+                                IconButton(onClick = { datePickerDialog.show() }, modifier = Modifier.size(20.dp)) {
+                                    Icon(Icons.Default.CalendarToday, contentDescription = "Select Date", tint = TextDark, modifier = Modifier.size(16.dp))
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { datePickerDialog.show() },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color(0xFFD1D5DB),
+                                focusedBorderColor = StaffPortalButtonBlue
+                            ),
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                        )
+                    }
+
+                    // Time Column
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Time (8 AM – 6 PM)", fontSize = 11.sp, color = TextGray)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = time,
+                            onValueChange = {},
+                            readOnly = true,
+                            placeholder = { Text("--:-- --", color = Color(0xFF9CA3AF), fontSize = 11.sp) },
+                            trailingIcon = {
+                                IconButton(onClick = { timePickerDialog.show() }, modifier = Modifier.size(20.dp)) {
+                                    Icon(Icons.Default.Schedule, contentDescription = "Select Time", tint = TextDark, modifier = Modifier.size(16.dp))
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { timePickerDialog.show() },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color(0xFFD1D5DB),
+                                focusedBorderColor = StaffPortalButtonBlue
+                            ),
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+                HorizontalDivider(color = Color(0xFFE5E7EB))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Text("Cancel", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Button(
+                        onClick = {
+                            if (currentSelectedCustomer != null) {
+                                onCustomerSelect(currentSelectedCustomer!!)
+                            }
+                            onSave(date, time)
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Text("Save Pickup Details", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DeliveryDetailsModalDialog(
+    deliveryAddress: String,
+    instructions: String,
+    vehicleType: String,
+    assignedRider: String,
+    selectedCustomer: POSCustomerData?,
+    customers: List<POSCustomerData>,
+    onCustomerSelect: (POSCustomerData) -> Unit,
+    onAddNewCustomer: () -> Unit = {},
+    onDismiss: () -> Unit,
+    onSave: (String, String, String, String) -> Unit
+) {
+    var addr by remember(selectedCustomer) { mutableStateOf(deliveryAddress.ifEmpty { selectedCustomer?.address ?: "" }) }
+    var inst by remember { mutableStateOf(instructions) }
+    var vehicle by remember { mutableStateOf(vehicleType) }
+    var rider by remember { mutableStateOf(assignedRider) }
+    var searchQuery by remember { mutableStateOf("") }
+    var currentSelectedCustomer by remember(selectedCustomer) { mutableStateOf(selectedCustomer) }
+
+    var expandedVehicle by remember { mutableStateOf(false) }
+    var expandedRider by remember { mutableStateOf(false) }
+
+    val vehicles = listOf("Motor", "Tricycle", "Truck")
+    val riders = listOf("EMP-005 (Juan)", "EMP-006 (Maria)", "EMP-007 (Andres)")
+
+    val filteredCustomers = if (searchQuery.trim().isEmpty()) {
+        emptyList()
+    } else {
+        customers.filter {
+            it.name.contains(searchQuery, ignoreCase = true) || it.phone.contains(searchQuery)
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth(0.98f)
+                .shadow(12.dp, RoundedCornerShape(12.dp))
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocalShipping,
+                            contentDescription = null,
+                            tint = StaffPortalButtonBlue,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Text(
+                            text = "Delivery Details",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = TextDark,
+                            maxLines = 1
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextDark,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Search Customer Section
+                Text(
+                    text = "Search Customer",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Search Customer...", color = Color(0xFF9CA3AF), fontSize = 12.sp) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = Color(0xFF9CA3AF),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                        focusedBorderColor = StaffPortalButtonBlue
+                    ),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                )
+
+                // Search Results Dropdown List
+                if (filteredCustomers.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFF9FAFB),
+                        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                    ) {
+                        Column {
+                            filteredCustomers.forEach { cust ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            currentSelectedCustomer = cust
+                                            onCustomerSelect(cust)
+                                            addr = cust.address // Auto-fill address
+                                            searchQuery = ""
+                                        }
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(cust.name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                        Text(cust.phone, fontSize = 10.sp, color = TextGray)
+                                    }
+                                    Surface(
+                                        color = StaffPortalButtonBlue.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text("Select", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue)
+                                    }
+                                }
+                                HorizontalDivider(color = Color(0xFFE5E7EB))
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Add New Customer Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    TextButton(
+                        onClick = onAddNewCustomer,
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                        modifier = Modifier.height(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            tint = StaffPortalButtonBlue,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Add New Customer",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = StaffPortalButtonBlue
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // SELECTED CUSTOMER Card Box
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "SELECTED CUSTOMER",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF64748B),
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = currentSelectedCustomer?.name ?: "No customer selected",
+                            fontSize = 12.sp,
+                            fontWeight = if (currentSelectedCustomer != null) FontWeight.Bold else FontWeight.Normal,
+                            color = if (currentSelectedCustomer != null) TextDark else Color(0xFF94A3B8)
+                        )
+                        Text(
+                            text = currentSelectedCustomer?.phone ?: "—",
+                            fontSize = 11.sp,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text("Complete Address", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Text("*", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = GasTrackRed)
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+
+                OutlinedTextField(
+                    value = addr, onValueChange = { addr = it },
+                    modifier = Modifier.fillMaxWidth().height(80.dp),
+                    placeholder = { Text("House No., Street, Barangay, City, Landmark", fontSize = 12.sp, color = Color(0xFF9CA3AF)) },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color(0xFFE9ECEF),
+                        focusedBorderColor = StaffPortalButtonBlue
+                    ),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text("Delivery Instructions (Optional)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                Spacer(modifier = Modifier.height(6.dp))
+
+                OutlinedTextField(
+                    value = inst, onValueChange = { inst = it },
+                    modifier = Modifier.fillMaxWidth(), placeholder = { Text("e.g. Leave at guard house, call upon arrival", fontSize = 12.sp, color = Color(0xFF9CA3AF)) },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color(0xFFE9ECEF),
+                        focusedBorderColor = StaffPortalButtonBlue
+                    ),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Vehicle Type", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedButton(
+                                onClick = { expandedVehicle = true },
+                                modifier = Modifier.fillMaxWidth().height(42.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(vehicle, fontSize = 12.sp, color = TextDark, fontWeight = FontWeight.Normal)
+                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = TextDark, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                            DropdownMenu(expanded = expandedVehicle, onDismissRequest = { expandedVehicle = false }, modifier = Modifier.background(Color.White)) {
+                                vehicles.forEach { v ->
+                                    DropdownMenuItem(text = { Text(v, fontSize = 13.sp) }, onClick = { vehicle = v; expandedVehicle = false })
+                                }
+                            }
+                        }
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Assign Rider", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedButton(
+                                onClick = { expandedRider = true },
+                                modifier = Modifier.fillMaxWidth().height(42.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(rider, fontSize = 12.sp, color = TextDark, fontWeight = FontWeight.Normal, maxLines = 1)
+                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = TextDark, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                            DropdownMenu(expanded = expandedRider, onDismissRequest = { expandedRider = false }, modifier = Modifier.background(Color.White)) {
+                                riders.forEach { r ->
+                                    DropdownMenuItem(text = { Text(r, fontSize = 13.sp) }, onClick = { rider = r; expandedRider = false })
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+                HorizontalDivider(color = Color(0xFFE5E7EB))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Text("Cancel", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Button(
+                        onClick = {
+                            if (currentSelectedCustomer != null) {
+                                onCustomerSelect(currentSelectedCustomer!!)
+                            }
+                            onSave(addr, inst, vehicle, rider)
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Text("Save Delivery Details", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun AddCustomerDialog(
-    onDismiss: () -> Unit,
-    onAdd: (String, String, String) -> Unit
+    customer: POSCustomerData? = null,
+    onDismiss: () -> Unit, 
+    onAdd: (String, String, String, String, String) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(customer?.name ?: "") }
+    var phone by remember { mutableStateOf(customer?.phone ?: "") }
+    var address by remember { mutableStateOf(customer?.address ?: "") }
+    var customerType by remember { mutableStateOf(customer?.customerType ?: "Residential") }
+    var expandedCustomerType by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(16.dp), color = Color.White, modifier = Modifier.fillMaxWidth()) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth(0.98f)
+                .shadow(12.dp, RoundedCornerShape(12.dp))
+        ) {
             Column(
                 modifier = Modifier
-                    .padding(24.dp)
+                    .padding(20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Text("Add New Customer", fontSize = 20.sp, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (customer == null) "Add Customer" else "Edit Customer",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextDark
+                    )
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextDark,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Full Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone Number") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = { Text("Address") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
-                )
+                // Customer Name
+                Column {
+                    Text("Customer Name", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Name", color = Color(0xFF9CA3AF), fontSize = 13.sp) },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = StaffPortalButtonBlue
+                        ),
+                        singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Phone Number
+                Column {
+                    Text("Phone Number", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Phone Number", color = Color(0xFF9CA3AF), fontSize = 13.sp) },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = StaffPortalButtonBlue
+                        ),
+                        singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Address
+                Column {
+                    Text("Address", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = address,
+                        onValueChange = { address = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Street, Brgy, City, Province, Zip Code", color = Color(0xFF9CA3AF), fontSize = 13.sp) },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = StaffPortalButtonBlue
+                        ),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                    )
+                }
                 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Customer Type Dropdown
+                Column {
+                    Text("Customer Type", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = customerType,
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { expandedCustomerType = true },
+                            trailingIcon = {
+                                IconButton(onClick = { expandedCustomerType = true }, modifier = Modifier.size(20.dp)) {
+                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = TextDark, modifier = Modifier.size(20.dp))
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color(0xFFD1D5DB),
+                                focusedBorderColor = StaffPortalButtonBlue
+                            ),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                        )
+                        DropdownMenu(
+                            expanded = expandedCustomerType,
+                            onDismissRequest = { expandedCustomerType = false },
+                            modifier = Modifier.fillMaxWidth(0.85f).background(Color.White)
+                        ) {
+                            listOf("Residential", "Commercial").forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                                    onClick = {
+                                        customerType = type
+                                        expandedCustomerType = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) { Text("Cancel") }
+                
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Text("Cancel", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
                     Button(
                         enabled = name.isNotEmpty() && phone.isNotEmpty(),
-                        onClick = { onAdd(name, phone, address) }, 
-                        modifier = Modifier.weight(1f), 
-                        shape = RoundedCornerShape(8.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
-                    ) { 
-                        Text("Add Customer") 
+                        onClick = { onAdd(name, phone, address, customerType, customer?.status ?: "Active") },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Text("Save", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ViewCustomerDialog(customer: POSCustomerData, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.95f).wrapContentHeight(), 
+            shape = RoundedCornerShape(16.dp), 
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(modifier = Modifier.size(50.dp), shape = RoundedCornerShape(12.dp), color = StaffPortalButtonBlue.copy(alpha = 0.1f)) {
+                            Box(contentAlignment = Alignment.Center) { Text(text = customer.initials, color = StaffPortalButtonBlue, fontWeight = FontWeight.Black, fontSize = 18.sp) }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(text = customer.name, fontWeight = FontWeight.Black, fontSize = 18.sp, color = TextDark)
+                            Text(text = "Customer ID: C-${customer.id.toString().padStart(4, '0')}", fontSize = 11.sp, color = TextGray)
+                        }
+                    }
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider(color = Color(0xFFF1F3F4))
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                DetailValueRow("Customer Type", customer.customerType, isBold = true)
+                DetailValueRow("Contact Number", customer.phone)
+                DetailValueRow("Complete Address", customer.address)
+                DetailValueRow("Account Status", customer.status, color = if (customer.status == "Active") Color(0xFF2E7D32) else GasTrackRed)
+                DetailValueRow("Registered By", customer.registeredBy)
+                DetailValueRow("Last Transaction", customer.lastOrder)
+
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                ) {
+                    Text("Close Summary", fontWeight = FontWeight.Black)
                 }
             }
         }
