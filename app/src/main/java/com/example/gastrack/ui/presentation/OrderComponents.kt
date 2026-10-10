@@ -3,16 +3,15 @@ package com.example.gastrack.ui.presentation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -26,6 +25,24 @@ import androidx.compose.ui.unit.sp
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 import java.util.Locale
+
+// Unified, shared lifecycle runtime single state object for client persistence
+object SharedCartState {
+    val cart = mutableStateMapOf<Int, Int>()
+}
+
+// Master Data class for all LPG products in the system
+data class POSProductData(
+    val id: Int,
+    val name: String,
+    val price: Double,
+    val imageRes: Int,
+    val stock: Int,
+    val brand: String,
+    val category: String,
+    val warehouseName: String = "Pasig Warehouse",
+    val isPopular: Boolean = false
+)
 
 data class Product(
     val id: Int,
@@ -58,7 +75,6 @@ fun ProductCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Product Image with stylized background
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -174,8 +190,6 @@ fun ProductCard(
                 colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
             ) {
-                Icon(Icons.Default.FlashOn, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
                 Text("BUY NOW", fontWeight = FontWeight.Black, fontSize = 15.sp)
             }
         }
