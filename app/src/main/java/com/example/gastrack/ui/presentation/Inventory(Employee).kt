@@ -101,13 +101,12 @@ fun InventoryEmployeeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InventoryStatCard("Critical Items", inventoryItems.count { it.status == "Critical" }.toString(), GasTrackRed)
-                    InventoryStatCard("Low Stock Items", inventoryItems.count { it.status == "Low Stock" }.toString(), Color(0xFFFFA000))
-                    InventoryStatCard("Normal Items", inventoryItems.count { it.status == "Normal" }.toString(), Color(0xFF2E7D32))
+                    InventoryStatCard("Critical", inventoryItems.count { it.status == "Critical" }.toString(), GasTrackRed, modifier = Modifier.weight(1f))
+                    InventoryStatCard("Low Stock", inventoryItems.count { it.status == "Low Stock" }.toString(), Color(0xFFFFA000), modifier = Modifier.weight(1f))
+                    InventoryStatCard("Normal", inventoryItems.count { it.status == "Normal" }.toString(), Color(0xFF2E7D32), modifier = Modifier.weight(1f))
                 }
             }
 
@@ -121,28 +120,27 @@ fun InventoryEmployeeScreen(
                 }
             }
 
-            item {
-                // --- Quick Action Buttons (Blue Theme) ---
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    InventoryQuickAction("Import Data", Icons.Default.CloudDownload) { /* Handle Import */ }
-                    InventoryQuickAction("Add Stock In", Icons.Default.Add) { showStockInForm = true }
-                    InventoryQuickAction("Add Stock Out", Icons.Default.Remove) { showStockOutForm = true }
-                    InventoryQuickAction("Adjustment", Icons.Default.Settings) { showAdjustmentForm = true }
-                }
-            }
-
-            item {
-                // --- Filter Controls ---
-                InventoryFiltersSection()
-            }
-
             if (selectedTab == "Inventory") {
+                item {
+                    // --- Quick Action Buttons (Blue Theme) ---
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        InventoryQuickAction("Import Data", Icons.Default.CloudDownload, modifier = Modifier.weight(1f)) { /* Handle Import */ }
+                        InventoryQuickAction("Stock In", Icons.Default.Add, modifier = Modifier.weight(1f)) { showStockInForm = true }
+                        InventoryQuickAction("Stock Out", Icons.Default.Remove, modifier = Modifier.weight(1f)) { showStockOutForm = true }
+                        InventoryQuickAction("Transfer", Icons.Default.Settings, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
+                    }
+                }
+
+                item {
+                    // --- Filter Controls ---
+                    InventoryFiltersSection()
+                }
+
                 items(inventoryItems) { item ->
                     InventoryCardMobile(
                         item = item,
@@ -155,6 +153,11 @@ fun InventoryEmployeeScreen(
                     )
                 }
             } else {
+                item {
+                    // --- Filter Controls for Transactions ---
+                    TransactionsFiltersSection()
+                }
+                
                 items(transactions) { trx ->
                     TransactionCardMobile(trx)
                 }
@@ -229,17 +232,19 @@ fun InventoryEmployeeScreen(
 }
 
 @Composable
-fun InventoryQuickAction(text: String, icon: ImageVector, onClick: () -> Unit) {
+fun InventoryQuickAction(text: String, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
         shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
-        modifier = Modifier.height(38.dp)
+        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+        modifier = modifier.height(44.dp)
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(text = text, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = text, fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        }
     }
 }
 
@@ -263,6 +268,15 @@ fun InventoryFiltersSection() {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterDropdown("All Warehouse", Modifier.weight(1f))
             FilterDropdown("Inventory Status", Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+fun TransactionsFiltersSection() {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterDropdown("All Types", Modifier.weight(1f))
         }
     }
 }

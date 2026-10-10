@@ -314,10 +314,9 @@ fun ActionFeedbackDialog(message: String, onDismiss: () -> Unit) {
 }
 
 @Composable
-fun InventoryStatCard(label: String, value: String, color: Color) {
+fun InventoryStatCard(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Surface(
-        modifier = Modifier
-            .width(160.dp)
+        modifier = modifier
             .shadow(4.dp, RoundedCornerShape(16.dp)),
         color = Color.White,
         shape = RoundedCornerShape(16.dp)
