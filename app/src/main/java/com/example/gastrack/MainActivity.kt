@@ -110,15 +110,6 @@ fun AppNavigation() {
             DashboardEmployeeScreen(
                 onNavigateToMenu = {
                     navController.navigate("employee_menu")
-                },
-                onNavigateToInventory = {
-                    navController.navigate("employee_inventory")
-                },
-                onNavigateToRestocking = {
-                    navController.navigate("employee_restocking")
-                },
-                onNavigateToNotifications = {
-                    navController.navigate("notifications")
                 }
             )
         }
