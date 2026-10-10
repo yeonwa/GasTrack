@@ -28,24 +28,51 @@ import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 import java.util.Locale
 
+data class CartItemData(
+    val id: Int,
+    val name: String,
+    val price: Int,
+    val imageRes: Int,
+    val quantity: Int
+)
+
 @Composable
 fun CartScreen(
     onBack: () -> Unit,
     onNavigateToCheckout: () -> Unit,
     onContinueShopping: () -> Unit
 ) {
-    // Sample Cart Items for UI Demo
-    val cartItems = remember {
-        mutableStateListOf(
-            CartItemData(1, "11kg Standard Refill", 950, R.drawable.tank_11kg, 1),
-            CartItemData(2, "2.7kg Camping Refill", 280, R.drawable.tank_2_7kg, 2)
-        )
+    // Shared Runtime state connection mapping
+    val cart = SharedCartState.cart
+
+    // High fidelity global product reference directory map
+    val allProductsReference = listOf(
+        Product(1, "11kg Standard Refill", "Refill only", 1150, R.drawable.tank_11kg, 20, "Petron"),
+        Product(2, "2.7kg Camping Refill", "Portable size", 350, R.drawable.tank_2_7kg, 15, "Petron"),
+        Product(3, "50kg Commercial Refill", "Bulk usage", 8500, R.drawable.tank_50kg, 10, "Petron"),
+        Product(4, "11kg Standard Tank", "New cylinder", 1150, R.drawable.tank_11kg, 20, "Solane"),
+        Product(5, "2.7kg Camping Tank", "Small cylinder", 350, R.drawable.tank_2_7kg, 15, "M-Gas"),
+        Product(6, "50kg Commercial Tank", "Heavy duty", 8500, R.drawable.tank_50kg, 10, "Phoenix")
+    )
+
+    // Build the dynamic cart contents directly out of the live additions
+    val currentCartItems = cart.entries.mapNotNull { entry ->
+        val product = allProductsReference.find { it.id == entry.key }
+        if (product != null) {
+            CartItemData(
+                id = product.id,
+                name = product.name,
+                price = product.price,
+                imageRes = product.imageRes,
+                quantity = entry.value
+            )
+        } else null
     }
 
-    val subtotal = cartItems.sumOf { it.price * it.quantity }
-    val deliveryCharge = if (cartItems.isEmpty()) 0 else 30
+    val subtotal = currentCartItems.sumOf { it.price * it.quantity }
+    val deliveryCharge = if (currentCartItems.isEmpty()) 0 else 50
     val totalAmount = subtotal + deliveryCharge
-    val totalItems = cartItems.sumOf { it.quantity }
+    val totalItems = currentCartItems.sumOf { it.quantity }
 
     Scaffold(
         containerColor = Color(0xFFFBFBFE),
@@ -78,7 +105,7 @@ fun CartScreen(
             }
         },
         bottomBar = {
-            if (cartItems.isNotEmpty()) {
+            if (currentCartItems.isNotEmpty()) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shadowElevation = 16.dp,
@@ -95,7 +122,7 @@ fun CartScreen(
                                 .fillMaxWidth()
                                 .height(60.dp),
                             shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalBlue),
+                            colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                         ) {
                             Text(
@@ -115,7 +142,7 @@ fun CartScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (cartItems.isEmpty()) {
+            if (currentCartItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(80.dp), tint = Color.LightGray)
@@ -133,27 +160,23 @@ fun CartScreen(
                     contentPadding = PaddingValues(24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(cartItems) { item ->
+                    items(currentCartItems) { item ->
                         CartItemCard(
                             item = item,
                             onQuantityChange = { newQty ->
-                                val index = cartItems.indexOf(item)
-                                if (index != -1) {
-                                    if (newQty <= 0) {
-                                        cartItems.removeAt(index)
-                                    } else {
-                                        cartItems[index] = item.copy(quantity = newQty)
-                                    }
+                                if (newQty <= 0) {
+                                    cart.remove(item.id)
+                                } else {
+                                    cart[item.id] = newQty
                                 }
                             },
-                            onRemove = { cartItems.remove(item) }
+                            onRemove = { cart.remove(item.id) }
                         )
                     }
 
                     item { Spacer(modifier = Modifier.height(8.dp)) }
 
                     item {
-                        // Summary Section
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -170,10 +193,34 @@ fun CartScreen(
                                     letterSpacing = 1.sp
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
-                                SummaryRow("Total Items", totalItems.toString())
-                                SummaryRow("Subtotal", "₱${String.format(Locale.US, "%,.2f", subtotal.toDouble())}")
-                                SummaryRow("Delivery Charge", "₱${String.format(Locale.US, "%,.2f", deliveryCharge.toDouble())}")
-                                SummaryRow("Discount", "-₱0.00", isDiscount = true)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Total Items", fontSize = 14.sp, color = TextGray, fontWeight = FontWeight.Medium)
+                                    Text(text = totalItems.toString(), fontSize = 14.sp, fontWeight = FontWeight.Black, color = TextDark)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Subtotal", fontSize = 14.sp, color = TextGray, fontWeight = FontWeight.Medium)
+                                    Text(text = "₱${String.format(Locale.US, "%,d", subtotal)}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = TextDark)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Delivery Charge", fontSize = 14.sp, color = TextGray, fontWeight = FontWeight.Medium)
+                                    Text(text = "₱${String.format(Locale.US, "%,d", deliveryCharge)}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = TextDark)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "Discount", fontSize = 14.sp, color = TextGray, fontWeight = FontWeight.Medium)
+                                    Text(text = "-₱0", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color(0xFF2E7D32))
+                                }
                                 
                                 Spacer(modifier = Modifier.height(16.dp))
                                 HorizontalDivider(color = Color(0xFFF1F3F4))
@@ -186,10 +233,10 @@ fun CartScreen(
                                 ) {
                                     Text(text = "Total Amount", fontSize = 17.sp, fontWeight = FontWeight.Black, color = TextDark)
                                     Text(
-                                        text = "₱${String.format(Locale.US, "%,.2f", totalAmount.toDouble())}",
+                                        text = "₱${String.format(Locale.US, "%,d", totalAmount)}",
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Black,
-                                        color = GasTrackRed
+                                        color = ButtonOrange
                                     )
                                 }
                             }
@@ -204,7 +251,7 @@ fun CartScreen(
                             TextButton(onClick = onContinueShopping) {
                                 Text("Continue Shopping", color = GasTrackBlue, fontWeight = FontWeight.Bold)
                             }
-                            TextButton(onClick = { cartItems.clear() }) {
+                            TextButton(onClick = { cart.clear() }) {
                                 Text("Clear Cart", color = GasTrackRed, fontWeight = FontWeight.Bold)
                             }
                         }
@@ -230,7 +277,6 @@ fun CartItemCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Product Image
                 Surface(
                     modifier = Modifier.size(80.dp),
                     shape = RoundedCornerShape(16.dp),
@@ -250,10 +296,10 @@ fun CartItemCard(
                     Text(text = "Unit Price: ₱${item.price}", fontSize = 13.sp, color = TextGray, fontWeight = FontWeight.Medium)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Subtotal: ₱${String.format(Locale.US, "%,.2f", (item.price * item.quantity).toDouble())}",
+                        text = "Subtotal: ₱${String.format(Locale.US, "%,d", item.price * item.quantity)}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = StaffPortalBlue
+                        color = ButtonOrange
                     )
                 }
                 
@@ -276,30 +322,6 @@ fun CartItemCard(
                 )
             }
         }
-    }
-}
-
-data class CartItemData(
-    val id: Int,
-    val name: String,
-    val price: Int,
-    val imageRes: Int,
-    var quantity: Int
-)
-
-@Composable
-fun SummaryRow(label: String, value: String, isDiscount: Boolean = false) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label, fontSize = 14.sp, color = TextGray, fontWeight = FontWeight.Medium)
-        Text(
-            text = value, 
-            fontSize = 14.sp, 
-            fontWeight = FontWeight.Black, 
-            color = if (isDiscount) Color(0xFF2E7D32) else TextDark
-        )
     }
 }
 
