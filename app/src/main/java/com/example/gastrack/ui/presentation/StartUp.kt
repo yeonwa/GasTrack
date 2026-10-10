@@ -62,12 +62,14 @@ fun StartUpScreen(
                     "Home" -> StartUpHomeContent(
                         onNavigateToCustomer = onNavigateToCustomer,
                         onNavigateToEmployee = onNavigateToEmployee,
-                        onNavigateToRegisterCompany = onNavigateToRegisterCompany
+                        onNavigateToRegisterCompany = onNavigateToRegisterCompany,
+                        onNavigateToPrivacy = { selectedTab = "Privacy" },
+                        onNavigateToTerms = { selectedTab = "Terms" }
                     )
                     "About" -> StartUpAboutContent()
                     "Contact" -> StartUpContactContent()
-                    "Privacy" -> StartUpPrivacyContent()
-                    "Terms" -> StartUpTermsContent()
+                    "Privacy" -> StartUpPrivacyContent(onBack = { selectedTab = "Home" })
+                    "Terms" -> StartUpTermsContent(onBack = { selectedTab = "Home" })
                 }
             }
         }
@@ -129,7 +131,9 @@ fun StartUpTopBar(
 fun StartUpHomeContent(
     onNavigateToCustomer: () -> Unit,
     onNavigateToEmployee: () -> Unit,
-    onNavigateToRegisterCompany: () -> Unit
+    onNavigateToRegisterCompany: () -> Unit,
+    onNavigateToPrivacy: () -> Unit = {},
+    onNavigateToTerms: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -150,14 +154,15 @@ fun StartUpHomeContent(
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Welcome to GasTrack",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     color = GasTrackBlue,
-                    lineHeight = 26.sp
+                    lineHeight = 26.sp,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -167,7 +172,8 @@ fun StartUpHomeContent(
                     fontSize = 13.sp,
                     color = TextGray,
                     lineHeight = 18.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -264,7 +270,9 @@ fun StartUpHomeContent(
                     fontSize = 11.sp,
                     color = GasTrackBlue,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .clickable { onNavigateToPrivacy() }
                 )
                 Text(
                     text = " and ",
@@ -278,7 +286,9 @@ fun StartUpHomeContent(
                     fontSize = 11.sp,
                     color = GasTrackBlue,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .clickable { onNavigateToTerms() }
                 )
             }
         }
@@ -817,25 +827,30 @@ fun StartUpScreenPreview() {
 }
 
 @Composable
-fun StartUpPrivacyContent() {
+fun StartUpPrivacyContent(onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text(
-            text = "PRIVACY POLICY",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Black,
-            color = GasTrackBlue
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack, modifier = Modifier.padding(end = 12.dp).size(24.dp)) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
+            }
+            Text(
+                text = "PRIVACY POLICY",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black,
+                color = GasTrackBlue
+            )
+        }
         Text(
             text = "Last updated October 08, 2026",
             fontSize = 12.sp,
             color = TextGray,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
         )
 
         Text(
@@ -940,25 +955,30 @@ fun StartUpPrivacyContent() {
 }
 
 @Composable
-fun StartUpTermsContent() {
+fun StartUpTermsContent(onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text(
-            text = "TERMS OF SERVICE",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Black,
-            color = GasTrackBlue
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack, modifier = Modifier.padding(end = 12.dp).size(24.dp)) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
+            }
+            Text(
+                text = "TERMS OF SERVICE",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black,
+                color = GasTrackBlue
+            )
+        }
         Text(
             text = "Last updated October 08, 2026",
             fontSize = 12.sp,
             color = TextGray,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
         )
 
         Text(
