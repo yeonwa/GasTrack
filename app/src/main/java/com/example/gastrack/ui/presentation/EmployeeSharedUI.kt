@@ -317,14 +317,15 @@ fun ActionFeedbackDialog(message: String, onDismiss: () -> Unit) {
 fun InventoryStatCard(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
+            .height(100.dp)
             .shadow(4.dp, RoundedCornerShape(16.dp)),
         color = Color.White,
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = label, fontSize = 12.sp, color = TextGray, fontWeight = FontWeight.Medium)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = value, fontSize = 24.sp, color = color, fontWeight = FontWeight.Black)
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.Center) {
+            Text(text = label, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 2, lineHeight = 14.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = value, fontSize = 22.sp, color = color, fontWeight = FontWeight.Black)
         }
     }
 }

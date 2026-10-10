@@ -30,9 +30,12 @@ import com.example.gastrack.ui.theme.*
 data class InventoryItemData(
     val id: String,
     val productID: String,
+    val productName: String,
     val warehouseName: String,
     val stockOnHand: Int,
+    val emptyStock: Int,
     val reorderLimit: Int,
+    val isTank: Boolean,
     val status: String // Normal, Critical, Low Stock
 )
 
@@ -66,11 +69,11 @@ fun InventoryEmployeeScreen(
     var itemToDelete by remember { mutableStateOf<InventoryItemData?>(null) }
 
     val inventoryItems = remember { mutableStateListOf(
-        InventoryItemData("P-001", "P-001", "Pasig", 50, 10, "Normal"),
-        InventoryItemData("P-002", "P-002", "San Juan", 100, 10, "Normal"),
-        InventoryItemData("P-003", "P-003", "Pasig", 20, 20, "Critical"),
-        InventoryItemData("P-004", "P-004", "San Juan", 34, 10, "Normal"),
-        InventoryItemData("P-005", "P-005", "San Juan", 60, 20, "Low Stock")
+        InventoryItemData("INV-001", "P-001", "Gasul LPG 2.7 kg", "Pasig", 50, 10, 10, true, "Normal"),
+        InventoryItemData("INV-002", "P-002", "Gasul LPG 7 kg", "San Juan", 100, 20, 10, true, "Normal"),
+        InventoryItemData("INV-003", "P-003", "LPG Hose Clamp", "Pasig", 20, 0, 20, false, "Critical"),
+        InventoryItemData("INV-004", "P-004", "Gasul LPG 11 kg", "San Juan", 34, 15, 10, true, "Normal"),
+        InventoryItemData("INV-005", "P-005", "POL Regulator", "San Juan", 60, 0, 20, false, "Low Stock")
     ) }
 
     val transactions = remember { mutableStateListOf(
@@ -104,9 +107,10 @@ fun InventoryEmployeeScreen(
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InventoryStatCard("Critical", inventoryItems.count { it.status == "Critical" }.toString(), GasTrackRed, modifier = Modifier.weight(1f))
-                    InventoryStatCard("Low Stock", inventoryItems.count { it.status == "Low Stock" }.toString(), Color(0xFFFFA000), modifier = Modifier.weight(1f))
-                    InventoryStatCard("Normal", inventoryItems.count { it.status == "Normal" }.toString(), Color(0xFF2E7D32), modifier = Modifier.weight(1f))
+                    InventoryStatCard("Out of Stock Items", inventoryItems.count { it.status == "Out of Stock" }.toString(), Color(0xFF991B1B), modifier = Modifier.weight(1f))
+                    InventoryStatCard("Critical Items", inventoryItems.count { it.status == "Critical" }.toString(), GasTrackRed, modifier = Modifier.weight(1f))
+                    InventoryStatCard("Low Stock Items", inventoryItems.count { it.status == "Low Stock" }.toString(), Color(0xFFFFA000), modifier = Modifier.weight(1f))
+                    InventoryStatCard("Normal Items", inventoryItems.count { it.status == "Normal" }.toString(), Color(0xFF2E7D32), modifier = Modifier.weight(1f))
                 }
             }
 
@@ -129,10 +133,11 @@ fun InventoryEmployeeScreen(
                             .padding(top = 16.dp, start = 16.dp, end = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        InventoryQuickAction("Import Data", Icons.Default.CloudDownload, modifier = Modifier.weight(1f)) { /* Handle Import */ }
+                        InventoryQuickAction("CSV", Icons.Default.FileDownload, modifier = Modifier.weight(1f)) { /* Download Template */ }
+                        InventoryQuickAction("Import", Icons.Default.FileUpload, modifier = Modifier.weight(1f)) { /* Handle Import */ }
                         InventoryQuickAction("Stock In", Icons.Default.Add, modifier = Modifier.weight(1f)) { showStockInForm = true }
-                        InventoryQuickAction("Stock Out", Icons.Default.Remove, modifier = Modifier.weight(1f)) { showStockOutForm = true }
-                        InventoryQuickAction("Transfer", Icons.Default.Settings, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
+                        InventoryQuickAction("Stock Out", Icons.Default.Add, modifier = Modifier.weight(1f)) { showStockOutForm = true }
+                        InventoryQuickAction("Transfer", Icons.Default.Add, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
                     }
                 }
 
@@ -235,15 +240,15 @@ fun InventoryEmployeeScreen(
 fun InventoryQuickAction(text: String, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0082FB)),
         shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
-        modifier = modifier.height(44.dp)
+        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
+        modifier = modifier.height(42.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = text, fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(text = text, fontSize = 8.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
         }
     }
 }
@@ -355,7 +360,7 @@ fun InventoryCardMobile(
                     Text(text = item.warehouseName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "Current Stock / Limit", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = "Filled / Limit", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
                     Text(text = "${item.stockOnHand} / ${item.reorderLimit}", fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
                 }
             }
@@ -394,8 +399,12 @@ fun InventoryDetailDialog(item: InventoryItemData, onDismiss: () -> Unit) {
                 
                 DetailValueRow("Inventory ID", item.id)
                 DetailValueRow("Product ID", item.productID, isBold = true)
+                DetailValueRow("Product Name", item.productName)
                 DetailValueRow("Warehouse", item.warehouseName, isBold = true)
-                DetailValueRow("Current Stock", item.stockOnHand.toString(), isBold = true, color = StaffPortalButtonBlue)
+                DetailValueRow("Filled / Sellable Stock", item.stockOnHand.toString(), isBold = true, color = StaffPortalButtonBlue)
+                if (item.isTank) {
+                    DetailValueRow("Empty Tanks", item.emptyStock.toString(), isBold = true, color = TextGray)
+                }
                 DetailValueRow("Reorder Limit", item.reorderLimit.toString(), color = GasTrackRed)
                 DetailValueRow("Current Status", item.status, color = if(item.status == "Normal") Color(0xFF2E7D32) else GasTrackRed)
                 
@@ -435,33 +444,78 @@ fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: 
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                EmployeeInputField(label = "STOCK ON HAND", value = stock, onValueChange = { if(it.all { char -> char.isDigit() }) stock = it }, placeholder = "0", icon = Icons.Default.Inventory)
-                Spacer(modifier = Modifier.height(16.dp))
-                EmployeeInputField(label = "REORDER LIMIT", value = limit, onValueChange = { if(it.all { char -> char.isDigit() }) limit = it }, placeholder = "0", icon = Icons.Default.NotificationsActive)
-                Spacer(modifier = Modifier.height(16.dp))
+                var action by remember { mutableStateOf("filled") }
                 
-                Text("STATUS", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                Spacer(modifier = Modifier.height(6.dp))
-                Box {
-                    OutlinedButton(
-                        onClick = { statusExpanded = true }, 
-                        modifier = Modifier.fillMaxWidth().height(48.dp), 
-                        shape = RoundedCornerShape(12.dp), 
-                        border = BorderStroke(1.dp, Color(0xFFE9ECEF))
-                    ) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(status, color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
+                if (item.isTank) {
+                    Text("STOCK ACTION", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    var actionExpanded by remember { mutableStateOf(false) }
+                    Box {
+                        OutlinedButton(
+                            onClick = { actionExpanded = true }, 
+                            modifier = Modifier.fillMaxWidth().height(48.dp), 
+                            shape = RoundedCornerShape(12.dp), 
+                            border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                        ) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    when(action) {
+                                        "filled" -> "Edit Filled Stock"
+                                        "set-empty" -> "Edit Empty Stock"
+                                        "refill" -> "Refill Empty Tanks"
+                                        else -> ""
+                                    }, 
+                                    color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp
+                                )
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
+                            }
+                        }
+                        DropdownMenu(expanded = actionExpanded, onDismissRequest = { actionExpanded = false }) {
+                            DropdownMenuItem(text = { Text("Edit Filled Stock", fontSize = 14.sp) }, onClick = { action = "filled"; stock = item.stockOnHand.toString(); actionExpanded = false })
+                            DropdownMenuItem(text = { Text("Edit Empty Stock", fontSize = 14.sp) }, onClick = { action = "set-empty"; stock = item.emptyStock.toString(); actionExpanded = false })
+                            if (item.emptyStock > 0) {
+                                DropdownMenuItem(text = { Text("Refill Empty Tanks", fontSize = 14.sp) }, onClick = { action = "refill"; stock = ""; actionExpanded = false })
+                            }
                         }
                     }
-                    DropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
-                        listOf("Normal", "Critical", "Low Stock").forEach { s ->
-                            DropdownMenuItem(text = { Text(s, fontSize = 14.sp) }, onClick = { status = s; statusExpanded = false })
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
+
+                val label = when(action) {
+                    "refill" -> "TANKS TO REFILL"
+                    "set-empty" -> "COUNTED EMPTY TANKS"
+                    else -> "NEW FILLED / SELLABLE STOCK QUANTITY"
+                }
+
+                EmployeeInputField(label = label, value = stock, onValueChange = { if(it.all { char -> char.isDigit() }) stock = it }, placeholder = "0", icon = Icons.Default.Inventory)
+                Spacer(modifier = Modifier.height(16.dp))
                 
-                Spacer(modifier = Modifier.height(32.dp))
+                if (action != "set-empty" && action != "refill") {
+                    EmployeeInputField(label = "REORDER LIMIT", value = limit, onValueChange = { if(it.all { char -> char.isDigit() }) limit = it }, placeholder = "0", icon = Icons.Default.NotificationsActive)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text("STATUS", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box {
+                        OutlinedButton(
+                            onClick = { statusExpanded = true }, 
+                            modifier = Modifier.fillMaxWidth().height(48.dp), 
+                            shape = RoundedCornerShape(12.dp), 
+                            border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                        ) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(status, color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
+                            }
+                        }
+                        DropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
+                            listOf("Normal", "Critical", "Low Stock").forEach { s ->
+                                DropdownMenuItem(text = { Text(s, fontSize = 14.sp) }, onClick = { status = s; statusExpanded = false })
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = onDismiss, 
@@ -472,12 +526,12 @@ fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: 
                         Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold) 
                     }
                     Button(
-                        onClick = { onSave(item.copy(stockOnHand = stock.toIntOrNull() ?: 0, reorderLimit = limit.toIntOrNull() ?: 0, status = status)) }, 
+                        onClick = { onSave(item.copy(stockOnHand = stock.toIntOrNull() ?: 0, reorderLimit = limit.toIntOrNull() ?: 0, status = status)) },
                         modifier = Modifier.weight(1f).height(44.dp), 
                         shape = RoundedCornerShape(10.dp), 
                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
                     ) { 
-                        Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Black) 
+                        Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Black)
                     }
                 }
             }
