@@ -3,7 +3,6 @@ package com.example.gastrack.ui.presentation
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -23,14 +22,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -43,10 +40,11 @@ import androidx.compose.ui.unit.sp
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAccountEmployeeScreen(
     onBack: () -> Unit,
-    onActivateAccount: () -> Unit
+    onActivateAccount: () -> Unit,
 ) {
     var employeeId by remember { mutableStateOf("") }
     var fullName by remember { mutableStateOf("") }
@@ -56,25 +54,20 @@ fun CreateAccountEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color(0xFFE2E8F0))
     ) {
-        // --- Header Section ---
+        EmployeePortalHeader(
+            title = "Request ID Activation",
+            onBack = onBack
+        )
+
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.offset(x = (-12).dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = TextDark
-                )
-            }
             
             // Side-by-side Logo Section (Faithful to Reference)
             Row(
@@ -183,13 +176,75 @@ fun CreateAccountEmployeeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            EmployeeInputField(
-                label = "JOB ROLE / DEPARTMENT",
-                value = jobRole,
-                onValueChange = { jobRole = it },
-                placeholder = "e.g. Inventory Staff",
-                icon = Icons.Default.Work
+            var expandedRole by remember { mutableStateOf(false) }
+            val roles = listOf(
+                "Admin",
+                "Manager",
+                "Operations Supervisor",
+                "Assistant Operations Supervisor",
+                "Store Supervisor",
+                "Assistant Store Supervisor",
+                "Stockman",
+                "Head Maintenance",
+                "Driver",
+                "Helper",
             )
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "JOB ROLE / DEPARTMENT",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    color = TextGray,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                )
+                ExposedDropdownMenuBox(
+                    expanded = expandedRole,
+                    onExpandedChange = { expandedRole = !expandedRole },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = jobRole,
+                        onValueChange = {},
+                        readOnly = true,
+                        placeholder = { Text("Select your role", color = Color.LightGray) },
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Default.Work, contentDescription = null, tint = StaffPortalButtonBlue)
+                        },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRole) },
+                        modifier = Modifier
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                            .fillMaxWidth()
+                            .shadow(4.dp, RoundedCornerShape(16.dp))
+                            .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFE9ECEF),
+                            focusedBorderColor = StaffPortalButtonBlue,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent
+                        ),
+                        singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedRole,
+                        onDismissRequest = { expandedRole = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
+                        roles.forEach { role ->
+                            DropdownMenuItem(
+                                text = { Text(text = role, fontWeight = FontWeight.Medium) },
+                                onClick = {
+                                    jobRole = role
+                                    expandedRole = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -205,7 +260,7 @@ fun CreateAccountEmployeeScreen(
                 )
                 OutlinedTextField(
                     value = securityPin,
-                    onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) securityPin = it },
+                    onValueChange = { if ((it.length <= 4) && it.all { char -> char.isDigit() }) securityPin = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(4.dp, RoundedCornerShape(16.dp))
@@ -269,49 +324,10 @@ fun CreateAccountEmployeeScreen(
     }
 }
 
-@Composable
-fun EmployeeInputField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    icon: ImageVector
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Black,
-            color = TextGray,
-            letterSpacing = 1.sp,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerShape(16.dp))
-                .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
-            placeholder = { Text(placeholder, color = Color.LightGray) },
-            leadingIcon = {
-                Icon(imageVector = icon, contentDescription = null, tint = StaffPortalButtonBlue)
-            },
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color(0xFFE9ECEF),
-                focusedBorderColor = StaffPortalButtonBlue,
-                unfocusedContainerColor = Color.Transparent,
-                focusedContainerColor = Color.Transparent
-            ),
-            singleLine = true,
-            textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
-        )
-    }
-}
+
 
 @Preview(showBackground = true)
 @Composable
 fun CreateAccountEmployeeScreenPreview() {
-    CreateAccountEmployeeScreen(onBack = {}, onActivateAccount = {})
+    CreateAccountEmployeeScreen(onBack = {}) {}
 }
