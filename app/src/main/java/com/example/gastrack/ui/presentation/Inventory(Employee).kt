@@ -1,11 +1,9 @@
 package com.example.gastrack.ui.presentation
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.gastrack.ui.theme.*
+import java.util.Locale
 
 // Data Models based on Dashboard Screenshots
 data class InventoryItemData(
@@ -342,6 +340,7 @@ fun TransactionsFiltersSection(
     }
 }
 
+@NonRestartableComposable
 @Composable
 fun FilterDropdown(
     options: List<String>,
@@ -750,7 +749,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                 
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                     @Composable
-                    fun FormRow(label: String, topAlign: Boolean = false, content: @Composable () -> Unit) {
+                    fun FormRow(label: String, content: @Composable () -> Unit) {
                         Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                             Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151), modifier = Modifier.padding(bottom = 4.dp))
                             Box(modifier = Modifier.fillMaxWidth()) { content() }
@@ -765,7 +764,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
@@ -784,7 +783,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
@@ -808,7 +807,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         )
                     }
 
-                    FormRow("Reason", topAlign = true) {
+                    FormRow("Reason") {
                         Column {
                             stockInReasons.forEach { r ->
                                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp).clickable { reason = r }) {
@@ -915,7 +914,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                                         onValueChange = {},
                                                         readOnly = true,
                                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(),
+                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                                         shape = RoundedCornerShape(8.dp),
                                                         textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark),
                                                         colors = OutlinedTextFieldDefaults.colors(
@@ -971,11 +970,11 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Column {
                                             Text(text = "Cost Price", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
-                                            Text(text = if(product != null) "₱ ${String.format("%.2f", cost)}" else "—", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                                            Text(text = if(product != null) "₱ ${String.format(Locale.US, "%.2f", cost)}" else "—", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextDark)
                                         }
                                         Column(horizontalAlignment = Alignment.End) {
                                             Text(text = "Subtotal", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
-                                            Text(text = "₱ ${String.format("%.2f", subtotal)}", fontSize = 12.sp, fontWeight = FontWeight.Black, color = TextDark)
+                                            Text(text = "₱ ${String.format(Locale.US, "%.2f", subtotal)}", fontSize = 12.sp, fontWeight = FontWeight.Black, color = TextDark)
                                         }
                                     }
                                 }
@@ -988,7 +987,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text("Total Items: $totalItems", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF374151))
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Estimated Cost: ₱ ${String.format("%.2f", estimatedCost)}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF374151))
+                    Text("Estimated Cost: ₱ ${String.format(Locale.US, "%.2f", estimatedCost)}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF374151))
                     Spacer(modifier = Modifier.height(28.dp))
                 }
                 
@@ -1071,7 +1070,7 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                 
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                     @Composable
-                    fun FormRow(label: String, topAlign: Boolean = false, content: @Composable () -> Unit) {
+                    fun FormRow(label: String, content: @Composable () -> Unit) {
                         Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                             Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151), modifier = Modifier.padding(bottom = 4.dp))
                             Box(modifier = Modifier.fillMaxWidth()) { content() }
@@ -1086,7 +1085,7 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
@@ -1105,7 +1104,7 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
@@ -1129,7 +1128,7 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         )
                     }
 
-                    FormRow("Reason", topAlign = true) {
+                    FormRow("Reason") {
                         Column {
                             stockOutReasons.forEach { r ->
                                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp).clickable { reason = r }) {
@@ -1234,7 +1233,7 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                                         onValueChange = {},
                                                         readOnly = true,
                                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(),
+                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                                         shape = RoundedCornerShape(8.dp),
                                                         textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark),
                                                         colors = OutlinedTextFieldDefaults.colors(
@@ -1321,11 +1320,11 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                             if (reason == "Other" && otherReason.isBlank()) { error = "Please provide details when Other reason is selected."; return@Button }
                             if (validItems.isEmpty()) { error = "Add at least one item with a product and quantity."; return@Button }
                             
-                            for (it in validItems) {
-                                val p = productMap[it.productId]
+                            validItems.forEach { item ->
+                                val p = productMap[item.productId]
                                 val available = p?.availableStock ?: 0
-                                if ((it.quantity.toIntOrNull() ?: 0) > available) {
-                                    error = "Cannot remove ${it.quantity} of \"${p?.name ?: it.productId}\" — only $available in stock."
+                                if ((item.quantity.toIntOrNull() ?: 0) > available) {
+                                    error = "Cannot remove ${item.quantity} of \"${p?.name ?: item.productId}\" — only $available in stock."
                                     return@Button
                                 }
                             }
@@ -1348,7 +1347,6 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    var stockType by remember { mutableStateOf("filled") }
     var fromWarehouseId by remember { mutableStateOf("") }
     var toWarehouseId by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("Completed") }
@@ -1407,7 +1405,7 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
@@ -1427,7 +1425,7 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
@@ -1447,7 +1445,7 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
@@ -1541,7 +1539,7 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                                         onValueChange = {},
                                                         readOnly = true,
                                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(),
+                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                                                         shape = RoundedCornerShape(8.dp),
                                                         textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark),
                                                         colors = OutlinedTextFieldDefaults.colors(
@@ -1627,11 +1625,11 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                             if (fromWarehouseId == toWarehouseId) { error = "Source and destination warehouses must be different."; return@Button }
                             if (validItems.isEmpty()) { error = "Add at least one product with quantity."; return@Button }
                             
-                            for (it in validItems) {
-                                val p = productMap[it.productId]
+                            validItems.forEach { item ->
+                                val p = productMap[item.productId]
                                 val available = p?.currentStock ?: 0
-                                if ((it.quantity.toIntOrNull() ?: 0) > available) {
-                                    error = "Cannot transfer ${it.quantity} of \"${p?.name ?: it.productId}\" — only $available in stock."
+                                if ((item.quantity.toIntOrNull() ?: 0) > available) {
+                                    error = "Cannot transfer ${item.quantity} of \"${p?.name ?: item.productId}\" — only $available in stock."
                                     return@Button
                                 }
                             }
