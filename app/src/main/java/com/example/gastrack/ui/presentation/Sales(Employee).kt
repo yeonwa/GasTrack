@@ -89,7 +89,6 @@ fun SalesEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = "Sales Analytics",
-            subtitle = "Performance Tracking",
             onBack = onBack
         )
 

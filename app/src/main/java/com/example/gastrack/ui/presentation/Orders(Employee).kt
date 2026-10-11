@@ -111,7 +111,6 @@ fun OrdersEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = if (mainTab == "Orders") "Orders Log" else "Logistics Queue",
-            subtitle = "Operations Management",
             onBack = onBack
         )
 

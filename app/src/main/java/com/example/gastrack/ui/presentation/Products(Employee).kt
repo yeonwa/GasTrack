@@ -91,7 +91,6 @@ fun ProductsEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = "Catalog Master",
-            subtitle = "Product Management",
             onBack = onBack
         )
 

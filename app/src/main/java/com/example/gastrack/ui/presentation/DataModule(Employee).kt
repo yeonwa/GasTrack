@@ -56,7 +56,6 @@ fun DataModuleEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = "Data & Reports",
-            subtitle = "System Intelligence",
             onBack = onBack
         )
 

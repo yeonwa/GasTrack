@@ -87,7 +87,6 @@ fun UsersEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = "User Accounts",
-            subtitle = "Access Management",
             onBack = onBack
         )
 

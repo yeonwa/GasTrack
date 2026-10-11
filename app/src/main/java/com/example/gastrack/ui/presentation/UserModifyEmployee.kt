@@ -70,7 +70,6 @@ fun UserModifyEmployeeScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             EmployeePortalHeader(
                 title = "Account Modification",
-                subtitle = "Security & Access",
                 onBack = onBack
             )
 

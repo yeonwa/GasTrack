@@ -97,7 +97,6 @@ fun RestockingEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = "Restocking",
-            subtitle = "Supply Chain Intelligence",
             onBack = onBack
         )
 

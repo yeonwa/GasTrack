@@ -72,7 +72,6 @@ fun SuppliersEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = "Suppliers",
-            subtitle = "Resource Management",
             onBack = onBack
         )
 

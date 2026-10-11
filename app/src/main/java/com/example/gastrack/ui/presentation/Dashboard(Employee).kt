@@ -45,8 +45,7 @@ fun DashboardEmployeeScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             EmployeePortalHeader(
-                title = "Hello Rei",
-                subtitle = "Operations Overview",
+                title = "Dashboard",
                 onBack = onNavigateToMenu
             )
 
