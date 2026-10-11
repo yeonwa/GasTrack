@@ -84,6 +84,14 @@ fun InventoryEmployeeScreen(
         InventoryTransactionData("T-005", "P-005", "Cylinder 7kg", "San Juan", "Out", 20, "POS", "01/01/2026", "U-003")
     ) }
 
+    // Inventory Filter States
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedWarehouse by remember { mutableStateOf("All Warehouse") }
+    var selectedStatus by remember { mutableStateOf("Inventory Status") }
+
+    // Transactions Filter States
+    var selectedTrxType by remember { mutableStateOf("All Types") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -91,7 +99,6 @@ fun InventoryEmployeeScreen(
     ) {
         EmployeePortalHeader(
             title = "Inventory",
-            subtitle = "Operations Management",
             onBack = onBack
         )
 
@@ -140,13 +147,28 @@ fun InventoryEmployeeScreen(
                         InventoryQuickAction("Transfer", Icons.Default.Add, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
                     }
                 }
+                
+                val filteredInventory = inventoryItems.filter {
+                    val matchesSearch = it.productName.contains(searchQuery, ignoreCase = true) || 
+                                        it.productID.contains(searchQuery, ignoreCase = true)
+                    val matchesWarehouse = selectedWarehouse == "All Warehouse" || it.warehouseName == selectedWarehouse
+                    val matchesStatus = selectedStatus == "Inventory Status" || it.status == selectedStatus
+                    matchesSearch && matchesWarehouse && matchesStatus
+                }
 
                 item {
                     // --- Filter Controls ---
-                    InventoryFiltersSection()
+                    InventoryFiltersSection(
+                        searchQuery = searchQuery,
+                        onSearchChange = { searchQuery = it },
+                        selectedWarehouse = selectedWarehouse,
+                        onWarehouseChange = { selectedWarehouse = it },
+                        selectedStatus = selectedStatus,
+                        onStatusChange = { selectedStatus = it }
+                    )
                 }
 
-                items(inventoryItems) { item ->
+                items(filteredInventory) { item ->
                     InventoryCardMobile(
                         item = item,
                         onView = { selectedItemForDetail = it },
@@ -158,12 +180,19 @@ fun InventoryEmployeeScreen(
                     )
                 }
             } else {
+                val filteredTransactions = transactions.filter {
+                    selectedTrxType == "All Types" || it.transactionType == selectedTrxType
+                }
+
                 item {
                     // --- Filter Controls for Transactions ---
-                    TransactionsFiltersSection()
+                    TransactionsFiltersSection(
+                        selectedType = selectedTrxType,
+                        onTypeChange = { selectedTrxType = it }
+                    )
                 }
                 
-                items(transactions) { trx ->
+                items(filteredTransactions) { trx ->
                     TransactionCardMobile(trx)
                 }
             }
@@ -188,10 +217,11 @@ fun InventoryEmployeeScreen(
     }
     
     if (showAdjustmentForm) {
-        // Shared logic with other forms or specific adjustment UI
-        showAdjustmentForm = false
-        successMessage = "Stock Adjustment applied successfully."
-        showSuccessDialog = true
+        TransferDialog(onDismiss = { showAdjustmentForm = false }) {
+            showAdjustmentForm = false
+            successMessage = "Stock Transfer processed successfully."
+            showSuccessDialog = true
+        }
     }
 
     if (selectedItemForDetail != null) {
@@ -254,10 +284,18 @@ fun InventoryQuickAction(text: String, icon: ImageVector, modifier: Modifier = M
 }
 
 @Composable
-fun InventoryFiltersSection() {
+fun InventoryFiltersSection(
+    searchQuery: String,
+    onSearchChange: (String) -> Unit,
+    selectedWarehouse: String,
+    onWarehouseChange: (String) -> Unit,
+    selectedStatus: String,
+    onStatusChange: (String) -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedTextField(
-            value = "", onValueChange = {},
+            value = searchQuery,
+            onValueChange = onSearchChange,
             modifier = Modifier.fillMaxWidth().height(52.dp),
             placeholder = { Text("Search Inventory by Product", color = Color.LightGray, fontSize = 13.sp) },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
@@ -271,36 +309,81 @@ fun InventoryFiltersSection() {
             singleLine = true
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterDropdown("All Warehouse", Modifier.weight(1f))
-            FilterDropdown("Inventory Status", Modifier.weight(1f))
+            FilterDropdown(
+                options = listOf("All Warehouse", "Pasig", "San Juan"),
+                selectedOption = selectedWarehouse,
+                onOptionSelected = onWarehouseChange,
+                modifier = Modifier.weight(1f)
+            )
+            FilterDropdown(
+                options = listOf("Inventory Status", "Normal", "Low Stock", "Critical"),
+                selectedOption = selectedStatus,
+                onOptionSelected = onStatusChange,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
 
 @Composable
-fun TransactionsFiltersSection() {
+fun TransactionsFiltersSection(
+    selectedType: String,
+    onTypeChange: (String) -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterDropdown("All Types", Modifier.weight(1f))
+            FilterDropdown(
+                options = listOf("All Types", "In", "Out", "Transfer", "Adjust"),
+                selectedOption = selectedType,
+                onOptionSelected = onTypeChange,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
 
 @Composable
-fun FilterDropdown(text: String, modifier: Modifier) {
-    Surface(
-        modifier = modifier.height(40.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-        color = Color.White
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+fun FilterDropdown(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .clickable { expanded = true },
+            shape = RoundedCornerShape(8.dp),
+            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+            color = Color.White
         ) {
-            Text(text = text, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1)
-            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray, modifier = Modifier.size(16.dp))
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = selectedOption, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1)
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray, modifier = Modifier.size(16.dp))
+            }
+        }
+        
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(text = option, fontSize = 12.sp) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }
@@ -384,38 +467,46 @@ fun InventoryCardMobile(
 fun InventoryDetailDialog(item: InventoryItemData, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.85f), 
-            shape = RoundedCornerShape(16.dp), 
+            modifier = Modifier.fillMaxWidth(0.85f).wrapContentHeight(), 
+            shape = RoundedCornerShape(12.dp), 
             color = Color.White
         ) {
             Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Inventory Item Details", fontSize = 20.sp, fontWeight = FontWeight.Black, color = TextDark)
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                    Text("Inventory Details", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF111827))
                     }
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
-                DetailValueRow("Inventory ID", item.id)
-                DetailValueRow("Product ID", item.productID, isBold = true)
-                DetailValueRow("Product Name", item.productName)
-                DetailValueRow("Warehouse", item.warehouseName, isBold = true)
-                DetailValueRow("Filled / Sellable Stock", item.stockOnHand.toString(), isBold = true, color = StaffPortalButtonBlue)
-                if (item.isTank) {
-                    DetailValueRow("Empty Tanks", item.emptyStock.toString(), isBold = true, color = TextGray)
+                @Composable
+                fun DetailRow(label: String, value: String) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        Text(text = "$label: ", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+                        Text(text = value, fontSize = 13.sp, color = Color(0xFF4B5563))
+                    }
                 }
-                DetailValueRow("Reorder Limit", item.reorderLimit.toString(), color = GasTrackRed)
-                DetailValueRow("Current Status", item.status, color = if(item.status == "Normal") Color(0xFF2E7D32) else GasTrackRed)
                 
-                Spacer(modifier = Modifier.height(32.dp))
+                DetailRow("Product ID", item.productID)
+                DetailRow("Product Name", item.productName)
+                DetailRow("Warehouse", item.warehouseName)
+                DetailRow("Current Stock", item.stockOnHand.toString())
+                if (item.isTank) {
+                    DetailRow("Empty Tanks", item.emptyStock.toString())
+                }
+                DetailRow("Reorder Limit", item.reorderLimit.toString())
+                DetailRow("Status", item.status)
+                DetailRow("Last Updated", "10/9/2026, 12:02:40 PM") // Mocked as per screenshot
+                
+                Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = onDismiss, 
-                    modifier = Modifier.fillMaxWidth().height(48.dp), 
-                    shape = RoundedCornerShape(10.dp), 
-                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                    modifier = Modifier.fillMaxWidth().height(44.dp), 
+                    shape = RoundedCornerShape(8.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
                 ) {
-                    Text("Close Overview", fontSize = 15.sp, fontWeight = FontWeight.Black)
+                    Text("Close", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -425,113 +516,89 @@ fun InventoryDetailDialog(item: InventoryItemData, onDismiss: () -> Unit) {
 @Composable
 fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: (InventoryItemData) -> Unit) {
     var stock by remember { mutableStateOf(item.stockOnHand.toString()) }
-    var limit by remember { mutableStateOf(item.reorderLimit.toString()) }
-    var status by remember { mutableStateOf(item.status) }
-    var statusExpanded by remember { mutableStateOf(false) }
+    var remarks by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.95f).wrapContentHeight(), 
-            shape = RoundedCornerShape(16.dp), 
+            modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight(), 
+            shape = RoundedCornerShape(12.dp), 
             color = Color.White
         ) {
             Column(modifier = Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Edit Inventory Item", fontSize = 20.sp, fontWeight = FontWeight.Black, color = TextDark)
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                    Text("Edit Stock", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF111827))
                     }
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = "${item.productName} — ${item.warehouseName}",
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B7280),
+                    fontWeight = FontWeight.Medium
+                )
+                
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                var action by remember { mutableStateOf("filled") }
+                Text("New Stock Quantity", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151))
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = stock,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) stock = it },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White
+                    ),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color(0xFF4B5563)),
+                    singleLine = true
+                )
                 
-                if (item.isTank) {
-                    Text("STOCK ACTION", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    var actionExpanded by remember { mutableStateOf(false) }
-                    Box {
-                        OutlinedButton(
-                            onClick = { actionExpanded = true }, 
-                            modifier = Modifier.fillMaxWidth().height(48.dp), 
-                            shape = RoundedCornerShape(12.dp), 
-                            border = BorderStroke(1.dp, Color(0xFFE9ECEF))
-                        ) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    when(action) {
-                                        "filled" -> "Edit Filled Stock"
-                                        "set-empty" -> "Edit Empty Stock"
-                                        "refill" -> "Refill Empty Tanks"
-                                        else -> ""
-                                    }, 
-                                    color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp
-                                )
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
-                            }
-                        }
-                        DropdownMenu(expanded = actionExpanded, onDismissRequest = { actionExpanded = false }) {
-                            DropdownMenuItem(text = { Text("Edit Filled Stock", fontSize = 14.sp) }, onClick = { action = "filled"; stock = item.stockOnHand.toString(); actionExpanded = false })
-                            DropdownMenuItem(text = { Text("Edit Empty Stock", fontSize = 14.sp) }, onClick = { action = "set-empty"; stock = item.emptyStock.toString(); actionExpanded = false })
-                            if (item.emptyStock > 0) {
-                                DropdownMenuItem(text = { Text("Refill Empty Tanks", fontSize = 14.sp) }, onClick = { action = "refill"; stock = ""; actionExpanded = false })
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                val label = when(action) {
-                    "refill" -> "TANKS TO REFILL"
-                    "set-empty" -> "COUNTED EMPTY TANKS"
-                    else -> "NEW FILLED / SELLABLE STOCK QUANTITY"
-                }
-
-                EmployeeInputField(label = label, value = stock, onValueChange = { if(it.all { char -> char.isDigit() }) stock = it }, placeholder = "0", icon = Icons.Default.Inventory)
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 
-                if (action != "set-empty" && action != "refill") {
-                    EmployeeInputField(label = "REORDER LIMIT", value = limit, onValueChange = { if(it.all { char -> char.isDigit() }) limit = it }, placeholder = "0", icon = Icons.Default.NotificationsActive)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text("STATUS", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box {
-                        OutlinedButton(
-                            onClick = { statusExpanded = true }, 
-                            modifier = Modifier.fillMaxWidth().height(48.dp), 
-                            shape = RoundedCornerShape(12.dp), 
-                            border = BorderStroke(1.dp, Color(0xFFE9ECEF))
-                        ) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(status, color = TextDark, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
-                            }
-                        }
-                        DropdownMenu(expanded = statusExpanded, onDismissRequest = { statusExpanded = false }) {
-                            listOf("Normal", "Critical", "Low Stock").forEach { s ->
-                                DropdownMenuItem(text = { Text(s, fontSize = 14.sp) }, onClick = { status = s; statusExpanded = false })
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                Text("Remarks (optional)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151))
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = remarks,
+                    onValueChange = { remarks = it },
+                    placeholder = { Text("e.g. Physical count correction", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White
+                    ),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = Color(0xFF4B5563)),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(28.dp))
+                
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = onDismiss, 
                         modifier = Modifier.weight(1f).height(44.dp), 
-                        shape = RoundedCornerShape(10.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)
+                        shape = RoundedCornerShape(8.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
                     ) { 
                         Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold) 
                     }
                     Button(
-                        onClick = { onSave(item.copy(stockOnHand = stock.toIntOrNull() ?: 0, reorderLimit = limit.toIntOrNull() ?: 0, status = status)) },
+                        onClick = { 
+                            // Note: Remarks is not currently part of InventoryItemData, 
+                            // but is available for backend submission in a real app.
+                            onSave(item.copy(stockOnHand = stock.toIntOrNull() ?: 0)) 
+                        },
                         modifier = Modifier.weight(1f).height(44.dp), 
-                        shape = RoundedCornerShape(10.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                        shape = RoundedCornerShape(8.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White)
                     ) { 
-                        Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Black)
+                        Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -551,230 +618,1037 @@ fun TransactionCardMobile(trx: InventoryTransactionData) {
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
+            // Header Row
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = trx.transactionId, fontSize = 13.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Text(text = "Trx ID: ${trx.transactionId}", fontSize = 13.sp, fontWeight = FontWeight.Black, color = TextDark)
+                
+                val typeLabel = when (trx.transactionType) {
+                    "In" -> "Stock In"
+                    "Out" -> "Stock Out"
+                    else -> trx.transactionType
+                }
+                
                 Surface(
                     color = when(trx.transactionType) {
                         "In" -> Color(0xFFE8F5E9)
                         "Out" -> Color(0xFFFFEBEE)
                         else -> Color(0xFFE3F2FD)
                     },
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, when(trx.transactionType) {
+                        "In" -> Color(0xFF2E7D32)
+                        "Out" -> GasTrackRed
+                        else -> StaffPortalButtonBlue
+                    })
                 ) {
                     Text(
-                        text = trx.transactionType.uppercase(), 
+                        text = typeLabel, 
                         color = when(trx.transactionType) {
                             "In" -> Color(0xFF2E7D32)
                             "Out" -> GasTrackRed
                             else -> StaffPortalButtonBlue
                         }, 
                         fontSize = 9.sp, fontWeight = FontWeight.Black,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = trx.productName, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextDark)
-            Text(text = "PID: ${trx.productId} • WH: ${trx.warehouseName}", fontSize = 11.sp, color = TextGray)
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Product & Warehouse Row
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Product", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = "${trx.productId} • ${trx.productName}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark, maxLines = 1)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = "Warehouse", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = trx.warehouseName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = Color(0xFFF1F3F4))
+            Spacer(modifier = Modifier.height(10.dp))
+            
+            // Stats Row
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text(text = "Quantity", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = trx.quantity.toString(), fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Reference", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = trx.reference, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = "Date", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = trx.transactionDate, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                }
+            }
             
             Spacer(modifier = Modifier.height(10.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                Column {
-                    Text(text = "Qty: ${trx.quantity} • ${trx.reference}", fontSize = 12.sp, color = TextDark, fontWeight = FontWeight.Medium)
-                    Text(text = "By: ${trx.processedBy}", fontSize = 10.sp, color = Color.LightGray, fontWeight = FontWeight.Bold)
-                }
-                Text(text = trx.transactionDate, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Text(text = "By: ${trx.processedBy}", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    var stockType by remember { mutableStateOf("filled") }
+    var warehouseId by remember { mutableStateOf("") }
+    var referenceNo by remember { mutableStateOf("") }
+    var reason by remember { mutableStateOf("Supplier Delivery") }
+    var otherReason by remember { mutableStateOf("") }
+    var remarks by remember { mutableStateOf("") }
+    
+    data class ItemRow(var productId: String = "", var quantity: String = "")
+    val items = remember { mutableStateListOf(ItemRow()) }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
+
+    val stockInReasons = listOf("Supplier Delivery", "Customer Return", "Inventory Adjustments", "Other")
+    val warehouses = listOf("Pasig", "San Juan", "Main Warehouse")
+    
+    data class Product(val id: String, val name: String, val costPrice: Double, val isTank: Boolean)
+    val products = listOf(
+        Product("P-001", "Gasul LPG 2.7 kg", 4860.0, true),
+        Product("P-002", "Gasul LPG 7 kg", 12500.0, true),
+        Product("P-003", "LPG Hose Clamp", 150.0, false),
+        Product("P-004", "Gasul LPG 11 kg", 13815.0, true),
+        Product("P-005", "POL Regulator", 350.0, false)
+    )
+    val productMap = products.associateBy { it.id }
+
+    val validItems = items.filter { it.productId.isNotBlank() && (it.quantity.toIntOrNull() ?: 0) > 0 }
+    val totalItems = validItems.sumOf { it.quantity.toIntOrNull() ?: 0 }
+    val estimatedCost = validItems.sumOf { 
+        val p = productMap[it.productId]
+        (p?.costPrice ?: 0.0) * (it.quantity.toIntOrNull() ?: 0)
+    }
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.9f), shape = RoundedCornerShape(12.dp), color = Color.White) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                Text("Add Stock In", fontSize = 24.sp, fontWeight = FontWeight.Black, color = TextDark)
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.9f),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.fillMaxSize().padding(28.dp)) {
+                Text("Add Stock In", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
                 Spacer(modifier = Modifier.height(20.dp))
-                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StockFormField("Stock In ID", "SI-001")
-                    
-                    var supplierId by remember { mutableStateOf("Select Supplier") }
-                    var showSupplierDropdown by remember { mutableStateOf(false) }
-                    Box {
-                        StockFormField("Supplier", supplierId, isDropdown = true, onClick = { showSupplierDropdown = true })
-                        DropdownMenu(expanded = showSupplierDropdown, onDismissRequest = { showSupplierDropdown = false }, modifier = Modifier.fillMaxWidth(0.6f).background(Color.White)) {
-                            listOf("S-001 (Petron)", "S-002 (Shell)", "S-003 (Phoenix)").forEach { s ->
-                                DropdownMenuItem(text = { Text(s) }, onClick = { supplierId = s; showSupplierDropdown = false })
-                            }
+                
+                if (error.isNotBlank()) {
+                    Text(error, color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
+                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                    @Composable
+                    fun FormRow(label: String, topAlign: Boolean = false, content: @Composable () -> Unit) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                            Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151), modifier = Modifier.padding(bottom = 4.dp))
+                            Box(modifier = Modifier.fillMaxWidth()) { content() }
                         }
                     }
-                    
-                    StockFormField("Invoice No", "INV-001")
-                    StockFormField("Received by", "User Name", isDropdown = true)
-                    StockFormField("Date", "01/01/2026 2:14:05 PM")
-                    StockFormField("Status", "Pending", isDropdown = true)
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Items", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
-                        Button(onClick = {}, colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue), shape = RoundedCornerShape(6.dp), modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
-                            Text("Add Item", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    
-                    // --- Stock In Table ---
-                    Box(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-                        Column(modifier = Modifier.width(500.dp).border(1.dp, Color(0xFFE9ECEF), RoundedCornerShape(4.dp))) {
-                            // Header
-                            Row(modifier = Modifier.fillMaxWidth().background(StaffPortalBlue).padding(vertical = 8.dp, horizontal = 4.dp)) {
-                                TableText("#", Modifier.width(30.dp), isHeader = true)
-                                TableText("Product ID", Modifier.weight(1f), isHeader = true)
-                                TableText("Product Name", Modifier.weight(2f), isHeader = true)
-                                TableText("Qty", Modifier.weight(0.8f), isHeader = true)
-                                TableText("Cost Price", Modifier.weight(1.2f), isHeader = true)
-                                TableText("Expiry Date", Modifier.weight(1.2f), isHeader = true)
-                            }
-                            // Rows
-                            val mockItems = listOf(
-                                listOf("1", "P-001", "Gasul LPG 2.7 kg", "20", "₱ 4,860.00", "01/01/2027"),
-                                listOf("2", "P-003", "Gasul LPG 11kg", "15", "₱ 13,815.00", "01/01/2027"),
-                                listOf("3", "P-005", "Cylinder 7kg", "15", "₱ 27,000.00", "01/01/2027")
+
+                    FormRow("Stock Type") {
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                value = if (stockType == "filled") "Filled / Sellable Stock" else "Empty Tanks",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
-                            mockItems.forEachIndexed { index, row ->
-                                Row(modifier = Modifier.fillMaxWidth().background(if(index % 2 == 0) Color.White else Color(0xFFF8F9FA)).padding(vertical = 8.dp, horizontal = 4.dp)) {
-                                    TableText(row[0], Modifier.width(30.dp))
-                                    TableText(row[1], Modifier.weight(1f))
-                                    TableText(row[2], Modifier.weight(2f))
-                                    TableText(row[3], Modifier.weight(0.8f))
-                                    TableText(row[4], Modifier.weight(1.2f))
-                                    TableText(row[5], Modifier.weight(1.2f))
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                DropdownMenuItem(text = { Text("Filled / Sellable Stock") }, onClick = { stockType = "filled"; items.clear(); items.add(ItemRow()); expanded = false })
+                                DropdownMenuItem(text = { Text("Empty Tanks") }, onClick = { stockType = "empty"; items.clear(); items.add(ItemRow()); expanded = false })
+                            }
+                        }
+                    }
+
+                    FormRow("Warehouse") {
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                value = warehouseId.ifBlank { "Select warehouse" },
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                            )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                warehouses.forEach { w ->
+                                    DropdownMenuItem(text = { Text(w) }, onClick = { warehouseId = w; expanded = false })
+                                }
+                            }
+                        }
+                    }
+
+                    FormRow("Reference ID") {
+                        OutlinedTextField(
+                            value = referenceNo,
+                            onValueChange = { referenceNo = it },
+                            placeholder = { Text("Reference ID") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                        )
+                    }
+
+                    FormRow("Reason", topAlign = true) {
+                        Column {
+                            stockInReasons.forEach { r ->
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp).clickable { reason = r }) {
+                                    RadioButton(selected = (reason == r), onClick = { reason = r }, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(r, fontSize = 14.sp, color = Color(0xFF374151))
+                                }
+                            }
+                            if (reason == "Other") {
+                                OutlinedTextField(
+                                    value = otherReason,
+                                    onValueChange = { otherReason = it },
+                                    placeholder = { Text("Describe the reason or conditions...") },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                                )
+                            }
+                        }
+                    }
+
+                    FormRow("Remarks") {
+                        OutlinedTextField(
+                            value = remarks,
+                            onValueChange = { remarks = it },
+                            placeholder = { Text("Optional notes") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                        )
+                    }
+
+                    // Items Section Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Items", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
+                        Button(
+                            onClick = { items.add(ItemRow()) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Text("Add Item", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(bottom = 12.dp))
+
+                    // Items Table using Cards for Mobile
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items.forEachIndexed { index, item ->
+                            val product = productMap[item.productId]
+                            val cost = product?.costPrice ?: 0.0
+                            val qty = item.quantity.toIntOrNull() ?: 0
+                            val subtotal = cost * qty
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(2.dp, RoundedCornerShape(12.dp)),
+                                color = Color.White,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Item ${index + 1}",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = TextDark
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                val newList = items.toMutableList()
+                                                newList.removeAt(index)
+                                                items.clear()
+                                                items.addAll(newList)
+                                            },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                            Text(text = "Product", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Box {
+                                                var expanded by remember { mutableStateOf(false) }
+                                                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                                                    OutlinedTextField(
+                                                        value = productMap[item.productId]?.name ?: "Select product",
+                                                        onValueChange = {},
+                                                        readOnly = true,
+                                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark),
+                                                        colors = OutlinedTextFieldDefaults.colors(
+                                                            unfocusedBorderColor = Color(0xFFE9ECEF),
+                                                            unfocusedContainerColor = Color.White,
+                                                            focusedContainerColor = Color.White
+                                                        )
+                                                    )
+                                                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                                        products.filter { stockType != "empty" || it.isTank }.forEach { p ->
+                                                            DropdownMenuItem(text = { Text(p.name, fontSize = 13.sp) }, onClick = {
+                                                                val newList = items.toMutableList()
+                                                                newList[index] = item.copy(productId = p.id)
+                                                                items.clear()
+                                                                items.addAll(newList)
+                                                                expanded = false
+                                                            })
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        Column(modifier = Modifier.width(70.dp)) {
+                                            Text(text = "Qty", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            OutlinedTextField(
+                                                value = item.quantity,
+                                                onValueChange = { q: String ->
+                                                    if (q.all { it.isDigit() }) {
+                                                        val newList = items.toMutableList()
+                                                        newList[index] = item.copy(quantity = q)
+                                                        items.clear()
+                                                        items.addAll(newList)
+                                                    }
+                                                },
+                                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue, textAlign = TextAlign.Center),
+                                                singleLine = true,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color(0xFFE9ECEF),
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    HorizontalDivider(color = Color(0xFFF1F3F4))
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column {
+                                            Text(text = "Cost Price", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Text(text = if(product != null) "₱ ${String.format("%.2f", cost)}" else "—", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                                        }
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(text = "Subtotal", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Text(text = "₱ ${String.format("%.2f", subtotal)}", fontSize = 12.sp, fontWeight = FontWeight.Black, color = TextDark)
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                     
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Total Items: 50", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
-                    Text(text = "Estimated Cost: ₱ 45,675.00", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                    HorizontalDivider(color = Color(0xFFE5E7EB))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Total Items: $totalItems", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF374151))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Estimated Cost: ₱ ${String.format("%.2f", estimatedCost)}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF374151))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                // Modal Actions
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = onDismiss, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                    Button(onClick = {}, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Save Draft", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                    Button(onClick = onConfirm, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) { Text("Received", fontSize = 14.sp, fontWeight = FontWeight.Black) }
+                    Button(
+                        onClick = onDismiss, 
+                        modifier = Modifier.weight(1f).height(48.dp), 
+                        shape = RoundedCornerShape(6.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
+                    ) { Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+                    
+                    Button(
+                        onClick = {
+                            if (warehouseId.isBlank()) { error = "Please select a warehouse."; return@Button }
+                            if (referenceNo.isBlank()) { error = "Reference ID is required."; return@Button }
+                            if (reason == "Other" && otherReason.isBlank()) { error = "Please provide details when Other reason is selected."; return@Button }
+                            if (validItems.isEmpty()) { error = "Add at least one item with a product and quantity."; return@Button }
+                            
+                            isSubmitting = true
+                            error = ""
+                            onConfirm()
+                        }, 
+                        modifier = Modifier.weight(1f).height(48.dp), 
+                        shape = RoundedCornerShape(6.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White),
+                        enabled = !isSubmitting
+                    ) { Text(if (isSubmitting) "Saving…" else "Received", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    var stockType by remember { mutableStateOf("filled") }
+    var warehouseId by remember { mutableStateOf("") }
+    var referenceNo by remember { mutableStateOf("") }
+    var reason by remember { mutableStateOf("Damaged Product") }
+    var otherReason by remember { mutableStateOf("") }
+    var remarks by remember { mutableStateOf("") }
+    
+    data class ItemRow(var productId: String = "", var quantity: String = "")
+    val items = remember { mutableStateListOf(ItemRow()) }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
+
+    val stockOutReasons = listOf("Damaged Product", "Defective Cylinder", "Return to Supplier", "Expired/Unusable", "Inventory Adjustment", "Other")
+    val warehouses = listOf("Pasig", "San Juan", "Main Warehouse")
+    
+    data class Product(val id: String, val name: String, val availableStock: Int, val isTank: Boolean)
+    val products = listOf(
+        Product("P-001", "Gasul LPG 2.7 kg", 50, true),
+        Product("P-002", "Gasul LPG 7 kg", 100, true),
+        Product("P-003", "LPG Hose Clamp", 20, false),
+        Product("P-004", "Gasul LPG 11 kg", 34, true),
+        Product("P-005", "POL Regulator", 60, false)
+    )
+    val productMap = products.associateBy { it.id }
+
+    val validItems = items.filter { it.productId.isNotBlank() && (it.quantity.toIntOrNull() ?: 0) > 0 }
+    val totalQty = validItems.sumOf { it.quantity.toIntOrNull() ?: 0 }
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.9f), shape = RoundedCornerShape(12.dp), color = Color.White) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                Text("Add Stock Out", fontSize = 24.sp, fontWeight = FontWeight.Black, color = TextDark)
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.9f),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.fillMaxSize().padding(28.dp)) {
+                Text("Add Stock Out", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
                 Spacer(modifier = Modifier.height(20.dp))
-                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StockFormField("Stock Out ID", "SO-001")
-                    
-                    var outType by remember { mutableStateOf("Supplier Return") }
-                    var showTypeDropdown by remember { mutableStateOf(false) }
-                    Box {
-                        StockFormField("Stock Out Type", outType, isDropdown = true, onClick = { showTypeDropdown = true })
-                        DropdownMenu(expanded = showTypeDropdown, onDismissRequest = { showTypeDropdown = false }, modifier = Modifier.fillMaxWidth(0.6f).background(Color.White)) {
-                            listOf("Supplier Return", "Damaged", "Expired", "Internal Use").forEach { type ->
-                                DropdownMenuItem(text = { Text(type) }, onClick = { outType = type; showTypeDropdown = false })
-                            }
+                
+                if (error.isNotBlank()) {
+                    Text(error, color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
+                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                    @Composable
+                    fun FormRow(label: String, topAlign: Boolean = false, content: @Composable () -> Unit) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                            Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151), modifier = Modifier.padding(bottom = 4.dp))
+                            Box(modifier = Modifier.fillMaxWidth()) { content() }
                         }
                     }
-                    
-                    StockFormField("Reference ID", "REF-001")
-                    
-                    var reason by remember { mutableStateOf("Damaged") }
-                    var showReasonDropdown by remember { mutableStateOf(false) }
-                    Box {
-                        StockFormField("Reason", reason, isDropdown = true, onClick = { showReasonDropdown = true })
-                        DropdownMenu(expanded = showReasonDropdown, onDismissRequest = { showReasonDropdown = false }, modifier = Modifier.fillMaxWidth(0.6f).background(Color.White)) {
-                            listOf("Damaged", "Defective", "Expired", "Other").forEach { r ->
-                                DropdownMenuItem(text = { Text(r) }, onClick = { reason = r; showReasonDropdown = false })
-                            }
-                        }
-                    }
-                    
-                    StockFormField("Processed by", "User Name", isDropdown = true)
-                    StockFormField("Date", "01/01/2026 2:14:05 PM")
-                    StockFormField("Status", "Pending", isDropdown = true)
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Items", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
-                        Button(onClick = {}, colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue), shape = RoundedCornerShape(6.dp), modifier = Modifier.height(32.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
-                            Text("Add Item", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    
-                    // --- Stock Out Table ---
-                    Box(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-                        Column(modifier = Modifier.width(500.dp).border(1.dp, Color(0xFFE9ECEF), RoundedCornerShape(4.dp))) {
-                            // Header
-                            Row(modifier = Modifier.fillMaxWidth().background(StaffPortalBlue).padding(vertical = 8.dp, horizontal = 4.dp)) {
-                                TableText("#", Modifier.width(30.dp), isHeader = true)
-                                TableText("Product ID", Modifier.weight(1f), isHeader = true)
-                                TableText("Product Name", Modifier.weight(2f), isHeader = true)
-                                TableText("Qty", Modifier.weight(0.8f), isHeader = true)
-                                TableText("Condition", Modifier.weight(1.2f), isHeader = true)
-                                TableText("Action", Modifier.weight(1.2f), isHeader = true)
-                            }
-                            // Rows
-                            val mockItems = listOf(
-                                listOf("1", "P-001", "Gasul LPG 2.7 kg", "20", "Damaged", "Send Back"),
-                                listOf("2", "P-003", "Gasul LPG 11kg", "15", "Damaged", "Send Back"),
-                                listOf("3", "P-005", "Cylinder 7kg", "15", "Damaged", "Send Back")
+
+                    FormRow("Stock Type") {
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                value = if (stockType == "filled") "Filled / Sellable Stock" else "Empty Tanks",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
                             )
-                            mockItems.forEachIndexed { index, row ->
-                                Row(modifier = Modifier.fillMaxWidth().background(if(index % 2 == 0) Color.White else Color(0xFFF8F9FA)).padding(vertical = 8.dp, horizontal = 4.dp)) {
-                                    TableText(row[0], Modifier.width(30.dp))
-                                    TableText(row[1], Modifier.weight(1f))
-                                    TableText(row[2], Modifier.weight(2f))
-                                    TableText(row[3], Modifier.weight(0.8f))
-                                    TableText(row[4], Modifier.weight(1.2f))
-                                    TableText(row[5], Modifier.weight(1.2f))
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                DropdownMenuItem(text = { Text("Filled / Sellable Stock") }, onClick = { stockType = "filled"; items.clear(); items.add(ItemRow()); expanded = false })
+                                DropdownMenuItem(text = { Text("Empty Tanks") }, onClick = { stockType = "empty"; items.clear(); items.add(ItemRow()); expanded = false })
+                            }
+                        }
+                    }
+
+                    FormRow("Warehouse") {
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                value = warehouseId.ifBlank { "Select warehouse" },
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                            )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                warehouses.forEach { w ->
+                                    DropdownMenuItem(text = { Text(w) }, onClick = { warehouseId = w; expanded = false })
+                                }
+                            }
+                        }
+                    }
+
+                    FormRow("Reference ID") {
+                        OutlinedTextField(
+                            value = referenceNo,
+                            onValueChange = { referenceNo = it },
+                            placeholder = { Text("Reference ID") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                        )
+                    }
+
+                    FormRow("Reason", topAlign = true) {
+                        Column {
+                            stockOutReasons.forEach { r ->
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp).clickable { reason = r }) {
+                                    RadioButton(selected = (reason == r), onClick = { reason = r }, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(r, fontSize = 14.sp, color = Color(0xFF374151))
+                                }
+                            }
+                            if (reason == "Other") {
+                                OutlinedTextField(
+                                    value = otherReason,
+                                    onValueChange = { otherReason = it },
+                                    placeholder = { Text("Describe the reason or conditions...") },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                                )
+                            }
+                        }
+                    }
+
+                    FormRow("Remarks") {
+                        OutlinedTextField(
+                            value = remarks,
+                            onValueChange = { remarks = it },
+                            placeholder = { Text("Optional notes") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                        )
+                    }
+
+                    // Items Section Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Items", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
+                        Button(
+                            onClick = { items.add(ItemRow()) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Text("Add Item", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(bottom = 12.dp))
+
+                    // Items Table using Cards for Mobile
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items.forEachIndexed { index, item ->
+                            val product = productMap[item.productId]
+                            val availableStock = product?.availableStock ?: 0
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(2.dp, RoundedCornerShape(12.dp)),
+                                color = Color.White,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Item ${index + 1}",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = TextDark
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                val newList = items.toMutableList()
+                                                newList.removeAt(index)
+                                                items.clear()
+                                                items.addAll(newList)
+                                            },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                            Text(text = "Product", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Box {
+                                                var expanded by remember { mutableStateOf(false) }
+                                                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                                                    OutlinedTextField(
+                                                        value = product?.name ?: "Select product",
+                                                        onValueChange = {},
+                                                        readOnly = true,
+                                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark),
+                                                        colors = OutlinedTextFieldDefaults.colors(
+                                                            unfocusedBorderColor = Color(0xFFE9ECEF),
+                                                            unfocusedContainerColor = Color.White,
+                                                            focusedContainerColor = Color.White
+                                                        )
+                                                    )
+                                                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                                        products.filter { stockType != "empty" || it.isTank }.forEach { p ->
+                                                            DropdownMenuItem(text = { Text(p.name, fontSize = 13.sp) }, onClick = {
+                                                                val newList = items.toMutableList()
+                                                                newList[index] = item.copy(productId = p.id)
+                                                                items.clear()
+                                                                items.addAll(newList)
+                                                                expanded = false
+                                                            })
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        Column(modifier = Modifier.width(70.dp)) {
+                                            Text(text = "Qty", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            OutlinedTextField(
+                                                value = item.quantity,
+                                                onValueChange = { q: String ->
+                                                    if (q.all { it.isDigit() }) {
+                                                        val newList = items.toMutableList()
+                                                        newList[index] = item.copy(quantity = q)
+                                                        items.clear()
+                                                        items.addAll(newList)
+                                                    }
+                                                },
+                                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue, textAlign = TextAlign.Center),
+                                                singleLine = true,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color(0xFFE9ECEF),
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    HorizontalDivider(color = Color(0xFFF1F3F4))
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column {
+                                            Text(text = "In Stock", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Text(text = "$availableStock", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                     
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Total Stock Out Items: 50", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
-                    Text(text = "Stock Deduction: 50", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextDark)
-                    Text(text = "Note: Items will be returned to supplier warehouse", fontSize = 12.sp, color = TextGray, fontStyle = FontStyle.Italic)
+                    HorizontalDivider(color = Color(0xFFE5E7EB))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Total Stock Out Items: $totalQty", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF374151))
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                // Modal Actions
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = onDismiss, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                    Button(onClick = {}, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)) { Text("Save Draft", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                    Button(onClick = onConfirm, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) { Text("Approved", fontSize = 14.sp, fontWeight = FontWeight.Black) }
+                    Button(
+                        onClick = onDismiss, 
+                        modifier = Modifier.weight(1f).height(48.dp), 
+                        shape = RoundedCornerShape(6.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
+                    ) { Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+                    
+                    Button(
+                        onClick = {
+                            if (warehouseId.isBlank()) { error = "Please select a warehouse."; return@Button }
+                            if (referenceNo.isBlank()) { error = "Reference ID is required."; return@Button }
+                            if (reason == "Other" && otherReason.isBlank()) { error = "Please provide details when Other reason is selected."; return@Button }
+                            if (validItems.isEmpty()) { error = "Add at least one item with a product and quantity."; return@Button }
+                            
+                            for (it in validItems) {
+                                val p = productMap[it.productId]
+                                val available = p?.availableStock ?: 0
+                                if ((it.quantity.toIntOrNull() ?: 0) > available) {
+                                    error = "Cannot remove ${it.quantity} of \"${p?.name ?: it.productId}\" — only $available in stock."
+                                    return@Button
+                                }
+                            }
+                            
+                            isSubmitting = true
+                            error = ""
+                            onConfirm()
+                        }, 
+                        modifier = Modifier.weight(1f).height(48.dp), 
+                        shape = RoundedCornerShape(6.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White),
+                        enabled = !isSubmitting
+                    ) { Text(if (isSubmitting) "Saving…" else "Approved", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TableText(text: String, modifier: Modifier = Modifier, isHeader: Boolean = false) {
-    Text(
-        text = text,
-        modifier = modifier.padding(horizontal = 2.dp),
-        fontSize = if(isHeader) 10.sp else 11.sp,
-        fontWeight = if(isHeader) FontWeight.Black else FontWeight.Bold,
-        color = if(isHeader) Color.White else TextDark,
-        textAlign = TextAlign.Start,
-        maxLines = 1
+fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    var stockType by remember { mutableStateOf("filled") }
+    var fromWarehouseId by remember { mutableStateOf("") }
+    var toWarehouseId by remember { mutableStateOf("") }
+    var status by remember { mutableStateOf("Completed") }
+    var remarks by remember { mutableStateOf("") }
+    
+    data class ItemRow(var productId: String = "", var quantity: String = "")
+    val items = remember { mutableStateListOf(ItemRow()) }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
+
+    val transferStatusList = listOf("Completed", "In Transit", "Pending")
+    val warehouses = listOf("Pasig Warehouse", "San Juan Warehouse", "Main Warehouse")
+    
+    data class Product(val id: String, val name: String, val currentStock: Int, val isTank: Boolean)
+    val products = listOf(
+        Product("P-001", "Gasul LPG 2.7 kg", 50, true),
+        Product("P-002", "Gasul LPG 7 kg", 100, true),
+        Product("P-003", "LPG Hose Clamp", 20, false),
+        Product("P-004", "Gasul LPG 11 kg", 34, true),
+        Product("P-005", "POL Regulator", 60, false)
     )
+    val productMap = products.associateBy { it.id }
+
+    val validItems = items.filter { it.productId.isNotBlank() && (it.quantity.toIntOrNull() ?: 0) > 0 }
+    val totalQty = validItems.sumOf { it.quantity.toIntOrNull() ?: 0 }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.9f),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.White
+        ) {
+            Column(modifier = Modifier.fillMaxSize().padding(28.dp)) {
+                Text("Warehouse Transfer", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                if (error.isNotBlank()) {
+                    Text(error, color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
+                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                    @Composable
+                    fun FormRow(label: String, content: @Composable () -> Unit) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                            Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151), modifier = Modifier.padding(bottom = 4.dp))
+                            Box(modifier = Modifier.fillMaxWidth()) { content() }
+                        }
+                    }
+
+                    FormRow("From Warehouse") {
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                value = fromWarehouseId.ifBlank { "Select warehouse" },
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                            )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                warehouses.forEach { w ->
+                                    DropdownMenuItem(text = { Text(w) }, onClick = { fromWarehouseId = w; expanded = false })
+                                }
+                            }
+                        }
+                    }
+
+                    FormRow("To Warehouse") {
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                value = toWarehouseId.ifBlank { "Select warehouse" },
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                            )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                warehouses.forEach { w ->
+                                    DropdownMenuItem(text = { Text(w) }, onClick = { toWarehouseId = w; expanded = false })
+                                }
+                            }
+                        }
+                    }
+
+                    FormRow("Status") {
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                            OutlinedTextField(
+                                value = status,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                            )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                transferStatusList.forEach { s ->
+                                    DropdownMenuItem(text = { Text(s) }, onClick = { status = s; expanded = false })
+                                }
+                            }
+                        }
+                    }
+
+                    FormRow("Remarks") {
+                        OutlinedTextField(
+                            value = remarks,
+                            onValueChange = { remarks = it },
+                            placeholder = { Text("Optional notes") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFD1D5DB))
+                        )
+                    }
+
+                    // Items Section Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Transfer Items", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
+                        Button(
+                            onClick = { items.add(ItemRow()) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Text("Add Item", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(bottom = 12.dp))
+
+                    // Items Table using Cards for Mobile
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items.forEachIndexed { index, item ->
+                            val product = productMap[item.productId]
+                            val availableStock = product?.currentStock ?: 0
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(2.dp, RoundedCornerShape(12.dp)),
+                                color = Color.White,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Item ${index + 1}",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = TextDark
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                val newList = items.toMutableList()
+                                                newList.removeAt(index)
+                                                items.clear()
+                                                items.addAll(newList)
+                                            },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                            Text(text = "Product", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Box {
+                                                var expanded by remember { mutableStateOf(false) }
+                                                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                                                    OutlinedTextField(
+                                                        value = product?.name ?: "Select product",
+                                                        onValueChange = {},
+                                                        readOnly = true,
+                                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                                        modifier = Modifier.fillMaxWidth().height(48.dp).menuAnchor(),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark),
+                                                        colors = OutlinedTextFieldDefaults.colors(
+                                                            unfocusedBorderColor = Color(0xFFE9ECEF),
+                                                            unfocusedContainerColor = Color.White,
+                                                            focusedContainerColor = Color.White
+                                                        )
+                                                    )
+                                                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                                        products.forEach { p ->
+                                                            DropdownMenuItem(text = { Text(p.name, fontSize = 13.sp) }, onClick = {
+                                                                val newList = items.toMutableList()
+                                                                newList[index] = item.copy(productId = p.id)
+                                                                items.clear()
+                                                                items.addAll(newList)
+                                                                expanded = false
+                                                            })
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        Column(modifier = Modifier.width(70.dp)) {
+                                            Text(text = "Qty", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            OutlinedTextField(
+                                                value = item.quantity,
+                                                onValueChange = { q: String ->
+                                                    if (q.all { it.isDigit() }) {
+                                                        val newList = items.toMutableList()
+                                                        newList[index] = item.copy(quantity = q)
+                                                        items.clear()
+                                                        items.addAll(newList)
+                                                    }
+                                                },
+                                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue, textAlign = TextAlign.Center),
+                                                singleLine = true,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    unfocusedBorderColor = Color(0xFFE9ECEF),
+                                                    unfocusedContainerColor = Color.White,
+                                                    focusedContainerColor = Color.White
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    HorizontalDivider(color = Color(0xFFF1F3F4))
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column {
+                                            Text(text = "Available", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                            Text(text = "$availableStock", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0xFFE5E7EB))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Total Transfer Items: $totalQty", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF374151))
+                    Spacer(modifier = Modifier.height(28.dp))
+                }
+                
+                // Modal Actions
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(
+                        onClick = onDismiss, 
+                        modifier = Modifier.weight(1f).height(48.dp), 
+                        shape = RoundedCornerShape(6.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
+                    ) { Text("Close", fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false) }
+                    
+                    Button(
+                        onClick = {
+                            if (fromWarehouseId.isBlank() || toWarehouseId.isBlank()) { error = "Please select source and destination warehouse."; return@Button }
+                            if (fromWarehouseId == toWarehouseId) { error = "Source and destination warehouses must be different."; return@Button }
+                            if (validItems.isEmpty()) { error = "Add at least one product with quantity."; return@Button }
+                            
+                            for (it in validItems) {
+                                val p = productMap[it.productId]
+                                val available = p?.currentStock ?: 0
+                                if ((it.quantity.toIntOrNull() ?: 0) > available) {
+                                    error = "Cannot transfer ${it.quantity} of \"${p?.name ?: it.productId}\" — only $available in stock."
+                                    return@Button
+                                }
+                            }
+                            
+                            isSubmitting = true
+                            error = ""
+                            onConfirm()
+                        }, 
+                        modifier = Modifier.weight(1f).height(48.dp), 
+                        shape = RoundedCornerShape(6.dp), 
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White),
+                        enabled = !isSubmitting
+                    ) { Text(if (isSubmitting) "Saving…" else "Create Transfer", fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false) }
+                }
+            }
+        }
+    }
 }
 
 
