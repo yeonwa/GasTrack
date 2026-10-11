@@ -1,6 +1,5 @@
 package com.example.gastrack.ui.presentation
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.gastrack.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardEmployeeScreen(
     onNavigateToMenu: () -> Unit = {}
@@ -65,7 +64,7 @@ fun DashboardEmployeeScreen(
                     StatCard(
                         label = "SALES (TODAY)",
                         value = "₱48,250.00",
-                        icon = Icons.Default.TrendingUp,
+                        icon = Icons.AutoMirrored.Filled.TrendingUp,
                         accentColor = StaffPortalButtonBlue,
                         badgeText = "+14.5%",
                         modifier = Modifier.weight(1f)
@@ -73,7 +72,7 @@ fun DashboardEmployeeScreen(
                     StatCard(
                         label = "TRANSACTIONS",
                         value = "34",
-                        icon = Icons.Default.ReceiptLong,
+                        icon = Icons.AutoMirrored.Filled.ReceiptLong,
                         accentColor = Color(0xFF4CAF50),
                         badgeText = "+2",
                         modifier = Modifier.weight(1f)
