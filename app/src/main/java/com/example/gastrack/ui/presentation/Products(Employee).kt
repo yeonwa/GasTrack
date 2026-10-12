@@ -2,7 +2,6 @@ package com.example.gastrack.ui.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,12 +33,13 @@ data class ProductData(
     val category: String, // LPG Gas, Cylinder, Accessories
     val brand: String,
     val supplier: String,
-    val unit: String, // e.g., Tank, Piece
+    val unit: String, // e.g., Tank, Piece, Kg, Meter
     val unitPrice: Double,
     val costPrice: Double,
     val reorderLevel: Int,
     val currentStock: Int = 0,
-    val image: String = "",
+    val unitValue: Double = 1.0,
+    val imageUrl: String = "",
     val arModel: String = "",
     val status: String = "Active"
 )
@@ -63,9 +63,18 @@ fun ProductsEmployeeScreen(
     var productToDelete by remember { mutableStateOf<ProductData?>(null) }
 
     val products = remember { mutableStateListOf(
-        ProductData("P-001", "11kg Standard Refill", "LPG Gas", "Petron", "Petron Gas Corp", "Tank", 950.0, 800.0, 20, 45),
-        ProductData("P-002", "2.7kg Camping Cylinder", "Cylinder", "Gasul", "Metrolist Inc", "Piece", 280.0, 200.0, 10, 5),
-        ProductData("P-003", "Gas Regulator (Auto)", "Accessories", "Standard", "Ace Hardware", "Piece", 450.0, 320.0, 50, 52)
+        ProductData(
+            id = "P-001", name = "11kg Standard Refill", category = "LPG Gas", brand = "Petron", supplier = "Petron Gas Corp",
+            unit = "Tank", unitPrice = 950.0, costPrice = 800.0, reorderLevel = 20, currentStock = 45, unitValue = 1.0, imageUrl = "gasul-50kg.png", status = "Active"
+        ),
+        ProductData(
+            id = "P-002", name = "2.7kg Camping Cylinder", category = "Cylinder", brand = "Gasul", supplier = "Metrolist Inc",
+            unit = "Kg", unitPrice = 280.0, costPrice = 200.0, reorderLevel = 10, currentStock = 5, unitValue = 2.7, status = "Active"
+        ),
+        ProductData(
+            id = "P-003", name = "Gas Regulator (Auto)", category = "Accessories", brand = "Standard", supplier = "Ace Hardware",
+            unit = "Piece", unitPrice = 450.0, costPrice = 320.0, reorderLevel = 50, currentStock = 52, unitValue = 1.0, status = "Active"
+        )
     ) }
 
     val filteredProducts = products.filter {
@@ -126,7 +135,7 @@ fun ProductsEmployeeScreen(
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
                         }
                     }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.fillMaxWidth(0.3f)) {
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         listOf("All", "LPG Gas", "Cylinder", "Accessories").forEach { cat ->
                             DropdownMenuItem(text = { Text(cat, fontSize = 12.sp) }, onClick = { selectedCategoryFilter = cat; expanded = false })
                         }
@@ -156,7 +165,7 @@ fun ProductsEmployeeScreen(
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
                         }
                     }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.fillMaxWidth(0.3f)) {
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         suppliers.forEach { sup ->
                             DropdownMenuItem(text = { Text(sup, fontSize = 12.sp) }, onClick = { selectedSupplierFilter = sup; expanded = false })
                         }
@@ -185,7 +194,7 @@ fun ProductsEmployeeScreen(
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
                         }
                     }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.fillMaxWidth(0.3f)) {
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         listOf("All", "Active", "Inactive").forEach { status ->
                             DropdownMenuItem(text = { Text(status, fontSize = 12.sp) }, onClick = { selectedStatusFilter = status; expanded = false })
                         }
@@ -211,7 +220,7 @@ fun ProductsEmployeeScreen(
                             productToEdit = product
                             showEditDialog = true
                         },
-                        onDelete = {
+                        onDelete = { 
                             productToDelete = product
                             showDeleteConfirm = true
                         }
@@ -226,7 +235,7 @@ fun ProductsEmployeeScreen(
                     .padding(vertical = 16.dp)
                     .height(56.dp)
                     .shadow(8.dp, RoundedCornerShape(28.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
                 shape = RoundedCornerShape(28.dp)
             ) {
                 Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -313,6 +322,14 @@ fun ProductManagementCard(
                         fontWeight = FontWeight.Bold,
                         color = StaffPortalButtonBlue
                     )
+                    if (product.brand.isNotEmpty()) {
+                        Text(
+                            text = "Brand: ${product.brand}",
+                            fontSize = 12.sp,
+                            color = TextGray,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
                 Surface(
                     color = if (product.status == "Active") Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
@@ -399,17 +416,20 @@ fun ProductEditDialog(
     var brand by remember { mutableStateOf(product?.brand ?: "Petron") }
     var supplier by remember { mutableStateOf(product?.supplier ?: "Petron Gas Corp") }
     var productName by remember { mutableStateOf(product?.name ?: "") }
-    var unit by remember { mutableStateOf(product?.unit ?: "Tank") }
+    var unit by remember { mutableStateOf(product?.unit ?: "Piece") }
+    var unitValue by remember { mutableStateOf(product?.unitValue?.let { String.format(Locale.US, "%.1f", it) } ?: "1.0") }
     var unitPrice by remember { mutableStateOf(product?.unitPrice?.let { String.format(Locale.US, "%.2f", it) } ?: "") }
     var costPrice by remember { mutableStateOf(product?.costPrice?.let { String.format(Locale.US, "%.2f", it) } ?: "") }
     var currentStock by remember { mutableStateOf(product?.currentStock?.toString() ?: "0") }
     var reorderLevel by remember { mutableStateOf(product?.reorderLevel?.toString() ?: "") }
     var status by remember { mutableStateOf(product?.status ?: "Active") }
+    var imageUrl by remember { mutableStateOf(product?.imageUrl ?: "") }
     var arModelUrl by remember { mutableStateOf(product?.arModel ?: "") }
 
     var catExpanded by remember { mutableStateOf(false) }
     var supplierExpanded by remember { mutableStateOf(false) }
     var unitExpanded by remember { mutableStateOf(false) }
+    var brandExpanded by remember { mutableStateOf(false) }
     var statusExpanded by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -419,7 +439,7 @@ fun ProductEditDialog(
             color = Color.White
         ) {
             Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
-                Text(text = "Product information", fontSize = 22.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Text(text = if (product == null) "Product Information" else "Edit Product", fontSize = 22.sp, fontWeight = FontWeight.Black, color = TextDark)
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // --- Row 1: Product ID & Product Name ---
@@ -428,7 +448,7 @@ fun ProductEditDialog(
                         Text("Product ID", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
                         Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
-                            value = product?.id ?: "P-XXX", onValueChange = {},
+                            value = product?.id ?: "(auto-generated)", onValueChange = {},
                             readOnly = true, modifier = Modifier.fillMaxWidth().height(48.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color(0xFFFBFBFE), focusedContainerColor = Color(0xFFFBFBFE), unfocusedBorderColor = Color(0xFFE9ECEF)),
@@ -495,9 +515,28 @@ fun ProductEditDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Row 3: Unit, Unit Price, Cost Price ---
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Column(modifier = Modifier.weight(0.8f)) {
+                // --- Row 2b: Brand & Unit ---
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Brand", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        ExposedDropdownMenuBox(expanded = brandExpanded, onExpandedChange = { brandExpanded = !brandExpanded }) {
+                            OutlinedTextField(
+                                value = brand, onValueChange = {}, readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brandExpanded) },
+                                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth().height(48.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF)),
+                                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            )
+                            ExposedDropdownMenu(expanded = brandExpanded, onDismissRequest = { brandExpanded = false }, modifier = Modifier.background(Color.White)) {
+                                listOf("Petron", "Gasul", "Standard", "Solane").forEach { b ->
+                                    DropdownMenuItem(text = { Text(b) }, onClick = { brand = b; brandExpanded = false })
+                                }
+                            }
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
                         Text("Unit", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
                         Spacer(modifier = Modifier.height(6.dp))
                         ExposedDropdownMenuBox(expanded = unitExpanded, onExpandedChange = { unitExpanded = !unitExpanded }) {
@@ -510,13 +549,36 @@ fun ProductEditDialog(
                                 textStyle = LocalTextStyle.current.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             )
                             ExposedDropdownMenu(expanded = unitExpanded, onDismissRequest = { unitExpanded = false }, modifier = Modifier.background(Color.White)) {
-                                listOf("Tank", "Piece", "Unit").forEach { u ->
+                                listOf("Piece", "Kg", "Meter", "Tank").forEach { u ->
                                     DropdownMenuItem(text = { Text(u) }, onClick = { unit = u; unitExpanded = false })
                                 }
                             }
                         }
                     }
-                    Column(modifier = Modifier.weight(1.1f)) {
+                }
+
+                if (unit != "Piece" && unit != "Tank") {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(if (unit == "Kg") "Capacity (kg)" else "Length (meters)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = unitValue, onValueChange = { unitValue = it },
+                            placeholder = { Text("1.0", color = Color.LightGray, fontSize = 13.sp) },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // --- Row 3: Unit Price & Cost Price ---
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text("Unit Price", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
                         Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
@@ -529,7 +591,7 @@ fun ProductEditDialog(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                         )
                     }
-                    Column(modifier = Modifier.weight(1.1f)) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text("Cost Price", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
                         Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
@@ -578,7 +640,7 @@ fun ProductEditDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Row 5: Status & AR Model URL ---
+                // --- Row 5: Status & Image URL ---
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Status", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
@@ -600,11 +662,11 @@ fun ProductEditDialog(
                         }
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("AR Model URL", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                        Text("Image URL", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
                         Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
-                            value = arModelUrl, onValueChange = { arModelUrl = it },
-                            placeholder = { Text("url link", color = Color.LightGray, fontSize = 13.sp) },
+                            value = imageUrl, onValueChange = { imageUrl = it },
+                            placeholder = { Text("filename.png or URL", color = Color.LightGray, fontSize = 12.sp) },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue),
@@ -616,20 +678,19 @@ fun ProductEditDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Row 6: Image Upload ---
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Image Upload:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Surface(
-                        modifier = Modifier.height(32.dp).width(120.dp).clickable { /* Upload Logic */ },
-                        color = Color(0xFFEEEEEE),
-                        shape = RoundedCornerShape(4.dp),
-                        border = BorderStroke(1.dp, Color.LightGray)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text("Attached File", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                        }
-                    }
+                // --- Row 6: AR Model URL ---
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("AR Model URL", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = arModelUrl, onValueChange = { arModelUrl = it },
+                        placeholder = { Text("URL link", color = Color.LightGray, fontSize = 13.sp) },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium),
+                        singleLine = true
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -638,9 +699,9 @@ fun ProductEditDialog(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Button(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f).height(36.dp),
-                        shape = RoundedCornerShape(6.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextDark)
+                        modifier = Modifier.weight(1f).height(42.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
                     ) {
                         Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
@@ -653,19 +714,21 @@ fun ProductEditDialog(
                                 brand = brand,
                                 supplier = supplier,
                                 unit = unit,
+                                unitValue = unitValue.toDoubleOrNull() ?: 1.0,
                                 unitPrice = unitPrice.toDoubleOrNull() ?: 0.0,
                                 costPrice = costPrice.toDoubleOrNull() ?: 0.0,
                                 reorderLevel = reorderLevel.toIntOrNull() ?: 0,
                                 currentStock = currentStock.toIntOrNull() ?: 0,
+                                imageUrl = imageUrl,
                                 status = status,
                                 arModel = arModelUrl
                             ))
                         },
-                        modifier = Modifier.weight(1f).height(36.dp),
-                        shape = RoundedCornerShape(6.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
+                        modifier = Modifier.weight(1f).height(42.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3))
                     ) {
-                        Text(if (product == null) "Add" else "Update", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(if (product == null) "Add" else "Save", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -677,52 +740,53 @@ fun ProductEditDialog(
 fun ProductDetailDialog(product: ProductData, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.95f).wrapContentHeight(), 
-            shape = RoundedCornerShape(24.dp), 
+            modifier = Modifier.fillMaxWidth(0.85f).wrapContentHeight(), 
+            shape = RoundedCornerShape(12.dp), 
             color = Color.White
         ) {
-            Column(modifier = Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(modifier = Modifier.size(56.dp), shape = RoundedCornerShape(14.dp), color = StaffPortalButtonBlue.copy(alpha = 0.08f)) {
-                            Icon(Icons.Default.Inventory2, contentDescription = null, modifier = Modifier.padding(14.dp), tint = StaffPortalButtonBlue)
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(text = product.name, fontWeight = FontWeight.Black, fontSize = 20.sp, color = TextDark)
-                            Text(text = "System ID: ${product.id}", fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
-                        }
+                    Text("Product Details", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF111827))
                     }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                @Composable
+                fun DetailRow(label: String, value: String) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        Text(text = "$label: ", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+                        Text(text = value, fontSize = 13.sp, color = Color(0xFF4B5563))
                     }
+                }
+                
+                DetailRow("Product ID", product.id)
+                DetailRow("Product Name", product.name)
+                DetailRow("Category", product.category)
+                DetailRow("Brand", product.brand)
+                DetailRow("Supplier", product.supplier)
+                DetailRow("Current Stock", "${product.currentStock} ${product.unit}s")
+                DetailRow("Unit Type", "${product.unit} ${if (product.unit != "Piece" && product.unit != "Tank") "(${product.unitValue})" else ""}")
+                DetailRow("Retail Price", String.format(Locale.US, "₱%,.2f", product.unitPrice))
+                DetailRow("Cost Price", String.format(Locale.US, "₱%,.2f", product.costPrice))
+                DetailRow("Reorder Level", product.reorderLevel.toString())
+                if (product.imageUrl.isNotEmpty()) {
+                    DetailRow("Image", product.imageUrl)
+                }
+                DetailRow("Status", product.status)
+                if (product.arModel.isNotEmpty()) {
+                    DetailRow("AR Asset", product.arModel)
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
-                HorizontalDivider(color = Color(0xFFF1F3F4))
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                DetailValueRow("Category", product.category, isBold = true, color = StaffPortalButtonBlue)
-                DetailValueRow("Brand", product.brand)
-                DetailValueRow("Supplier", product.supplier)
-                DetailValueRow("Current Stock", "${product.currentStock} ${product.unit}s", isBold = true, color = if (product.currentStock <= product.reorderLevel) GasTrackRed else TextDark)
-                DetailValueRow("Unit Type", product.unit)
-                DetailValueRow("Retail Price", String.format(Locale.US, "₱%,.2f", product.unitPrice), isBold = true)
-                DetailValueRow("Cost Price", String.format(Locale.US, "₱%,.2f", product.costPrice))
-                DetailValueRow("Reorder Level", "${product.reorderLevel} ${product.unit}s")
-                DetailValueRow("Status", product.status, color = if (product.status == "Active") Color(0xFF2E7D32) else GasTrackRed)
-                if (product.arModel.isNotEmpty()) {
-                    DetailValueRow("AR Asset", "LINKED", color = StaffPortalButtonBlue)
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
                 Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                    onClick = onDismiss, 
+                    modifier = Modifier.fillMaxWidth().height(44.dp), 
+                    shape = RoundedCornerShape(8.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
                 ) {
-                    Text("Close Catalog", fontWeight = FontWeight.Black)
+                    Text("Close", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
