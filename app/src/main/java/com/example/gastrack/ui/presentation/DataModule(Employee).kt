@@ -182,7 +182,7 @@ fun ReportGeneratorTab(
                 Button(
                     onClick = { onAction("Exporting to $selectedFormat...") },
                     modifier = Modifier.weight(1f).height(56.dp).shadow(8.dp, RoundedCornerShape(28.dp)),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                     shape = RoundedCornerShape(28.dp)
                 ) {
                     Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
