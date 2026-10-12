@@ -22,6 +22,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -317,15 +318,36 @@ fun ActionFeedbackDialog(message: String, onDismiss: () -> Unit) {
 fun InventoryStatCard(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
-            .height(100.dp)
-            .shadow(4.dp, RoundedCornerShape(16.dp)),
+            .height(90.dp)
+            .shadow(3.dp, RoundedCornerShape(14.dp)),
         color = Color.White,
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(14.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.Center) {
-            Text(text = label, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 2, lineHeight = 14.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = value, fontSize = 22.sp, color = color, fontWeight = FontWeight.Black)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                color = TextGray,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                lineHeight = 12.sp,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                fontSize = 15.sp,
+                color = color,
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

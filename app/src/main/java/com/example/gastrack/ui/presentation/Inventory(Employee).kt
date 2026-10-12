@@ -268,7 +268,7 @@ fun InventoryEmployeeScreen(
 fun InventoryQuickAction(text: String, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0082FB)),
+        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
         modifier = modifier.height(42.dp)
@@ -595,7 +595,7 @@ fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: 
                         },
                         modifier = Modifier.weight(1f).height(44.dp), 
                         shape = RoundedCornerShape(8.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White)
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue, contentColor = Color.White)
                     ) { 
                         Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
@@ -851,7 +851,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         Text("Items", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
                         Button(
                             onClick = { items.add(ItemRow()) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
+                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                             shape = RoundedCornerShape(6.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
@@ -1013,7 +1013,7 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         }, 
                         modifier = Modifier.weight(1f).height(48.dp), 
                         shape = RoundedCornerShape(6.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue, contentColor = Color.White),
                         enabled = !isSubmitting
                     ) { Text(if (isSubmitting) "Saving…" else "Received", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
                 }
@@ -1172,7 +1172,7 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         Text("Items", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
                         Button(
                             onClick = { items.add(ItemRow()) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
+                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                             shape = RoundedCornerShape(6.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
@@ -1335,7 +1335,7 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         }, 
                         modifier = Modifier.weight(1f).height(48.dp), 
                         shape = RoundedCornerShape(6.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue, contentColor = Color.White),
                         enabled = !isSubmitting
                     ) { Text(if (isSubmitting) "Saving…" else "Approved", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
                 }
@@ -1478,7 +1478,7 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         Text("Transfer Items", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
                         Button(
                             onClick = { items.add(ItemRow()) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
+                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                             shape = RoundedCornerShape(6.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
@@ -1640,7 +1640,7 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                         }, 
                         modifier = Modifier.weight(1f).height(48.dp), 
                         shape = RoundedCornerShape(6.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3), contentColor = Color.White),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue, contentColor = Color.White),
                         enabled = !isSubmitting
                     ) { Text(if (isSubmitting) "Saving…" else "Create Transfer", fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false) }
                 }

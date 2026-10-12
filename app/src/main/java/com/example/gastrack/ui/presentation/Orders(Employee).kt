@@ -714,7 +714,7 @@ fun DeliveryDataCard(
                     onClick = onAssign,
                     modifier = Modifier.weight(1.5f).height(38.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
+                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                 ) {
                     Text("Assign Driver", fontSize = 11.sp, fontWeight = FontWeight.Black)

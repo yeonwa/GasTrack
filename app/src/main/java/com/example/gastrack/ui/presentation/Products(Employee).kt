@@ -235,7 +235,7 @@ fun ProductsEmployeeScreen(
                     .padding(vertical = 16.dp)
                     .height(56.dp)
                     .shadow(8.dp, RoundedCornerShape(28.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3)),
+                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                 shape = RoundedCornerShape(28.dp)
             ) {
                 Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -726,7 +726,7 @@ fun ProductEditDialog(
                         },
                         modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D6BF3))
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
                     ) {
                         Text(if (product == null) "Add" else "Save", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
