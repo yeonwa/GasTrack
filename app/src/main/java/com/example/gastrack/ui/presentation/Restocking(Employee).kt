@@ -1022,9 +1022,11 @@ fun RestockingEmployeeScreen(
                     Text("Items", fontSize = 14.sp, fontWeight = FontWeight.Black, color = TextDark)
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val poItems = if (po.items.isNotEmpty()) po.items else listOf(
-                        PurchaseOrderItemData("POI-DEFAULT", po.purchaseOrderId, "P-001", "Cylinder 11 kg", if (po.totalQty > 0) po.totalQty else 50, if (po.totalQty > 0) po.totalAmount / po.totalQty else 870.0, po.totalAmount)
-                    )
+                    val poItems = po.items.ifEmpty {
+                        listOf(
+                            PurchaseOrderItemData("POI-DEFAULT", po.purchaseOrderId, "P-001", "Cylinder 11 kg", if (po.totalQty > 0) po.totalQty else 50, if (po.totalQty > 0) po.totalAmount / po.totalQty else 870.0, po.totalAmount)
+                        )
+                    }
 
                     poItems.forEach { item ->
                         Surface(
@@ -1187,6 +1189,7 @@ data class CustomizeRowState(
     val costPrice: Double
 )
 
+@Suppress("UnstableComposableParameter")
 @Composable
 fun CustomizeRestockModal(onClose: () -> Unit, items: List<RestockRecommendationData>, onApplied: () -> Unit) {
     val rows = remember(items) {
