@@ -46,6 +46,7 @@ fun MenuEmployeeScreen(
     onNavigateToSuppliers: () -> Unit = {},
     onNavigateToUsers: () -> Unit = {},
     onNavigateToReports: () -> Unit = {},
+    onNavigateToReportCompliance: () -> Unit = {},
     onNavigateToSystemDataManagement: () -> Unit = {},
 ) {
     Box(
@@ -75,6 +76,7 @@ fun MenuEmployeeScreen(
                 item { EmployeeMenuItem(Icons.Default.AutoAwesome, "Restocking", "Smart replenishment", onNavigateToRestocking) }
                 item { EmployeeMenuItem(Icons.Default.Groups, "Suppliers", "Vendor directory", onNavigateToSuppliers) }
                 item { EmployeeMenuItem(Icons.Default.Analytics, "Data and Reports", "Exportable system data", onNavigateToReports) }
+                item { EmployeeMenuItem(Icons.Default.Assessment, "Report & Compliance", "Regulatory compliance tracker", onNavigateToReportCompliance) }
                 item { EmployeeMenuItem(Icons.Default.Person, "Users", "Staff access control", onNavigateToUsers) }
                 item { EmployeeMenuItem(Icons.AutoMirrored.Filled.ListAlt, "Order and Delivery", "Fulfillment tracking", onNavigateToOrders) }
                 item { EmployeeMenuItem(Icons.Default.Settings, "Company Profile & Branches", "Company, Branch, & Warehouse", onNavigateToSystemDataManagement) }

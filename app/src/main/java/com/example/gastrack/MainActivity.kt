@@ -155,6 +155,13 @@ fun AppNavigation() {
                 }
             )
         }
+        composable("employee_report_compliance") {
+            ReportComplianceScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
         composable("employee_system_management") {
             SystemDataManagementScreen(
                 onBack = {
@@ -226,6 +233,9 @@ fun AppNavigation() {
                 },
                 onNavigateToReports = {
                     navController.navigate("employee_data")
+                },
+                onNavigateToReportCompliance = {
+                    navController.navigate("employee_report_compliance")
                 },
                 onNavigateToSystemDataManagement = {
                     navController.navigate("employee_system_management")
