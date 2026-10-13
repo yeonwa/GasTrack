@@ -2,41 +2,39 @@ package com.example.gastrack.ui.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
+
+data class MenuItemData(
+    val icon: ImageVector,
+    val title: String,
+    val subtitle: String,
+    val onClick: () -> Unit
+)
 
 @Composable
 fun MenuEmployeeScreen(
     onNavigateToDashboard: () -> Unit,
     onNavigateToLogout: () -> Unit,
-    onNavigateToProfile: () -> Unit = {},
     onNavigateToOrders: () -> Unit = {},
     onNavigateToPOS: () -> Unit = {},
     onNavigateToSales: () -> Unit = {},
@@ -49,6 +47,30 @@ fun MenuEmployeeScreen(
     onNavigateToReportCompliance: () -> Unit = {},
     onNavigateToSystemDataManagement: () -> Unit = {},
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    val menuItems = listOf(
+        MenuItemData(Icons.Default.GridView, "Dashboard", "System overview & stats", onNavigateToDashboard),
+        MenuItemData(Icons.Default.ShoppingCart, "POS Terminal", "Direct retail checkout", onNavigateToPOS),
+        MenuItemData(Icons.Default.Category, "Inventory", "Stock level monitoring", onNavigateToInventory),
+        MenuItemData(Icons.Default.Inventory, "Products", "Catalog management", onNavigateToProducts),
+        MenuItemData(Icons.Default.AttachMoney, "Sales", "Transaction analytics", onNavigateToSales),
+        MenuItemData(Icons.Default.Sync, "Restocking", "Smart replenishment", onNavigateToRestocking),
+        MenuItemData(Icons.Default.LocalShipping, "Order and Delivery", "Fulfillment tracking", onNavigateToOrders),
+        MenuItemData(Icons.Default.Groups, "Suppliers", "Vendor directory", onNavigateToSuppliers),
+        MenuItemData(Icons.Default.Assessment, "Report and Compliance", "Regulatory compliance tracker", onNavigateToReportCompliance),
+        MenuItemData(Icons.Default.Storage, "Data", "Exportable system data", onNavigateToReports),
+        MenuItemData(Icons.Default.Person, "Users", "Staff access control", onNavigateToUsers),
+        MenuItemData(Icons.Default.Settings, "Settings", "System configuration", onNavigateToSystemDataManagement)
+    )
+
+    val filteredMenuItems = remember(searchQuery, menuItems) {
+        menuItems.filter {
+            it.title.contains(searchQuery, ignoreCase = true) ||
+            it.subtitle.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -58,8 +80,20 @@ fun MenuEmployeeScreen(
             EmployeePortalHeader(
                 title = "Admin Account",
                 subtitle = "Hello,",
-                onProfile = onNavigateToProfile,
-                showProfile = true
+                showProfile = false,
+                rightContent = {
+                    IconButton(
+                        onClick = { /* TODO: Notification click handler */ },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
             )
 
             // --- Menu Items List (Premium Cards) ---
@@ -68,18 +102,48 @@ fun MenuEmployeeScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item { EmployeeMenuItem(Icons.Default.GridView, "Dashboard", "System overview & stats", onNavigateToDashboard) }
-                item { EmployeeMenuItem(Icons.Default.ShoppingCart, "POS Terminal", "Direct retail checkout", onNavigateToPOS) }
-                item { EmployeeMenuItem(Icons.Default.Category, "Inventory", "Stock level monitoring", onNavigateToInventory) }
-                item { EmployeeMenuItem(Icons.Default.Inventory, "Products", "Catalog management", onNavigateToProducts) }
-                item { EmployeeMenuItem(Icons.Default.AttachMoney, "Sales", "Transaction analytics", onNavigateToSales) }
-                item { EmployeeMenuItem(Icons.Default.AutoAwesome, "Restocking", "Smart replenishment", onNavigateToRestocking) }
-                item { EmployeeMenuItem(Icons.Default.Groups, "Suppliers", "Vendor directory", onNavigateToSuppliers) }
-                item { EmployeeMenuItem(Icons.Default.Analytics, "Data and Reports", "Exportable system data", onNavigateToReports) }
-                item { EmployeeMenuItem(Icons.Default.Assessment, "Report & Compliance", "Regulatory compliance tracker", onNavigateToReportCompliance) }
-                item { EmployeeMenuItem(Icons.Default.Person, "Users", "Staff access control", onNavigateToUsers) }
-                item { EmployeeMenuItem(Icons.AutoMirrored.Filled.ListAlt, "Order and Delivery", "Fulfillment tracking", onNavigateToOrders) }
-                item { EmployeeMenuItem(Icons.Default.Settings, "Company Profile & Branches", "Company, Branch, & Warehouse", onNavigateToSystemDataManagement) }
+                item {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .shadow(4.dp, RoundedCornerShape(20.dp)),
+                        color = Color.White,
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        TextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Search for...", color = TextGray, fontSize = 14.sp) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = TextGray) },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                            ),
+                            singleLine = true
+                        )
+                    }
+                }
+
+                if (filteredMenuItems.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No menu items found.",
+                            color = TextGray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    items(filteredMenuItems.size) { index ->
+                        val item = filteredMenuItems[index]
+                        EmployeeMenuItem(item.icon, item.title, item.subtitle, item.onClick)
+                    }
+                }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
 
@@ -108,18 +172,6 @@ fun MenuEmployeeScreen(
             }
         }
     }
-}
-
-@Composable
-fun MenuSectionHeader(text: String) {
-    Text(
-        text = text,
-        color = TextGray,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.Black,
-        letterSpacing = 1.sp,
-        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
-    )
 }
 
 @Composable
