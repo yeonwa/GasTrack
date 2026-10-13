@@ -133,10 +133,9 @@ fun SuppliersEmployeeScreen(
     }
 }
 
-@Suppress("UnstableComposableParameter")
 @Composable
 fun SuppliersDirectoryTab(
-    suppliers: List<SupplierData>,
+    suppliers: androidx.compose.runtime.snapshots.SnapshotStateList<SupplierData>,
     onAddClick: () -> Unit,
     onViewClick: (SupplierData) -> Unit,
     onEditClick: (SupplierData) -> Unit,
