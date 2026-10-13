@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -502,29 +503,29 @@ fun StatCard(label: String, value: String, sub: String, tone: StatTone, icon: Im
     }
 
     Surface(
-        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(14.dp)),
+        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
         color = Color.White,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, Color(0xFFF0F0F0))
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Surface(
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(32.dp),
                 shape = CircleShape,
                 color = bgColor
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(20.dp))
+                    Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(16.dp))
                 }
             }
-            Column {
-                Text(text = label, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium)
-                Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Black, color = contentColor)
-                Text(text = sub, fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = label, fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = value, fontSize = 15.sp, fontWeight = FontWeight.Black, color = contentColor, maxLines = 1)
+                Text(text = sub, fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

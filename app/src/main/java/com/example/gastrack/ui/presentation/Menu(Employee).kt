@@ -46,6 +46,7 @@ fun MenuEmployeeScreen(
     onNavigateToReports: () -> Unit = {},
     onNavigateToReportCompliance: () -> Unit = {},
     onNavigateToSystemDataManagement: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
 

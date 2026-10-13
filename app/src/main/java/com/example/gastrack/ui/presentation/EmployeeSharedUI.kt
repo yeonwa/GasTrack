@@ -315,39 +315,65 @@ fun ActionFeedbackDialog(message: String, onDismiss: () -> Unit) {
 }
 
 @Composable
-fun InventoryStatCard(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
+fun InventoryStatCard(
+    label: String, 
+    value: String, 
+    color: Color, 
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    sub: String? = null
+) {
     Surface(
         modifier = modifier
-            .height(90.dp)
-            .shadow(3.dp, RoundedCornerShape(14.dp)),
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
         color = Color.White,
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color(0xFFF0F0F0))
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = label,
-                fontSize = 10.sp,
-                color = TextGray,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                lineHeight = 12.sp,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                fontSize = 15.sp,
-                color = color,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            if (icon != null) {
+                Surface(
+                    modifier = Modifier.size(32.dp),
+                    shape = CircleShape,
+                    color = color.copy(alpha = 0.12f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    fontSize = 10.sp,
+                    color = TextGray,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = value,
+                    fontSize = 14.sp,
+                    color = color,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (sub != null) {
+                    Text(
+                        text = sub,
+                        fontSize = 9.sp,
+                        color = TextGray,
+                        fontWeight = FontWeight.Normal,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
         }
     }
 }

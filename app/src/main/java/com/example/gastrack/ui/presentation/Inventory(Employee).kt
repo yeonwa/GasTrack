@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -105,17 +106,55 @@ fun InventoryEmployeeScreen(
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
-                // --- Stats Dashboard Row ---
-                Row(
+                // --- Stats Dashboard 2x2 Grid ---
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InventoryStatCard("Out of Stock Items", inventoryItems.count { it.status == "Out of Stock" }.toString(), Color(0xFF991B1B), modifier = Modifier.weight(1f))
-                    InventoryStatCard("Critical Items", inventoryItems.count { it.status == "Critical" }.toString(), GasTrackRed, modifier = Modifier.weight(1f))
-                    InventoryStatCard("Low Stock Items", inventoryItems.count { it.status == "Low Stock" }.toString(), Color(0xFFFFA000), modifier = Modifier.weight(1f))
-                    InventoryStatCard("Normal Items", inventoryItems.count { it.status == "Normal" }.toString(), Color(0xFF2E7D32), modifier = Modifier.weight(1f))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InventoryStatCard(
+                            label = "Out of Stock",
+                            value = inventoryItems.count { it.status == "Out of Stock" }.toString(),
+                            color = Color(0xFF991B1B),
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.RemoveShoppingCart,
+                            sub = "Items"
+                        )
+                        InventoryStatCard(
+                            label = "Critical Items",
+                            value = inventoryItems.count { it.status == "Critical" }.toString(),
+                            color = GasTrackRed,
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.Warning,
+                            sub = "Action needed"
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InventoryStatCard(
+                            label = "Low Stock",
+                            value = inventoryItems.count { it.status == "Low Stock" }.toString(),
+                            color = Color(0xFFFFA000),
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.AutoMirrored.Filled.TrendingDown,
+                            sub = "Reorder limit"
+                        )
+                        InventoryStatCard(
+                            label = "Normal Items",
+                            value = inventoryItems.count { it.status == "Normal" }.toString(),
+                            color = Color(0xFF2E7D32),
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.CheckCircle,
+                            sub = "In stock"
+                        )
+                    }
                 }
             }
 
@@ -141,8 +180,8 @@ fun InventoryEmployeeScreen(
                         InventoryQuickAction("CSV", Icons.Default.FileDownload, modifier = Modifier.weight(1f)) { /* Download Template */ }
                         InventoryQuickAction("Import", Icons.Default.FileUpload, modifier = Modifier.weight(1f)) { /* Handle Import */ }
                         InventoryQuickAction("Stock In", Icons.Default.Add, modifier = Modifier.weight(1f)) { showStockInForm = true }
-                        InventoryQuickAction("Stock Out", Icons.Default.Add, modifier = Modifier.weight(1f)) { showStockOutForm = true }
-                        InventoryQuickAction("Transfer", Icons.Default.Add, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
+                        InventoryQuickAction("Stock Out", Icons.Default.Remove, modifier = Modifier.weight(1f)) { showStockOutForm = true }
+                        InventoryQuickAction("Transfer", Icons.Default.SwapHoriz, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
                     }
                 }
                 
