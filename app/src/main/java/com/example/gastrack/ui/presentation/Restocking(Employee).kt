@@ -318,31 +318,47 @@ fun RestockingEmployeeScreen(
                     Text(actionError, color = GasTrackRed, fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
                 }
 
-                // Metric Cards
-                Row(
+                // Metric Cards (Uniform 2-Row Grid matching Inventory)
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InventoryStatCard(
-                        label = "Critical Urgencies",
-                        value = "$criticalCount",
-                        color = GasTrackRed,
-                        modifier = Modifier.weight(1f)
-                    )
-                    InventoryStatCard(
-                        label = "Restocking Cost",
-                        value = formatPeso(estimatedCost),
-                        color = StaffPortalButtonBlue,
-                        modifier = Modifier.weight(1f)
-                    )
-                    InventoryStatCard(
-                        label = "Open Recommendations",
-                        value = recommendations.size.toString(),
-                        color = Color(0xFFFFA000),
-                        modifier = Modifier.weight(1f)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InventoryStatCard(
+                            label = "Critical Urgencies",
+                            value = "$criticalCount",
+                            color = GasTrackRed,
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.Warning,
+                            sub = "Products"
+                        )
+                        InventoryStatCard(
+                            label = "Restocking Cost",
+                            value = formatPeso(estimatedCost),
+                            color = StaffPortalButtonBlue,
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.AttachMoney,
+                            sub = "Est. Total"
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InventoryStatCard(
+                            label = "Open Recommendations",
+                            value = recommendations.size.toString(),
+                            color = Color(0xFFFFA000),
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.Assessment,
+                            sub = "Active"
+                        )
+                    }
                 }
             }
 
@@ -924,7 +940,7 @@ fun RestockingEmployeeScreen(
     if (isCustomizeOpen) {
         CustomizeRestockModal(
             onClose = { isCustomizeOpen = false },
-            items = recommendations.filter { selectedRows.contains(it.restockId) },
+            restockList = RestockItemList(recommendations.filter { selectedRows.contains(it.restockId) }),
             onApplied = {
                 isCustomizeOpen = false
             }
@@ -1189,9 +1205,14 @@ data class CustomizeRowState(
     val costPrice: Double
 )
 
-@Suppress("UnstableComposableParameter")
+@Immutable
+data class RestockItemList(
+    val items: List<RestockRecommendationData>
+)
+
 @Composable
-fun CustomizeRestockModal(onClose: () -> Unit, items: List<RestockRecommendationData>, onApplied: () -> Unit) {
+fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onApplied: () -> Unit) {
+    val items = restockList.items
     val rows = remember(items) {
         mutableStateListOf<CustomizeRowState>().apply {
             addAll(items.map { itm ->
