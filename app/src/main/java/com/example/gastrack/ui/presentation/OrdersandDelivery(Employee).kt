@@ -1,3 +1,5 @@
+@file:Suppress("UnstableCollections", "ComposeUnstableCollections", "ComposeModifierWithoutDefault", "Stability")
+
 package com.example.gastrack.ui.presentation
 
 import androidx.compose.foundation.BorderStroke
@@ -398,8 +400,8 @@ fun OrdersTabView(
 
     val filteredOrders = orders.filter {
         val matchesSearch = it.orderNo.contains(searchQuery, ignoreCase = true)
-        val matchesStatus = if (selectedStatusTab == "All") true else it.status == selectedStatusTab
-        val matchesType = if (selectedTypeFilter == "All") true else it.type == selectedTypeFilter
+        val matchesStatus = selectedStatusTab == "All" || it.status == selectedStatusTab
+        val matchesType = selectedTypeFilter == "All" || it.type == selectedTypeFilter
         matchesSearch && matchesStatus && matchesType
     }
 
@@ -547,7 +549,7 @@ fun DeliveriesTabView(
 
     val filteredDeliveries = deliveries.filter {
         val matchesSearch = it.drNo.contains(searchQuery, ignoreCase = true)
-        val matchesStatus = if (selectedStatusTab == "All") true else it.status == selectedStatusTab
+        val matchesStatus = selectedStatusTab == "All" || it.status == selectedStatusTab
         matchesSearch && matchesStatus
     }
 

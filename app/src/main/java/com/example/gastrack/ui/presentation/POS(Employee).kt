@@ -69,7 +69,6 @@ data class HeldCartData(
     val selectedCustomer: POSCustomerData? = null
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun POSEmployeeScreen(
     onBack: () -> Unit = {}
@@ -144,8 +143,7 @@ fun POSEmployeeScreen(
     val totalSalesInclusive = subtotalInclusive - discountAmount
     val vatAmount = totalSalesInclusive * (0.12 / 1.12)
     val amountNetOfVat = totalSalesInclusive - vatAmount
-    val totalAmountDue = totalSalesInclusive
-
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -177,7 +175,7 @@ fun POSEmployeeScreen(
                         onUpdateQuantity = { id, qty -> 
                             val product = products.find { it.id == id }
                             if (product != null) {
-                                val clampedQty = Math.max(0, Math.min(qty, product.stock))
+                                val clampedQty = qty.coerceIn(0, product.stock)
                                 if (clampedQty <= 0) cart.remove(id) else cart[id] = clampedQty 
                             }
                         }
@@ -192,12 +190,11 @@ fun POSEmployeeScreen(
                         pickupDate = pickupDate,
                         pickupTime = pickupTime,
                         deliveryAddress = deliveryAddress,
-                        assignedRider = assignedRider,
                         subtotalInclusive = subtotalInclusive,
                         discountAmount = discountAmount,
                         vatAmount = vatAmount,
                         amountNetOfVat = amountNetOfVat,
-                        totalAmountDue = totalAmountDue,
+                        totalAmountDue = totalSalesInclusive,
                         heldCount = heldCarts.size,
                         onDiscountChange = { discountRate = it },
                         onCustomerTypeChange = { newType ->
@@ -223,15 +220,13 @@ fun POSEmployeeScreen(
             }
             
             POSBottomBar(
-                totalAmount = totalAmountDue,
+                totalAmount = totalSalesInclusive,
                 onCheckoutClick = { 
-                    if (totalAmountDue > 0) {
-                        if (customerType == "Pickup" && selectedCustomer == null) {
-                            showPickupModal = true
-                        } else if (customerType == "Delivery" && (selectedCustomer == null || deliveryAddress.isEmpty())) {
-                            showDeliveryModal = true
-                        } else {
-                            showPayPopup = true
+                    if (totalSalesInclusive > 0) {
+                        when (customerType) {
+                            "Pickup" -> if (selectedCustomer == null) showPickupModal = true else showPayPopup = true
+                            "Delivery" -> if (selectedCustomer == null || deliveryAddress.isEmpty()) showDeliveryModal = true else showPayPopup = true
+                            else -> showPayPopup = true
                         }
                     } 
                 },
@@ -246,7 +241,7 @@ fun POSEmployeeScreen(
                                 items = HashMap(cart),
                                 customerType = customerType,
                                 discountRate = discountRate,
-                                totalAmount = totalAmountDue,
+                                totalAmount = totalSalesInclusive,
                                 pickupDate = pickupDate,
                                 pickupTime = pickupTime,
                                 deliveryAddress = deliveryAddress,
@@ -277,7 +272,7 @@ fun POSEmployeeScreen(
 
     if (showPayPopup) {
         PayPopup(
-            totalAmount = totalAmountDue,
+            totalAmount = totalSalesInclusive,
             subtotal = subtotalInclusive,
             discount = discountAmount,
             vat = vatAmount,
@@ -303,7 +298,7 @@ fun POSEmployeeScreen(
             discount = discountAmount,
             vat = vatAmount,
             netOfVat = amountNetOfVat,
-            totalAmount = totalAmountDue,
+            totalAmount = totalSalesInclusive,
             onBackClick = {
                 showOrderDetails = false
                 showPayPopup = true
@@ -433,7 +428,6 @@ fun POSEmployeeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun POSProductsTab(
     products: List<POSProductData>,
@@ -444,16 +438,14 @@ fun POSProductsTab(
     var selectedCategory by remember { mutableStateOf("All Categories") }
     var selectedBrand by remember { mutableStateOf("All") }
     
-    var expandedCategory by remember { mutableStateOf(false) }
-    var expandedBrand by remember { mutableStateOf(false) }
     
     val categories = listOf("All Categories", "Cylinder", "Accessories", "Gasul LPG")
     val brands = listOf("All", "Petron", "Solane", "M-Gas", "Phoenix")
 
     val filteredProducts = products.filter {
         val matchesSearch = it.name.contains(searchQuery, ignoreCase = true)
-        val matchesCategory = if (selectedCategory == "All Categories") true else it.category == selectedCategory
-        val matchesBrand = if (selectedBrand == "All") true else it.brand == selectedBrand
+        val matchesCategory = selectedCategory == "All Categories" || it.category == selectedCategory
+        val matchesBrand = selectedBrand == "All" || it.brand == selectedBrand
         matchesSearch && matchesCategory && matchesBrand
     }
 
@@ -560,7 +552,6 @@ fun POSCartTabView(
     pickupDate: String,
     pickupTime: String,
     deliveryAddress: String,
-    assignedRider: String,
     subtotalInclusive: Double,
     discountAmount: Double,
     vatAmount: Double,
@@ -645,7 +636,7 @@ fun POSCartTabView(
                     ) {
                         Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
-                                Text(if (customerType == "Pickup") "Pickup: $pickupDate at $pickupTime" else "Delivery to: ${if (deliveryAddress.isEmpty()) "Set Address" else deliveryAddress}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue)
+                                Text(if (customerType == "Pickup") "Pickup: $pickupDate at $pickupTime" else "Delivery to: ${deliveryAddress.ifEmpty { "Set Address" }}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue)
                                 Text("Customer: ${selectedCustomer?.name ?: "Select Customer"}", fontSize = 10.sp, color = TextGray)
                             }
                             Icon(Icons.Default.Edit, contentDescription = "Edit", tint = StaffPortalButtonBlue, modifier = Modifier.size(16.dp))
@@ -805,8 +796,9 @@ fun POSBottomBar(totalAmount: Double, onCheckoutClick: () -> Unit, onHoldClick: 
     }
 }
 
+@Suppress("unused")
 @Composable
-fun POSCustomersTab(
+private fun POSCustomersTab(
     customers: List<POSCustomerData>,
     selectedCustomer: POSCustomerData?,
     onCustomerSelected: (POSCustomerData?) -> Unit,
@@ -820,7 +812,7 @@ fun POSCustomersTab(
     
     val filteredCustomers = customers.filter { 
         val matchesSearch = it.name.contains(searchQuery, ignoreCase = true) || it.phone.contains(searchQuery)
-        val matchesType = if (selectedTypeFilter == "All") true else it.customerType == selectedTypeFilter
+        val matchesType = selectedTypeFilter == "All" || it.customerType == selectedTypeFilter
         matchesSearch && matchesType
     }
 
@@ -918,8 +910,9 @@ fun POSCustomersTab(
     }
 }
 
+@Suppress("unused")
 @Composable
-fun POSCustomerCard(
+private fun POSCustomerCard(
     customer: POSCustomerData, 
     isSelected: Boolean, 
     onSelect: () -> Unit,
@@ -1118,7 +1111,7 @@ fun OrderDetailsPopup(
                 DetailValueRow("Sale ID", "SALE-1002")
                 DetailValueRow("Order Type", orderType, isBold = true, color = StaffPortalButtonBlue)
                 DetailValueRow("Payment Method", paymentMethod, isBold = true)
-                DetailValueRow("Fulfillment", if (customer == null) "Walk-in Store" else customer.name)
+                DetailValueRow("Fulfillment", customer?.name ?: "Walk-in Store")
                 DetailValueRow("Timestamp", "2026-01-20 02:14 PM")
                 DetailValueRow("Status", "COMPLETED", color = StatusActive)
                 
