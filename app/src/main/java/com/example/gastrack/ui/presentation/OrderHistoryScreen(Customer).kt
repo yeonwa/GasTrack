@@ -33,7 +33,6 @@ data class OrderItem(
     val itemCount: Int = 1
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderHistoryScreen(
     onBack: () -> Unit
