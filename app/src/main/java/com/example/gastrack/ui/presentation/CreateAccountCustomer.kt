@@ -3,7 +3,6 @@ package com.example.gastrack.ui.presentation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,9 +17,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -36,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
+import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +42,7 @@ fun CreateAccountCustomerScreen(
     onBack: () -> Unit,
     onAccountCreated: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -55,6 +55,44 @@ fun CreateAccountCustomerScreen(
     var city by remember { mutableStateOf("") }
     var barangay by remember { mutableStateOf("") }
     var houseNoStreet by remember { mutableStateOf("") }
+
+    val locationsMap = remember {
+        val map = mutableMapOf<String, Map<String, Map<String, List<String>>>>()
+        try {
+            val jsonString = context.assets.open("psgc_locations.json").bufferedReader().use { it.readText() }
+            val rootObj = JSONObject(jsonString)
+            for (regKey in rootObj.keys()) {
+                val provObj = rootObj.getJSONObject(regKey)
+                val provMap = mutableMapOf<String, Map<String, List<String>>>()
+                for (provKey in provObj.keys()) {
+                    val cityObj = provObj.getJSONObject(provKey)
+                    val cityMap = mutableMapOf<String, List<String>>()
+                    for (cityKey in cityObj.keys()) {
+                        val bgyArray = cityObj.getJSONArray(cityKey)
+                        val bgyList = mutableListOf<String>()
+                        for (i in 0 until bgyArray.length()) {
+                            bgyList.add(bgyArray.getString(i))
+                        }
+                        cityMap[cityKey] = bgyList
+                    }
+                    provMap[provKey] = cityMap
+                }
+                map[regKey] = provMap
+            }
+        } catch (_: Exception) {}
+        map
+    }
+
+    val availableRegions = remember(locationsMap) { locationsMap.keys.sorted() }
+    val availableProvinces = remember(locationsMap, region) {
+        locationsMap[region]?.keys?.sorted() ?: emptyList()
+    }
+    val availableCities = remember(locationsMap, region, province) {
+        locationsMap[region]?.get(province)?.keys?.sorted() ?: emptyList()
+    }
+    val availableBarangays = remember(locationsMap, region, province, city) {
+        locationsMap[region]?.get(province)?.get(city)?.sorted() ?: emptyList()
+    }
     
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -134,19 +172,12 @@ fun CreateAccountCustomerScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Join GasTrack",
+                text = "Create Your GasTrack Account",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 color = TextDark
             )
-            Text(
-                text = "Register for fast and safe LPG deliveries",
-                fontSize = 14.sp,
-                color = TextGray,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-
+  
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- Form Fields ---
@@ -161,26 +192,23 @@ fun CreateAccountCustomerScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // First Name & Last Name
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomerInputField(
-                        label = "FIRST NAME",
-                        value = firstName,
-                        onValueChange = { firstName = it },
-                        placeholder = "e.g. Juan"
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomerInputField(
-                        label = "LAST NAME",
-                        value = lastName,
-                        onValueChange = { lastName = it },
-                        placeholder = "e.g. Dela Cruz"
-                    )
-                }
-            }
+            // First Name
+            CustomerInputField(
+                label = "FIRST NAME",
+                value = firstName,
+                onValueChange = { firstName = it },
+                placeholder = "e.g. Juan"
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Last Name
+            CustomerInputField(
+                label = "LAST NAME",
+                value = lastName,
+                onValueChange = { lastName = it },
+                placeholder = "e.g. Dela Cruz"
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -298,49 +326,59 @@ fun CreateAccountCustomerScreen(
                 modifier = Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 12.dp)
             )
 
-            // Region & Province
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomerInputField(
-                        label = "REGION",
-                        value = region,
-                        onValueChange = { region = it },
-                        placeholder = "e.g. NCR"
-                    )
+            // Region
+            CustomerDropdownField(
+                label = "REGION",
+                selectedOption = region,
+                options = CustomerDropdownOptions(availableRegions),
+                onSelect = { selectedReg ->
+                    region = selectedReg
+                    val provs = locationsMap[selectedReg]?.keys?.sorted() ?: emptyList()
+                    province = if (provs.size == 1) provs[0] else ""
+                    city = ""
+                    barangay = ""
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomerInputField(
-                        label = "PROVINCE",
-                        value = province,
-                        onValueChange = { province = it },
-                        placeholder = "e.g. Metro Manila"
-                    )
-                }
+            )
+
+            // Province (Only appears when the region has multiple provinces to choose from)
+            if (availableProvinces.size > 1) {
+                Spacer(modifier = Modifier.height(16.dp))
+                CustomerDropdownField(
+                    label = "PROVINCE",
+                    selectedOption = province,
+                    options = CustomerDropdownOptions(availableProvinces),
+                    onSelect = { 
+                        province = it
+                        city = ""
+                        barangay = ""
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // City & Barangay
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomerInputField(
-                        label = "CITY / MUNICIPALITY",
-                        value = city,
-                        onValueChange = { city = it },
-                        placeholder = "e.g. Malabon"
-                    )
+            // City / Municipality
+            CustomerDropdownField(
+                label = "CITY / MUNICIPALITY",
+                selectedOption = city,
+                options = CustomerDropdownOptions(availableCities),
+                onSelect = { 
+                    city = it
+                    barangay = ""
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomerInputField(
-                        label = "BARANGAY",
-                        value = barangay,
-                        onValueChange = { barangay = it },
-                        placeholder = "e.g. Concepcion"
-                    )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Barangay
+            CustomerDropdownField(
+                label = "BARANGAY",
+                selectedOption = barangay,
+                options = CustomerDropdownOptions(availableBarangays),
+                onSelect = { 
+                    barangay = it
                 }
-            }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -416,7 +454,7 @@ fun CreateAccountCustomerScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Send OTP via SMS",
+                        text = "Verify Email Address",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black
                     )
@@ -434,8 +472,8 @@ fun CreateAccountCustomerScreen(
     }
 
     if (showOtpDialog) {
-        OtpVerificationDialog(
-            mobileNumber = mobileNumber,
+        EmailVerificationDialog(
+            email = email,
             onDismiss = { showOtpDialog = false },
             onVerified = {
                 showOtpDialog = false
@@ -446,8 +484,8 @@ fun CreateAccountCustomerScreen(
 }
 
 @Composable
-fun OtpVerificationDialog(
-    mobileNumber: String,
+fun EmailVerificationDialog(
+    email: String,
     onDismiss: () -> Unit,
     onVerified: () -> Unit
 ) {
@@ -464,14 +502,14 @@ fun OtpVerificationDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Verify Number",
+                    text = "Verify Email",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
                     color = TextDark
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Enter the 6-digit code sent to\n+63 $mobileNumber",
+                    text = "Enter the 6-digit verification code sent to\n$email",
                     fontSize = 14.sp,
                     color = TextGray,
                     textAlign = TextAlign.Center,
@@ -555,6 +593,64 @@ fun CustomerInputField(
                 focusedContainerColor = Color.Transparent
             )
         )
+    }
+}
+
+@Immutable
+data class CustomerDropdownOptions(val items: List<String>)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomerDropdownField(
+    label: String,
+    selectedOption: String,
+    options: CustomerDropdownOptions,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Black,
+            color = TextGray,
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = selectedOption,
+                onValueChange = {},
+                readOnly = true,
+                placeholder = { Text("Select $label", color = Color.LightGray) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                    focusedBorderColor = GasTrackBlue,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent
+                )
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.items.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onSelect(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
