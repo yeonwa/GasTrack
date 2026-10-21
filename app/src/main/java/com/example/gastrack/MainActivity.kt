@@ -226,26 +226,8 @@ fun AppNavigation() {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onNavigateToProfile = {
-                    navController.navigate("employee_profile")
-                },
                 onNavigateToNotifications = {
                     navController.navigate("employee_notifications")
-                }
-            )
-        }
-        composable("employee_profile") {
-            ProfileEmployeeScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToEdit = {
-                    navController.navigate("employee_user_modify")
-                },
-                onLogout = {
-                    navController.navigate("startup") {
-                        popUpTo(0) { inclusive = true }
-                    }
                 }
             )
         }
