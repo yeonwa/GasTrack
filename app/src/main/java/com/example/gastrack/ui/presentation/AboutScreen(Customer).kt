@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -22,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
     onBack: () -> Unit

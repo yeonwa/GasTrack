@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun ARLoadingScreen(
@@ -37,7 +38,7 @@ fun ARLoadingScreen(
     )
 
     LaunchedEffect(Unit) {
-        delay(3000)
+        delay(3.seconds)
         onLoadingComplete()
     }
 
@@ -76,13 +77,13 @@ fun ARLoadingScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Text(
-                text = "Initializing AI Visuals",
+                text = "Preparing Camera Scan",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
                 color = Color.White
             )
             Text(
-                text = "Scanning environment...",
+                text = "Please hold your phone steady...",
                 fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.7f),
                 fontWeight = FontWeight.Medium

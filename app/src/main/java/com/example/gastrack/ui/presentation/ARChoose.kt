@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +20,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -110,7 +108,7 @@ fun ARChooseScreen(
                     Icon(Icons.Default.Info, contentDescription = null, tint = GasTrackBlue)
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = "Select your LPG tank model to ensure accurate volume measurement through your camera.",
+                        text = "Select your LPG tank model so the AR camera can check its size and safe placement." ,
                         fontSize = 13.sp,
                         color = TextDark,
                         fontWeight = FontWeight.Medium,

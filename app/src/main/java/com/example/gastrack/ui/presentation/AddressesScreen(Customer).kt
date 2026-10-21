@@ -38,7 +38,6 @@ data class AddressItem(
     val isPrimary: Boolean = false
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddressesScreen(
     onBack: () -> Unit
@@ -149,12 +148,12 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = if (address.isPrimary) GasTrackRed.copy(alpha = 0.1f) else Color(0xFFF1F3F4)
+                color = if (address.isPrimary) StaffPortalButtonBlue.copy(alpha = 0.1f) else Color(0xFFF1F3F4)
             ) {
                 Icon(
                     imageVector = address.icon,
                     contentDescription = null,
-                    tint = if (address.isPrimary) GasTrackRed else StaffPortalBlue,
+                    tint = if (address.isPrimary) StaffPortalButtonBlue else StaffPortalBlue,
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -170,11 +169,11 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
                     if (address.isPrimary) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            color = GasTrackRed,
+                            color = StaffPortalButtonBlue,
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
-                                text = "PRIMARY",
+                                text = "DEFAULT",
                                 color = Color.White,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Black,
@@ -190,11 +189,23 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
                     lineHeight = 18.sp,
                     fontWeight = FontWeight.Medium
                 )
+                if (!address.isPrimary) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Set as Default",
+                        fontSize = 12.sp,
+                        color = StaffPortalButtonBlue,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clickable { onSelect() }
+                            .padding(vertical = 2.dp)
+                    )
+                }
             }
             RadioButton(
                 selected = address.isPrimary,
                 onClick = onSelect,
-                colors = RadioButtonDefaults.colors(selectedColor = GasTrackRed)
+                colors = RadioButtonDefaults.colors(selectedColor = StaffPortalButtonBlue)
             )
         }
     }
