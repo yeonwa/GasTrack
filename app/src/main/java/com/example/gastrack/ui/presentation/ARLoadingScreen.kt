@@ -1,6 +1,5 @@
 package com.example.gastrack.ui.presentation
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -26,17 +24,6 @@ import kotlin.time.Duration.Companion.seconds
 fun ARLoadingScreen(
     onLoadingComplete: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "Rotation")
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "LogoRotation"
-    )
-
     LaunchedEffect(Unit) {
         delay(3.seconds)
         onLoadingComplete()
@@ -64,13 +51,11 @@ fun ARLoadingScreen(
                     color = Color.White.copy(alpha = 0.1f)
                 ) {}
                 
-                // Rotating Logo
+                // Static Logo
                 Image(
                     painter = painterResource(id = R.drawable.favicon),
                     contentDescription = "Loading",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .rotate(rotation)
+                    modifier = Modifier.size(100.dp)
                 )
             }
             
