@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -355,7 +354,7 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
                 val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
+                    it.surfaceProvider = previewView.surfaceProvider
                 }
                 
                 val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -367,7 +366,7 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                         cameraSelector,
                         preview
                     )
-                } catch (e: Exception) { }
+                } catch (_: Exception) { }
             }, ContextCompat.getMainExecutor(context))
         }
     )
