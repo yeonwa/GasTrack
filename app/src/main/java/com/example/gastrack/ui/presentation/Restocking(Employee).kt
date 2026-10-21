@@ -59,6 +59,13 @@ data class PurchaseOrderData(
     val items: List<PurchaseOrderItemData> = emptyList()
 )
 
+data class WarehouseData(
+    val id: String,
+    val name: String,
+    val location: String,
+    val status: String
+)
+
 @Immutable
 data class PurchaseOrderItemData(
     val id: String,
@@ -1029,7 +1036,7 @@ fun RestockingEmployeeScreen(
                             ) {
                                 Text(warehouses.find { it.id == receiveWarehouseId }?.name ?: "Select Warehouse", fontSize = 13.sp)
                                 Spacer(modifier = Modifier.weight(1f))
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
                             }
                             DropdownMenu(expanded = warehouseExpanded, onDismissRequest = { warehouseExpanded = false }) {
                                 warehouses.forEach { wh ->

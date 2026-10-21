@@ -354,6 +354,9 @@ fun AppNavigation() {
                 },
                 onNavigateToPrivacyPolicy = {
                     navController.navigate("privacy_policy")
+                },
+                onNavigateToTermsOfService = {
+                    navController.navigate("terms_of_service")
                 }
             )
         }
@@ -497,6 +500,13 @@ fun AppNavigation() {
         }
         composable("privacy_policy") {
             PrivacyPolicyScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("terms_of_service") {
+            TermsOfServiceScreenCustomer(
                 onBack = {
                     navController.popBackStack()
                 }

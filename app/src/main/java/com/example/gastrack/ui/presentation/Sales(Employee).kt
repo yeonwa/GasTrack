@@ -3,8 +3,6 @@ package com.example.gastrack.ui.presentation
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,18 +11,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,6 +28,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.gastrack.ui.theme.*
 import java.util.Locale
 
+@Immutable
 data class SalesData(
     val salesId: String,
     val orderId: String,
@@ -45,6 +41,7 @@ data class SalesData(
     val remarks: String = ""
 )
 
+@Immutable
 data class PaymentData(
     val paymentId: String,
     val paymentType: String, // e.g., "Sale", "Purchase Order"
@@ -76,7 +73,7 @@ fun SalesEmployeeScreen(
         SalesData("S-004", "O-004", "C-004", "SALE-2026-004", "2026-01-03 10:35 AM", 0.0, 105.0, "EMP-003")
     ) }
 
-    val paymentRecords = remember { listOf(
+    val paymentRecords = remember { mutableStateListOf(
         PaymentData("P-001", "Sale", "S-001", null, "Cash", 950.0, "2026-01-05 10:35 AM"),
         PaymentData("P-002", "Sale", "S-002", null, "GCash", 1000.0, "2026-01-05 10:22 AM", "REF-8821"),
         PaymentData("P-003", "Sale", "S-003", null, "Card", 550.0, "2026-01-04 03:30 PM", "AUTH-9912")
@@ -226,8 +223,8 @@ fun SalesStatCard(label: String, value: String, accentColor: Color, modifier: Mo
 
 @Composable
 fun SalesRecordsTab(
-    sales: List<SalesData>,
-    payments: List<PaymentData>,
+    sales: SnapshotStateList<SalesData>,
+    payments: SnapshotStateList<PaymentData>,
     onViewClick: (SalesData) -> Unit,
     onDeleteClick: (SalesData) -> Unit
 ) {
@@ -237,7 +234,7 @@ fun SalesRecordsTab(
     val filteredSales = sales.filter { sale ->
         val payment = payments.find { it.saleId == sale.salesId }
         val matchesSearch = sale.saleNo.contains(searchQuery, ignoreCase = true)
-        val matchesType = if (selectedPaymentType == "All") true else payment?.paymentMethod == selectedPaymentType
+        val matchesType = selectedPaymentType == "All" || payment?.paymentMethod == selectedPaymentType
         matchesSearch && matchesType
     }
 

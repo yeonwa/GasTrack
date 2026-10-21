@@ -36,7 +36,8 @@ fun MenuScreen(
     onNavigateToPaymentMethods: () -> Unit = {},
     onNavigateToHelpCenter: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
-    onNavigateToPrivacyPolicy: () -> Unit = {}
+    onNavigateToPrivacyPolicy: () -> Unit = {},
+    onNavigateToTermsOfService: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = Color.White,
@@ -111,6 +112,7 @@ fun MenuScreen(
                 item { SimpleMenuItem(Icons.AutoMirrored.Filled.HelpOutline, "Help Center", onNavigateToHelpCenter) }
                 item { SimpleMenuItem(Icons.Default.Info, "About GasTrack", onNavigateToAbout) }
                 item { SimpleMenuItem(Icons.Default.Policy, "Privacy Policy", onNavigateToPrivacyPolicy) }
+                item { SimpleMenuItem(Icons.Default.Description, "Terms of Service", onNavigateToTermsOfService) }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
 
