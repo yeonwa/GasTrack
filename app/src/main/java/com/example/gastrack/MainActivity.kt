@@ -64,7 +64,7 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onNavigateToSignUp = {
-                    navController.navigate("create_account_employee")
+                    navController.navigate("register_company")
                 },
                 onNavigateToHome = {
                     navController.navigate("employee_menu") {
@@ -88,18 +88,6 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onRegisterComplete = {
-                    navController.navigate("employee_menu") {
-                        popUpTo("startup") { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable("create_account_employee") {
-            CreateAccountEmployeeScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
-                onActivateAccount = {
                     navController.navigate("employee_menu") {
                         popUpTo("startup") { inclusive = true }
                     }
