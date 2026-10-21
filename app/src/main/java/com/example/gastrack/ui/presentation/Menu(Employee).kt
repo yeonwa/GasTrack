@@ -28,7 +28,7 @@ data class MenuItemData(
     val icon: ImageVector,
     val title: String,
     val subtitle: String,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
 )
 
 @Composable
@@ -46,7 +46,8 @@ fun MenuEmployeeScreen(
     onNavigateToReports: () -> Unit = {},
     onNavigateToReportCompliance: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
@@ -62,7 +63,7 @@ fun MenuEmployeeScreen(
         MenuItemData(Icons.Default.Assessment, "Report and Compliance", "Regulatory compliance tracker", onNavigateToReportCompliance),
         MenuItemData(Icons.Default.Storage, "Data", "Exportable system data", onNavigateToReports),
         MenuItemData(Icons.Default.Person, "Users", "Staff access control", onNavigateToUsers),
-        MenuItemData(Icons.Default.Settings, "Settings", "System configuration", onNavigateToSettings)
+        MenuItemData(Icons.Default.Settings, "Settings", "System configuration", onNavigateToSettings),
     )
 
     val filteredMenuItems = remember(searchQuery, menuItems) {
@@ -75,16 +76,17 @@ fun MenuEmployeeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0)),
+            .background(EmployeePortalBackground),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             EmployeePortalHeader(
                 title = "Admin Account",
                 subtitle = "Hello,",
-                showProfile = false,
+                showProfile = true,
+                onProfile = onNavigateToProfile,
                 rightContent = {
                     IconButton(
-                        onClick = { /* TODO: Notification click handler */ },
+                        onClick = onNavigateToNotifications,
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(

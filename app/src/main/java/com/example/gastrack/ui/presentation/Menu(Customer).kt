@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -15,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,7 +35,7 @@ fun MenuScreen(
     onNavigateToHelpCenter: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToPrivacyPolicy: () -> Unit = {},
-    onNavigateToTermsOfService: () -> Unit = {}
+    onNavigateToTermsOfService: () -> Unit = {},
 ) {
     Scaffold(
         containerColor = Color.White,
@@ -105,6 +103,7 @@ fun MenuScreen(
                 item { SimpleMenuItem(Icons.Default.PersonOutline, "Profile", onNavigateToProfile) }
                 item { SimpleMenuItem(Icons.Default.History, "Order History", onNavigateToHistory) }
                 item { SimpleMenuItem(Icons.Default.Payment, "Payment Methods", onNavigateToPaymentMethods) }
+                item { SimpleMenuItem(Icons.Default.LocationOn, "Saved Addresses", onNavigateToAddresses) }
 
                 item { Spacer(modifier = Modifier.height(16.dp)) }
 

@@ -240,6 +240,9 @@ fun AppNavigation() {
                 },
                 onNavigateToProfile = {
                     navController.navigate("employee_profile")
+                },
+                onNavigateToNotifications = {
+                    navController.navigate("employee_notifications")
                 }
             )
         }
@@ -262,6 +265,16 @@ fun AppNavigation() {
             SettingsEmployeeScreen(
                 onBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+        composable("employee_notifications") {
+            NotificationEmployeeScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToReport = {
+                    navController.navigate("employee_report_compliance")
                 }
             )
         }
