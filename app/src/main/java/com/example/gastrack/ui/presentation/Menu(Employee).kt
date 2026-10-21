@@ -45,7 +45,6 @@ fun MenuEmployeeScreen(
     onNavigateToUsers: () -> Unit = {},
     onNavigateToReports: () -> Unit = {},
     onNavigateToReportCompliance: () -> Unit = {},
-    onNavigateToSystemDataManagement: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {}
 ) {
@@ -63,7 +62,6 @@ fun MenuEmployeeScreen(
         MenuItemData(Icons.Default.Assessment, "Report and Compliance", "Regulatory compliance tracker", onNavigateToReportCompliance),
         MenuItemData(Icons.Default.Storage, "Data", "Exportable system data", onNavigateToReports),
         MenuItemData(Icons.Default.Person, "Users", "Staff access control", onNavigateToUsers),
-        MenuItemData(Icons.Default.Business, "System Data", "Company, Branch, & Warehouses", onNavigateToSystemDataManagement),
         MenuItemData(Icons.Default.Settings, "Settings", "System configuration", onNavigateToSettings)
     )
 

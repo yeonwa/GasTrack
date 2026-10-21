@@ -76,16 +76,8 @@ fun LogOutCustomerScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = "You will need to sign in again to access your orders and history.",
-            fontSize = 15.sp,
-            color = TextGray,
-            textAlign = TextAlign.Center,
-            lineHeight = 22.sp,
-            fontWeight = FontWeight.Medium
-        )
+        Spacer(modifier = Modifier.height(12.dp))
 
-        Spacer(modifier = Modifier.height(64.dp))
 
         // --- Logout Button ---
         Button(

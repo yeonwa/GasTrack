@@ -162,13 +162,6 @@ fun AppNavigation() {
                 }
             )
         }
-        composable("employee_system_management") {
-            SystemDataManagementScreen(
-                onBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
         composable("employee_users") {
             UsersEmployeeScreen(
                 onBack = {
@@ -237,8 +230,8 @@ fun AppNavigation() {
                 onNavigateToReportCompliance = {
                     navController.navigate("employee_report_compliance")
                 },
-                onNavigateToSystemDataManagement = {
-                    navController.navigate("employee_system_management")
+                onNavigateToSettings = {
+                    navController.navigate("employee_settings")
                 },
                 onNavigateToLogout = {
                     navController.navigate("startup") {
@@ -262,6 +255,13 @@ fun AppNavigation() {
                     navController.navigate("startup") {
                         popUpTo(0) { inclusive = true }
                     }
+                }
+            )
+        }
+        composable("employee_settings") {
+            SettingsEmployeeScreen(
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }

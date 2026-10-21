@@ -145,7 +145,7 @@ fun LogInEmployeeScreen(
 
                 // --- Subtitle ---
                 Text(
-                    text = "Staff Portal: Operations Access Only",
+                    text = "Staff Portal",
                     fontSize = 16.sp,
                     color = TextGray,
                     fontWeight = FontWeight.Bold,
