@@ -452,20 +452,15 @@ fun AppNavigation() {
                     // Handle Order Placement
                 },
                 onNavigateToTracking = {
-                    navController.navigate("map_tracking")
+                    navController.navigate("customer_home") {
+                        popUpTo("customer_home") { inclusive = true }
+                    }
                 },
                 onNavigateToAddresses = {
                     navController.navigate("addresses")
                 },
                 onNavigateToProfile = {
                     navController.navigate("profile")
-                }
-            )
-        }
-        composable("map_tracking") {
-            MapTrackingScreen(
-                onBack = {
-                    navController.popBackStack()
                 }
             )
         }
