@@ -296,7 +296,7 @@ fun RestockingEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0))
+            .background(EmployeePortalBackground)
     ) {
         EmployeePortalHeader(
             title = "Restocking Assistant",
@@ -439,16 +439,10 @@ fun RestockingEmployeeScreen(
                 item {
                     Column(modifier = Modifier.padding(16.dp)) {
                         // Search Field Row
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            placeholder = { Text("Search by Product", fontSize = 13.sp) },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextGray, modifier = Modifier.size(18.dp)) },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White),
-                            singleLine = true,
-                            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
+                        EmployeeSearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            placeholder = "Search by Product"
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -458,51 +452,18 @@ fun RestockingEmployeeScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // Supplier Dropdown
-                            var supplierExpanded by remember { mutableStateOf(false) }
-                            Box(modifier = Modifier.weight(1f)) {
-                                OutlinedButton(
-                                    onClick = { supplierExpanded = true },
-                                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
-                                ) {
-                                    Text(selectedSupplier, fontSize = 13.sp, color = TextDark)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
-                                }
-                                DropdownMenu(expanded = supplierExpanded, onDismissRequest = { supplierExpanded = false }) {
-                                    suppliers.forEach { sup ->
-                                        DropdownMenuItem(text = { Text(sup, fontSize = 13.sp) }, onClick = {
-                                            selectedSupplier = sup
-                                            supplierExpanded = false
-                                        })
-                                    }
-                                }
-                            }
-
-                            // Priority Dropdown
-                            var priorityExpanded by remember { mutableStateOf(false) }
-                            Box(modifier = Modifier.weight(1f)) {
-                                OutlinedButton(
-                                    onClick = { priorityExpanded = true },
-                                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
-                                ) {
-                                    Text(selectedPriority, fontSize = 13.sp, color = TextDark)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
-                                }
-                                DropdownMenu(expanded = priorityExpanded, onDismissRequest = { priorityExpanded = false }) {
-                                    listOf("All Priority", "Low", "Critical").forEach { pri ->
-                                        DropdownMenuItem(text = { Text(pri, fontSize = 13.sp) }, onClick = {
-                                            selectedPriority = pri
-                                            priorityExpanded = false
-                                        })
-                                    }
-                                }
-                            }
+                            FilterDropdown(
+                                options = suppliers,
+                                selectedOption = selectedSupplier,
+                                onOptionSelected = { selectedSupplier = it },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterDropdown(
+                                options = listOf("All Priority", "Low", "Critical"),
+                                selectedOption = selectedPriority,
+                                onOptionSelected = { selectedPriority = it },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -609,52 +570,45 @@ fun RestockingEmployeeScreen(
 
                                 Text("Items", fontSize = 15.sp, fontWeight = FontWeight.Black, color = TextDark)
 
-                                // Table Header Row
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = Color(0xFFF1F5F9),
-                                    shape = RoundedCornerShape(6.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text("Product Name", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark, modifier = Modifier.weight(1.5f))
-                                        Text("Qty", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark, textAlign = TextAlign.Center, modifier = Modifier.weight(0.8f))
-                                        Text("Cost Price", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
-                                        Text("Subtotal", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
-                                    }
-                                }
-
                                 draft.items.forEachIndexed { idx, itm ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = Color(0xFFF8FAFC),
+                                        shape = RoundedCornerShape(10.dp),
+                                        border = BorderStroke(1.dp, EmployeePortalBackground)
                                     ) {
-                                        Text(itm.productName, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextDark, modifier = Modifier.weight(1.5f))
-                                        Box(modifier = Modifier.weight(0.8f), contentAlignment = Alignment.Center) {
-                                            OutlinedTextField(
-                                                value = itm.quantity.toString(),
-                                                onValueChange = { newText ->
-                                                    val newQty = newText.toIntOrNull() ?: 0
-                                                    val updatedItems = draft.items.mapIndexed { i, cur ->
-                                                        if (i == idx) cur.copy(quantity = newQty, subtotal = newQty * cur.unitCost) else cur
-                                                    }
-                                                    poDraft = draft.copy(items = updatedItems)
-                                                },
-                                                modifier = Modifier.width(70.dp).height(48.dp),
-                                                singleLine = true,
-                                                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, textAlign = TextAlign.Center)
-                                            )
+                                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                                Text(itm.productName, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                                Text("Cost: ${formatPeso(itm.unitCost)}", fontSize = 12.sp, color = TextGray)
+                                            }
+                                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Text("Qty:", fontSize = 12.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                                                    OutlinedTextField(
+                                                        value = itm.quantity.toString(),
+                                                        onValueChange = { newText ->
+                                                            val newQty = newText.toIntOrNull() ?: 0
+                                                            val updatedItems = draft.items.mapIndexed { i, cur ->
+                                                                if (i == idx) cur.copy(quantity = newQty, subtotal = newQty * cur.unitCost) else cur
+                                                            }
+                                                            poDraft = draft.copy(items = updatedItems)
+                                                        },
+                                                        modifier = Modifier.width(80.dp).height(48.dp),
+                                                        singleLine = true,
+                                                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
+                                                    )
+                                                }
+                                                Column(horizontalAlignment = Alignment.End) {
+                                                    Text("Subtotal", fontSize = 10.sp, color = TextGray)
+                                                    Text(formatPeso(itm.subtotal), fontSize = 14.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
+                                                }
+                                            }
                                         }
-                                        Text(formatPeso(itm.unitCost), fontSize = 13.sp, color = TextDark, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
-                                        Text(formatPeso(itm.subtotal), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
                                     }
                                 }
 
-                                HorizontalDivider(color = Color(0xFFE2E8F0))
+                                HorizontalDivider(color = EmployeePortalBackground)
 
                                 Text("Total Summary", fontSize = 15.sp, fontWeight = FontWeight.Black, color = TextDark)
 
@@ -704,7 +658,7 @@ fun RestockingEmployeeScreen(
                                         Text(formatPeso(poTotals.first), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
                                     }
 
-                                    HorizontalDivider(color = Color(0xFFE2E8F0))
+                                    HorizontalDivider(color = EmployeePortalBackground)
 
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                         Text("Total Cost", fontSize = 16.sp, fontWeight = FontWeight.Black, color = TextDark)
@@ -728,7 +682,7 @@ fun RestockingEmployeeScreen(
                                             activeTab = "purchaseOrderHistory"
                                         },
                                         modifier = Modifier.fillMaxWidth().height(48.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = TextDark),
+                                        colors = ButtonDefaults.buttonColors(containerColor = EmployeePortalBackground, contentColor = TextDark),
                                         shape = RoundedCornerShape(8.dp),
                                         enabled = !isSavingDraft
                                     ) {
@@ -777,7 +731,7 @@ fun RestockingEmployeeScreen(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 color = Color(0xFFF8FAFC),
                                                 shape = RoundedCornerShape(8.dp),
-                                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                                                border = BorderStroke(1.dp, EmployeePortalBackground)
                                             ) {
                                                 Row(
                                                     modifier = Modifier.padding(12.dp),
@@ -989,7 +943,7 @@ fun RestockingEmployeeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color(0xFFF8FAFC),
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                        border = BorderStroke(1.dp, EmployeePortalBackground)
                     ) {
                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1049,7 +1003,7 @@ fun RestockingEmployeeScreen(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             color = Color(0xFFF8FAFC),
                             shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            border = BorderStroke(1.dp, EmployeePortalBackground)
                         ) {
                             Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(item.productName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
@@ -1126,7 +1080,7 @@ fun RestockRecommendationCardItem(
         modifier = Modifier.fillMaxWidth(),
         color = if (isSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, if (isSelected) StaffPortalButtonBlue else Color(0xFFE2E8F0))
+        border = BorderStroke(1.dp, if (isSelected) StaffPortalButtonBlue else EmployeePortalBackground)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -1165,7 +1119,7 @@ fun RestockRecommendationCardItem(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = Color(0xFFE2E8F0))
+            HorizontalDivider(color = EmployeePortalBackground)
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
@@ -1272,7 +1226,7 @@ fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onA
                                 modifier = Modifier.fillMaxWidth(),
                                 color = Color(0xFFF8FAFC),
                                 shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                                border = BorderStroke(1.dp, EmployeePortalBackground)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(12.dp),
@@ -1310,7 +1264,7 @@ fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onA
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = Color(0xFFE2E8F0))
+                HorizontalDivider(color = EmployeePortalBackground)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

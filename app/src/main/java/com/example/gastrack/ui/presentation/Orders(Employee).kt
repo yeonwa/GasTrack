@@ -107,7 +107,7 @@ fun OrdersEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0)),
+            .background(EmployeePortalBackground),
     ) {
         EmployeePortalHeader(
             title = if (mainTab == "Orders") "Orders Log" else "Logistics Queue",
@@ -408,56 +408,27 @@ fun OrdersTabView(
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(12.dp))
         
-        OutlinedTextField(
-            value = searchQuery, onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth().height(56.dp), 
-            placeholder = { Text("Search by Order No...", color = Color.LightGray, fontSize = 14.sp) },
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
-            singleLine = true,
-            textStyle = LocalTextStyle.current.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        EmployeeSearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = "Search by Order No..."
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(modifier = Modifier.weight(1f)) {
-                var expanded by remember { mutableStateOf(false) }
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, if (selectedTypeFilter != "All") StaffPortalButtonBlue else Color(0xFFE9ECEF)),
-                    contentPadding = PaddingValues(horizontal = 12.dp)
-                ) {
-                    Text(if (selectedTypeFilter == "All") "All Types" else selectedTypeFilter, fontSize = 11.sp, fontWeight = FontWeight.Black, color = if (selectedTypeFilter != "All") StaffPortalButtonBlue else TextGray)
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    listOf("All", "Walk-in", "Pickup", "Delivery").forEach { type ->
-                        DropdownMenuItem(text = { Text(type, fontSize = 12.sp, fontWeight = FontWeight.Bold) }, onClick = { selectedTypeFilter = type; expanded = false })
-                    }
-                }
-            }
-            Box(modifier = Modifier.weight(1f)) {
-                var expanded by remember { mutableStateOf(false) }
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, if (selectedStatusTab != "All") StaffPortalButtonBlue else Color(0xFFE9ECEF)),
-                    contentPadding = PaddingValues(horizontal = 12.dp)
-                ) {
-                    Text(if (selectedStatusTab == "All") "All Status" else selectedStatusTab, fontSize = 11.sp, fontWeight = FontWeight.Black, color = if (selectedStatusTab != "All") StaffPortalButtonBlue else TextGray)
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    listOf("All", "Pending", "Confirmed", "Processing", "Completed", "Cancelled").forEach { status ->
-                        DropdownMenuItem(text = { Text(status, fontSize = 12.sp, fontWeight = FontWeight.Bold) }, onClick = { onStatusTabSelected(status); expanded = false })
-                    }
-                }
-            }
+            FilterDropdown(
+                options = listOf("All", "Walk-in", "Pickup", "Delivery"),
+                selectedOption = if (selectedTypeFilter == "All") "All Types" else selectedTypeFilter,
+                onOptionSelected = { selectedTypeFilter = it },
+                modifier = Modifier.weight(1f)
+            )
+            FilterDropdown(
+                options = listOf("All", "Pending", "Confirmed", "Processing", "Completed", "Cancelled"),
+                selectedOption = if (selectedStatusTab == "All") "All Status" else selectedStatusTab,
+                onOptionSelected = { onStatusTabSelected(it) },
+                modifier = Modifier.weight(1f)
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -513,8 +484,8 @@ fun OrderDataCard(
                     Text(
                         text = order.status.uppercase(), 
                         color = when(order.status) {
-                            "Completed" -> Color(0xFF2E7D32)
-                            "Cancelled" -> GasTrackRed
+                            "Completed" -> StatusActive
+                            "Cancelled" -> StatusInactive
                             "Pending" -> Color(0xFFEF6C00)
                             else -> StaffPortalButtonBlue
                         }, 
@@ -666,7 +637,7 @@ fun DeliveryDataCard(
                     Text(
                         text = delivery.status.uppercase(), 
                         color = when(delivery.status) {
-                            "Delivered" -> Color(0xFF2E7D32)
+                            "Delivered" -> StatusActive
                             "In Transit" -> StaffPortalButtonBlue
                             else -> Color(0xFFEF6C00)
                         }, 
@@ -743,7 +714,7 @@ fun OrderDetailDialog(order: OrderData, onDismiss: () -> Unit) {
                 DetailValueRow("Order No", order.orderNo, isBold = true, color = StaffPortalButtonBlue)
                 DetailValueRow("Date", order.date)
                 DetailValueRow("Order Type", order.type)
-                DetailValueRow("Status", order.status, color = if(order.status == "Completed") Color(0xFF2E7D32) else TextDark)
+                DetailValueRow("Status", order.status, color = if(order.status == "Completed") StatusActive else TextDark)
                 
                 Spacer(modifier = Modifier.height(20.dp))
                 HorizontalDivider(color = Color(0xFFF1F3F4))
@@ -798,7 +769,7 @@ fun DeliveryDetailDialog(delivery: DeliveryData, onDismiss: () -> Unit) {
                 
                 DetailValueRow("DR Number", delivery.drNo, isBold = true, color = StaffPortalButtonBlue)
                 DetailValueRow("Sales Ref", delivery.salesId)
-                DetailValueRow("Status", delivery.status, color = if(delivery.status == "Delivered") Color(0xFF2E7D32) else StaffPortalButtonBlue, isBold = true)
+                DetailValueRow("Status", delivery.status, color = if(delivery.status == "Delivered") StatusActive else StaffPortalButtonBlue, isBold = true)
                 DetailValueRow("Assigned Driver", delivery.deliveredBy)
                 
                 Spacer(modifier = Modifier.height(20.dp))

@@ -54,7 +54,7 @@ fun RegisterLPGCompanyScreen(
     var showSuccessDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = Color(0xFFF8F9FA),
+        containerColor = EmployeePortalBackground,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -75,7 +75,7 @@ fun RegisterLPGCompanyScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = GasTrackBlue,
+                    containerColor = StaffPortalBlue,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 ),
@@ -171,14 +171,14 @@ fun RegisterLPGCompanyScreen(
                             color = TextDark
                         )
                         Surface(
-                            color = GasTrackBlue.copy(alpha = 0.1f),
+                            color = StaffPortalButtonBlue.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
                                 text = "STEP $currentStep OF 2",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Black,
-                                color = GasTrackBlue,
+                                color = StaffPortalButtonBlue,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -209,8 +209,8 @@ fun RegisterLPGCompanyScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
                         )
@@ -230,8 +230,8 @@ fun RegisterLPGCompanyScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
                         )
@@ -247,8 +247,8 @@ fun RegisterLPGCompanyScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
                         )
@@ -263,7 +263,7 @@ fun RegisterLPGCompanyScreen(
                                 .height(48.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = GasTrackBlue,
+                                containerColor = StaffPortalButtonBlue,
                                 contentColor = Color.White
                             )
                         ) {
@@ -288,8 +288,8 @@ fun RegisterLPGCompanyScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
                         )
@@ -305,8 +305,8 @@ fun RegisterLPGCompanyScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
                         )
@@ -322,8 +322,8 @@ fun RegisterLPGCompanyScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -347,8 +347,8 @@ fun RegisterLPGCompanyScreen(
                             },
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -381,8 +381,8 @@ fun RegisterLPGCompanyScreen(
                             },
                             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color(0xFFE9ECEF),
-                                focusedBorderColor = GasTrackBlue
+                                unfocusedBorderColor = BorderColor,
+                                focusedBorderColor = StaffPortalButtonBlue
                             ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -440,7 +440,7 @@ fun RegisterLPGCompanyScreen(
                                     .weight(1f)
                                     .height(48.dp),
                                 shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                                border = BorderStroke(1.dp, BorderColor)
                             ) {
                                 Text(
                                     text = "Back",
@@ -458,7 +458,7 @@ fun RegisterLPGCompanyScreen(
                                     .height(48.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = GasTrackBlue,
+                                    containerColor = StaffPortalButtonBlue,
                                     contentColor = Color.White
                                 )
                             ) {

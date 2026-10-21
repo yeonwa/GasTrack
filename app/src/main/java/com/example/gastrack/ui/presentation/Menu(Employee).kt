@@ -46,6 +46,7 @@ fun MenuEmployeeScreen(
     onNavigateToReports: () -> Unit = {},
     onNavigateToReportCompliance: () -> Unit = {},
     onNavigateToSystemDataManagement: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -62,7 +63,8 @@ fun MenuEmployeeScreen(
         MenuItemData(Icons.Default.Assessment, "Report and Compliance", "Regulatory compliance tracker", onNavigateToReportCompliance),
         MenuItemData(Icons.Default.Storage, "Data", "Exportable system data", onNavigateToReports),
         MenuItemData(Icons.Default.Person, "Users", "Staff access control", onNavigateToUsers),
-        MenuItemData(Icons.Default.Settings, "Settings", "System configuration", onNavigateToSystemDataManagement)
+        MenuItemData(Icons.Default.Business, "System Data", "Company, Branch, & Warehouses", onNavigateToSystemDataManagement),
+        MenuItemData(Icons.Default.Settings, "Settings", "System configuration", onNavigateToSettings)
     )
 
     val filteredMenuItems = remember(searchQuery, menuItems) {

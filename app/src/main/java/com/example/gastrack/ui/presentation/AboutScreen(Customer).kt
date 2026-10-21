@@ -98,7 +98,7 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Text(
-                text = "GasTrack is a modern solution for LPG management and delivery. We leverage AI technology to predict your usage and ensure you never run out of gas.",
+                text = "GasTrack is a purpose-built inventory management system for LPG companies in the Philippines. We help LPG dealers track cylinder movements, deliveries, and stock levels across branches in real time.",
                 fontSize = 15.sp,
                 color = TextGray,
                 textAlign = TextAlign.Center,
@@ -109,7 +109,7 @@ fun AboutScreen(
             Spacer(modifier = Modifier.weight(1f))
             
             Text(
-                text = "© 2024 GasTrack Inc.\nAll rights reserved.",
+                text = "© 2026 GasTrack Inc.\nAll rights reserved.",
                 fontSize = 12.sp,
                 color = Color.LightGray,
                 textAlign = TextAlign.Center,

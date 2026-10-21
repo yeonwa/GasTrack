@@ -62,7 +62,7 @@ fun SuppliersEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0))
+            .background(EmployeePortalBackground)
     ) {
         EmployeePortalHeader(
             title = "Suppliers",
@@ -143,7 +143,6 @@ fun SuppliersDirectoryTab(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("All Status") }
-    var statusDropdownExpanded by remember { mutableStateOf(false) }
 
     val filteredSuppliers by remember(suppliers, searchQuery, selectedStatus) {
         derivedStateOf {
@@ -160,39 +159,20 @@ fun SuppliersDirectoryTab(
         .padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
         
-        OutlinedTextField(
-            value = searchQuery, onValueChange = { searchQuery = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            placeholder = { Text("Search by Supplier Name, ID or Contact Person", color = Color.LightGray, fontSize = 12.sp) },
-            trailingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp)) },
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
-            singleLine = true,
-            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        EmployeeSearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = "Search by Supplier Name, ID or Contact Person"
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Box(modifier = Modifier.fillMaxWidth()) {
-            FilterChipDropdown(selectedStatus, modifier = Modifier.fillMaxWidth()) { statusDropdownExpanded = true }
-            DropdownMenu(
-                expanded = statusDropdownExpanded,
-                onDismissRequest = { statusDropdownExpanded = false },
-                modifier = Modifier.fillMaxWidth(0.9f)
-            ) {
-                listOf("All Status", "Active", "Inactive").forEach { status ->
-                    DropdownMenuItem(
-                        text = { Text(status, fontSize = 13.sp) },
-                        onClick = {
-                            selectedStatus = status
-                            statusDropdownExpanded = false
-                        }
-                    )
-                }
-            }
-        }
+        FilterDropdown(
+            options = listOf("All Status", "Active", "Inactive"),
+            selectedOption = selectedStatus,
+            onOptionSelected = { selectedStatus = it },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
         
@@ -230,28 +210,6 @@ fun SuppliersDirectoryTab(
     }
 }
 
-@Composable
-fun FilterChipDropdown(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Surface(
-        modifier = modifier
-            .height(44.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-        color = Color.White
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text, fontSize = 13.sp, color = TextDark, fontWeight = FontWeight.Medium)
-            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray, modifier = Modifier.size(20.dp))
-        }
-    }
-}
 
 @Composable
 fun SupplierCardMobile(
@@ -288,12 +246,12 @@ fun SupplierCardMobile(
                     )
                 }
                 Surface(
-                    color = if (supplier.status == "Active") Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                    color = if (supplier.status == "Active") StatusActive.copy(alpha = 0.15f) else StatusInactive.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = supplier.status.uppercase(),
-                        color = if (supplier.status == "Active") Color(0xFF2E7D32) else GasTrackRed,
+                        color = if (supplier.status == "Active") StatusActive else StatusInactive,
                         fontSize = 9.sp,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         fontWeight = FontWeight.Black,
@@ -685,7 +643,7 @@ fun SupplierDetailDialog(supplier: SupplierData, onDismiss: () -> Unit) {
                                         modifier = Modifier.fillMaxWidth(),
                                         color = Color(0xFFF8FAFC),
                                         shape = RoundedCornerShape(10.dp),
-                                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                                        border = BorderStroke(1.dp, EmployeePortalBackground)
                                     ) {
                                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -716,7 +674,7 @@ fun SupplierDetailDialog(supplier: SupplierData, onDismiss: () -> Unit) {
                                         modifier = Modifier.fillMaxWidth(),
                                         color = Color(0xFFF8FAFC),
                                         shape = RoundedCornerShape(10.dp),
-                                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                                        border = BorderStroke(1.dp, EmployeePortalBackground)
                                     ) {
                                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -762,7 +720,7 @@ fun SupplierDetailDialog(supplier: SupplierData, onDismiss: () -> Unit) {
                                         modifier = Modifier.fillMaxWidth(),
                                         color = Color(0xFFF8FAFC),
                                         shape = RoundedCornerShape(10.dp),
-                                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                                        border = BorderStroke(1.dp, EmployeePortalBackground)
                                     ) {
                                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

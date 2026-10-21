@@ -149,7 +149,7 @@ fun POSEmployeeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0)) // Darker background to make white cards pop
+            .background(EmployeePortalBackground) // Darker background to make white cards pop
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             EmployeePortalHeader(
@@ -459,119 +459,33 @@ fun POSProductsTab(
 
     Column(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            // Search Product
-            OutlinedTextField(
-                value = searchQuery, onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth().height(52.dp), 
-                placeholder = { Text("Search product name...", color = Color.LightGray, fontSize = 15.sp) },
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            EmployeeSearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Search product name..."
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Filter By Category
                 Column(modifier = Modifier.weight(1f)) {
                     Text("CATEGORY", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 0.5.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(
-                            onClick = { expandedCategory = true },
-                            modifier = Modifier.fillMaxWidth().height(42.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = selectedCategory,
-                                    color = TextDark,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    maxLines = 1
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    tint = TextGray,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                        DropdownMenu(
-                            expanded = expandedCategory,
-                            onDismissRequest = { expandedCategory = false },
-                            modifier = Modifier.background(Color.White)
-                        ) {
-                            categories.forEach { cat ->
-                                DropdownMenuItem(
-                                    text = { Text(cat, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                                    onClick = {
-                                        selectedCategory = cat
-                                        expandedCategory = false
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    FilterDropdown(
+                        options = categories,
+                        selectedOption = selectedCategory,
+                        onOptionSelected = { selectedCategory = it },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
-                // Filter By Brand
                 Column(modifier = Modifier.weight(1f)) {
                     Text("BRAND", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 0.5.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(
-                            onClick = { expandedBrand = true },
-                            modifier = Modifier.fillMaxWidth().height(42.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = selectedBrand,
-                                    color = TextDark,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    maxLines = 1
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    tint = TextGray,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                        DropdownMenu(
-                            expanded = expandedBrand,
-                            onDismissRequest = { expandedBrand = false },
-                            modifier = Modifier.background(Color.White)
-                        ) {
-                            brands.forEach { brand ->
-                                DropdownMenuItem(
-                                    text = { Text(brand, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                                    onClick = {
-                                        selectedBrand = brand
-                                        expandedBrand = false
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    FilterDropdown(
+                        options = brands,
+                        selectedOption = selectedBrand,
+                        onOptionSelected = { selectedBrand = it },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
@@ -1029,10 +943,10 @@ fun POSCustomerCard(
                         Text(text = customer.name, fontWeight = FontWeight.Black, fontSize = 15.sp, color = TextDark)
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            color = if (customer.status == "Active") Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                            color = if (customer.status == "Active") StatusActive.copy(alpha = 0.1f) else StatusInactive.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(4.dp)
                         ) {
-                            Text(customer.status.uppercase(), modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp), fontSize = 8.sp, fontWeight = FontWeight.Black, color = if (customer.status == "Active") Color(0xFF2E7D32) else GasTrackRed)
+                            Text(customer.status.uppercase(), modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp), fontSize = 8.sp, fontWeight = FontWeight.Black, color = if (customer.status == "Active") StatusActive else StatusInactive)
                         }
                     }
                     Text(text = "${customer.customerType} • ${customer.phone}", color = TextGray, fontSize = 11.sp, fontWeight = FontWeight.Medium)
@@ -1206,7 +1120,7 @@ fun OrderDetailsPopup(
                 DetailValueRow("Payment Method", paymentMethod, isBold = true)
                 DetailValueRow("Fulfillment", if (customer == null) "Walk-in Store" else customer.name)
                 DetailValueRow("Timestamp", "2026-01-20 02:14 PM")
-                DetailValueRow("Status", "COMPLETED", color = Color(0xFF2E7D32))
+                DetailValueRow("Status", "COMPLETED", color = StatusActive)
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 Column(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFF1F3F4), RoundedCornerShape(12.dp)).clip(RoundedCornerShape(12.dp))) {
@@ -1510,7 +1424,7 @@ fun PickupDetailsModalDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     color = Color(0xFFF8FAFC),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    border = BorderStroke(1.dp, EmployeePortalBackground)
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
@@ -1844,7 +1758,7 @@ fun DeliveryDetailsModalDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     color = Color(0xFFF8FAFC),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    border = BorderStroke(1.dp, EmployeePortalBackground)
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
@@ -2227,7 +2141,7 @@ fun ViewCustomerDialog(customer: POSCustomerData, onDismiss: () -> Unit) {
                 DetailValueRow("Customer Type", customer.customerType, isBold = true)
                 DetailValueRow("Contact Number", customer.phone)
                 DetailValueRow("Complete Address", customer.address)
-                DetailValueRow("Account Status", customer.status, color = if (customer.status == "Active") Color(0xFF2E7D32) else GasTrackRed)
+                DetailValueRow("Account Status", customer.status, color = if (customer.status == "Active") StatusActive else StatusInactive)
                 DetailValueRow("Registered By", customer.registeredBy)
                 DetailValueRow("Last Transaction", customer.lastOrder)
 

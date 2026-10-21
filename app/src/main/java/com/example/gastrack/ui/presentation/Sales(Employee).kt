@@ -85,7 +85,7 @@ fun SalesEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0))
+            .background(EmployeePortalBackground)
     ) {
         EmployeePortalHeader(
             title = "Sales Analytics",
@@ -174,7 +174,7 @@ fun SalesDashboardTab() {
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(color = Color(0xFFE8F5E9), shape = RoundedCornerShape(6.dp)) {
-                        Text(text = "+12.5%", color = Color(0xFF2E7D32), fontSize = 9.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        Text(text = "+12.5%", color = StatusActive, fontSize = 9.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = "vs yesterday", color = TextGray, fontSize = 10.sp, fontWeight = FontWeight.Medium)
@@ -244,64 +244,20 @@ fun SalesRecordsTab(
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(12.dp))
         
-        OutlinedTextField(
-            value = searchQuery, onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth().height(52.dp), 
-            placeholder = { Text("Search by Sale No...", color = Color.LightGray, fontSize = 14.sp) },
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
-            singleLine = true,
-            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        EmployeeSearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = "Search by Sale No..."
         )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Payment Type Filter Dropdown
-        Box(modifier = Modifier.fillMaxWidth()) {
-            var expanded by remember { mutableStateOf(false) }
-            OutlinedButton(
-                onClick = { expanded = true },
-                modifier = Modifier.fillMaxWidth().height(40.dp),
-                shape = RoundedCornerShape(10.dp),
-                border = BorderStroke(1.dp, if (selectedPaymentType != "All") StaffPortalButtonBlue else Color(0xFFE9ECEF)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.FilterList, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (selectedPaymentType == "All") "Filter by Payment Type" else "Payment: $selectedPaymentType",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (selectedPaymentType == "All") TextGray else TextDark
-                        )
-                    }
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray, modifier = Modifier.size(18.dp))
-                }
-            }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(0.85f).background(Color.White)
-            ) {
-                listOf("All", "Cash", "GCash", "Card").forEach { type ->
-                    DropdownMenuItem(
-                        text = { Text(type, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                        onClick = {
-                            selectedPaymentType = type
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
+        FilterDropdown(
+            options = listOf("All", "Cash", "GCash", "Card"),
+            selectedOption = if (selectedPaymentType == "All") "Filter by Payment Type" else "Payment: $selectedPaymentType",
+            onOptionSelected = { selectedPaymentType = it },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(14.dp))
 

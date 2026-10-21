@@ -94,7 +94,7 @@ fun InventoryEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0))
+            .background(EmployeePortalBackground)
     ) {
         EmployeePortalHeader(
             title = "Inventory",
@@ -120,7 +120,7 @@ fun InventoryEmployeeScreen(
                         InventoryStatCard(
                             label = "Out of Stock",
                             value = inventoryItems.count { it.status == "Out of Stock" }.toString(),
-                            color = Color(0xFF991B1B),
+                            color = StatusInactive,
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.RemoveShoppingCart,
                             sub = "Items"
@@ -128,7 +128,7 @@ fun InventoryEmployeeScreen(
                         InventoryStatCard(
                             label = "Critical Items",
                             value = inventoryItems.count { it.status == "Critical" }.toString(),
-                            color = GasTrackRed,
+                            color = StatusInactive,
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.Warning,
                             sub = "Action needed"
@@ -149,7 +149,7 @@ fun InventoryEmployeeScreen(
                         InventoryStatCard(
                             label = "Normal Items",
                             value = inventoryItems.count { it.status == "Normal" }.toString(),
-                            color = Color(0xFF2E7D32),
+                            color = StatusActive,
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.CheckCircle,
                             sub = "In stock"
@@ -330,20 +330,10 @@ fun InventoryFiltersSection(
     onStatusChange: (String) -> Unit
 ) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = onSearchChange,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            placeholder = { Text("Search Inventory by Product", color = Color.LightGray, fontSize = 13.sp) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White, 
-                focusedContainerColor = Color.White, 
-                unfocusedBorderColor = Color(0xFFE9ECEF), 
-                focusedBorderColor = GasTrackBlue
-            ),
-            singleLine = true
+        EmployeeSearchBar(
+            query = searchQuery,
+            onQueryChange = onSearchChange,
+            placeholder = "Search Inventory by Product"
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterDropdown(
@@ -379,53 +369,6 @@ fun TransactionsFiltersSection(
     }
 }
 
-@NonRestartableComposable
-@Composable
-fun FilterDropdown(
-    options: List<String>,
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit,
-    modifier: Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(modifier = modifier) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .clickable { expanded = true },
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-            color = Color.White
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = selectedOption, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1)
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray, modifier = Modifier.size(16.dp))
-            }
-        }
-        
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(text = option, fontSize = 12.sp) },
-                    onClick = {
-                        onOptionSelected(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
 @Composable
 fun InventoryCardMobile(
     item: InventoryItemData,
@@ -446,23 +389,23 @@ fun InventoryCardMobile(
                 Text(text = "Inv ID: ${item.id}", fontSize = 13.sp, fontWeight = FontWeight.Black, color = TextDark)
                 Surface(
                     color = when(item.status) {
-                        "Critical" -> GasTrackRed.copy(alpha = 0.1f)
+                        "Critical" -> StatusInactive.copy(alpha = 0.1f)
                         "Low Stock" -> Color(0xFFFFF3E0)
-                        else -> Color(0xFFE8F5E9)
+                        else -> StatusActive.copy(alpha = 0.1f)
                     },
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, when(item.status) {
-                        "Critical" -> GasTrackRed
+                        "Critical" -> StatusInactive
                         "Low Stock" -> Color(0xFFFFA000)
-                        else -> Color(0xFF2E7D32)
+                        else -> StatusActive
                     })
                 ) {
                     Text(
                         text = item.status, 
                         color = when(item.status) {
-                            "Critical" -> GasTrackRed
+                            "Critical" -> StatusInactive
                             "Low Stock" -> Color(0xFFFFA000)
-                            else -> Color(0xFF2E7D32)
+                            else -> StatusActive
                         }, 
                         fontSize = 9.sp, fontWeight = FontWeight.Black,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
@@ -668,22 +611,22 @@ fun TransactionCardMobile(trx: InventoryTransactionData) {
                 
                 Surface(
                     color = when(trx.transactionType) {
-                        "In" -> Color(0xFFE8F5E9)
-                        "Out" -> Color(0xFFFFEBEE)
+                        "In" -> StatusActive.copy(alpha = 0.1f)
+                        "Out" -> StatusInactive.copy(alpha = 0.1f)
                         else -> Color(0xFFE3F2FD)
                     },
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, when(trx.transactionType) {
-                        "In" -> Color(0xFF2E7D32)
-                        "Out" -> GasTrackRed
+                        "In" -> StatusActive
+                        "Out" -> StatusInactive
                         else -> StaffPortalButtonBlue
                     })
                 ) {
                     Text(
                         text = typeLabel, 
                         color = when(trx.transactionType) {
-                            "In" -> Color(0xFF2E7D32)
-                            "Out" -> GasTrackRed
+                            "In" -> StatusActive
+                            "Out" -> StatusInactive
                             else -> StaffPortalButtonBlue
                         }, 
                         fontSize = 9.sp, fontWeight = FontWeight.Black,

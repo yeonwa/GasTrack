@@ -40,7 +40,7 @@ fun DashboardEmployeeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0))
+            .background(EmployeePortalBackground)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             EmployeePortalHeader(
@@ -279,7 +279,7 @@ fun RestockRow(name: String, stock: Int, reorderLevel: Int, status: String, onRe
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                color = if (status == "Critical") GasTrackRed else Color(0xFFF59E0B),
+                color = if (status == "Critical") StatusInactive else Color(0xFFF59E0B),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(status, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
@@ -367,7 +367,7 @@ fun ModalLowStockRow(name: String, stock: Int, limit: Int, status: String) {
             Text("Stock: $stock / Reorder at: $limit", fontSize = 11.sp, color = TextGray)
         }
         Surface(
-            color = if (status == "Critical") GasTrackRed else Color(0xFFF59E0B),
+            color = if (status == "Critical") StatusInactive else Color(0xFFF59E0B),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(status, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))

@@ -88,7 +88,7 @@ fun UsersEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0))
+            .background(EmployeePortalBackground)
     ) {
         EmployeePortalHeader(
             title = "User Accounts",
@@ -243,81 +243,34 @@ fun UsersListTab(
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = searchQuery, onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth(), placeholder = { Text("Search by Full Name or Email...", color = Color.LightGray, fontSize = 13.sp) },
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
-            singleLine = true
+        EmployeeSearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = "Search by Full Name or Email..."
         )
         
         Spacer(modifier = Modifier.height(12.dp))
         
         // Filters Row
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Role Filter
-            Box(modifier = Modifier.weight(1f)) {
-                var expanded by remember { mutableStateOf(false) }
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth().height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, if (selectedRoleFilter != "All Roles") StaffPortalButtonBlue else Color(0xFFE9ECEF)),
-                    contentPadding = PaddingValues(horizontal = 10.dp)
-                ) {
-                    Text(if (selectedRoleFilter == "All Roles") "Role" else selectedRoleFilter, fontSize = 11.sp, color = TextDark, maxLines = 1)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    roles.forEach { role ->
-                        DropdownMenuItem(text = { Text(role, fontSize = 12.sp) }, onClick = { selectedRoleFilter = role; expanded = false })
-                    }
-                }
-            }
-
-            // Status Filter
-            Box(modifier = Modifier.weight(1f)) {
-                var expanded by remember { mutableStateOf(false) }
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth().height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, if (selectedStatusFilter != "All Status") StaffPortalButtonBlue else Color(0xFFE9ECEF)),
-                    contentPadding = PaddingValues(horizontal = 10.dp)
-                ) {
-                    Text(if (selectedStatusFilter == "All Status") "Status" else selectedStatusFilter, fontSize = 11.sp, color = TextDark, maxLines = 1)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    statuses.forEach { status ->
-                        DropdownMenuItem(text = { Text(status, fontSize = 12.sp) }, onClick = { selectedStatusFilter = status; expanded = false })
-                    }
-                }
-            }
-            
-            // Branch Filter
-            Box(modifier = Modifier.weight(1f)) {
-                var expanded by remember { mutableStateOf(false) }
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth().height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, if (selectedBranchFilter != "All Branch/Warehouse") StaffPortalButtonBlue else Color(0xFFE9ECEF)),
-                    contentPadding = PaddingValues(horizontal = 10.dp)
-                ) {
-                    Text(if (selectedBranchFilter == "All Branch/Warehouse") "Branch" else selectedBranchFilter, fontSize = 11.sp, color = TextDark, maxLines = 1)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = TextGray)
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    branches.forEach { branch ->
-                        DropdownMenuItem(text = { Text(branch, fontSize = 12.sp) }, onClick = { selectedBranchFilter = branch; expanded = false })
-                    }
-                }
-            }
+            FilterDropdown(
+                options = roles,
+                selectedOption = if (selectedRoleFilter == "All Roles") "Role" else selectedRoleFilter,
+                onOptionSelected = { selectedRoleFilter = it },
+                modifier = Modifier.weight(1f)
+            )
+            FilterDropdown(
+                options = statuses,
+                selectedOption = if (selectedStatusFilter == "All Status") "Status" else selectedStatusFilter,
+                onOptionSelected = { selectedStatusFilter = it },
+                modifier = Modifier.weight(1f)
+            )
+            FilterDropdown(
+                options = branches,
+                selectedOption = if (selectedBranchFilter == "All Branch/Warehouse") "Branch" else selectedBranchFilter,
+                onOptionSelected = { selectedBranchFilter = it },
+                modifier = Modifier.weight(1f)
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -387,12 +340,12 @@ fun UserCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(text = "ID: ${user.companyId}", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark)
                     Surface(
-                        color = if (user.status == "Active") Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                        color = if (user.status == "Active") StatusActive.copy(alpha = 0.15f) else StatusInactive.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
                             text = user.status.uppercase(), 
-                            color = if (user.status == "Active") Color(0xFF2E7D32) else GasTrackRed, 
+                            color = if (user.status == "Active") StatusActive else StatusInactive, 
                             fontSize = 8.sp, 
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             fontWeight = FontWeight.Black
@@ -529,8 +482,8 @@ fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
                 }
                 Surface(
                     color = when(log.activityType) {
-                        "Create" -> Color(0xFFE8F5E9)
-                        "Delete" -> Color(0xFFFFEBEE)
+                        "Create" -> StatusActive.copy(alpha = 0.15f)
+                        "Delete" -> StatusInactive.copy(alpha = 0.15f)
                         else -> Color(0xFFE3F2FD)
                     },
                     shape = RoundedCornerShape(6.dp)
@@ -538,8 +491,8 @@ fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
                     Text(
                         text = log.activityType.uppercase(), 
                         color = when(log.activityType) {
-                            "Create" -> Color(0xFF2E7D32)
-                            "Delete" -> GasTrackRed
+                            "Create" -> StatusActive
+                            "Delete" -> StatusInactive
                             else -> StaffPortalButtonBlue
                         }, 
                         fontSize = 8.sp, 
@@ -640,7 +593,8 @@ fun UserEditDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String, String, String, String, List<String>) -> Unit
 ) {
-    var fullName by remember { mutableStateOf(if (user != null) "${user.firstName} ${user.lastName}" else "") }
+    var firstName by remember { mutableStateOf(user?.firstName ?: "") }
+    var lastName by remember { mutableStateOf(user?.lastName ?: "") }
     var email by remember { mutableStateOf(user?.email ?: "") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -648,7 +602,10 @@ fun UserEditDialog(
     var branch by remember { mutableStateOf(user?.branch ?: "") }
     var status by remember { mutableStateOf(user?.status ?: "Active") }
     
-    val defaultModules = listOf("Dashboard", "POS Terminal", "Inventory", "Products", "Sales", "Restocking", "Order and Delivery", "Suppliers", "Report and Compliance", "Data", "Users", "Settings")
+    // React dashboard module grouping
+    val salesAndOps = listOf("POS Terminal", "Sales", "Order and Delivery", "Inventory", "Products", "Restocking", "Suppliers")
+    val mgmtAndAdmin = listOf("Dashboard", "Report and Compliance", "Data", "Users", "Settings")
+    val defaultModules = salesAndOps + mgmtAndAdmin
     
     // Auto-check modules based on role (mirroring React's buildModulesByRole)
     val selectedModules = remember(role) {
@@ -687,28 +644,43 @@ fun UserEditDialog(
                     Text("BASIC INFORMATION", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    OutlinedTextField(
-                        value = fullName,
-                        onValueChange = { fullName = it },
-                        label = { Text("Full Name", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue)
-                    )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = firstName,
+                                onValueChange = { firstName = it },
+                                label = { Text("First Name", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = lastName,
+                                onValueChange = { lastName = it },
+                                label = { Text("Last Name", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Username / Email Address", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
+                        label = { Text("Email Address", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         singleLine = true,
                         enabled = user == null,
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color(0xFFE9ECEF), 
-                            focusedBorderColor = GasTrackBlue
+                            focusedBorderColor = StaffPortalButtonBlue
                         )
                     )
 
@@ -720,7 +692,7 @@ fun UserEditDialog(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue)
+                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
                     )
                     
                     Spacer(modifier = Modifier.height(12.dp))
@@ -731,7 +703,7 @@ fun UserEditDialog(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue)
+                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -822,52 +794,61 @@ fun UserEditDialog(
                     }
                     
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text("MODULE ACCESS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("MODULE ACCESS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
+                        Text("${selectedModules.size} of ${defaultModules.size} enabled", fontSize = 10.sp, color = TextGray)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Chunk the modules into rows of 2 for perfect alignment and mobile friendliness
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        defaultModules.chunked(2).forEach { rowModules ->
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                rowModules.forEach { module ->
+                    @Composable
+                    fun ModuleSection(title: String, modules: List<String>) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFFBFBFE),
+                            border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(title, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                modules.forEach { module ->
+                                    val enabled = selectedModules.contains(module)
                                     Row(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(bottom = 8.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Checkbox(
-                                            checked = selectedModules.contains(module),
-                                            onCheckedChange = null, // ReadOnly per React logic
-                                            enabled = false,
-                                            colors = CheckboxDefaults.colors(
-                                                disabledCheckedColor = StaffPortalButtonBlue.copy(alpha = 0.5f),
-                                                disabledUncheckedColor = Color.LightGray
-                                            )
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = module, 
-                                            fontSize = 12.sp, 
-                                            color = if (selectedModules.contains(module)) TextDark else Color.Gray,
-                                            maxLines = 1
+                                            fontSize = 13.sp, 
+                                            color = if (enabled) TextDark else Color.Gray,
+                                            fontWeight = if (enabled) FontWeight.SemiBold else FontWeight.Normal
                                         )
-                                    }
-                                }
-                                // Ensure the last row aligns correctly if there's an odd number of items
-                                if (rowModules.size < 2) {
-                                    repeat(2 - rowModules.size) {
-                                        Spacer(modifier = Modifier.weight(1f))
+                                        Switch(
+                                            checked = enabled,
+                                            onCheckedChange = null,
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.White,
+                                                checkedTrackColor = StaffPortalButtonBlue,
+                                                disabledCheckedThumbColor = Color.White,
+                                                disabledCheckedTrackColor = StaffPortalButtonBlue.copy(alpha = 0.5f)
+                                            ),
+                                            enabled = false
+                                        )
                                     }
                                 }
                             }
                         }
                     }
+
+                    ModuleSection("Sales & Operations", salesAndOps)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ModuleSection("Management & Administration", mgmtAndAdmin)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                val isFormValid = fullName.isNotBlank() && 
+                val isFormValid = firstName.isNotBlank() && lastName.isNotBlank() && 
                     email.isNotBlank() && email.contains("@") && 
                     role.isNotBlank() && 
                     branch.isNotBlank() && 
@@ -879,17 +860,14 @@ fun UserEditDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0), contentColor = Color(0xFF1E293B))
+                        colors = ButtonDefaults.buttonColors(containerColor = EmployeePortalBackground, contentColor = Color(0xFF1E293B))
                     ) {
                         Text("Cancel", fontWeight = FontWeight.Bold)
                     }
                     Button(
                         enabled = isFormValid,
                         onClick = {
-                            val parts = fullName.trim().split(" ", limit = 2)
-                            val fName = parts.getOrElse(0) { "" }
-                            val lName = parts.getOrElse(1) { "" }
-                            onSave(fName, lName, email, role, status, branch, selectedModules) 
+                            onSave(firstName.trim(), lastName.trim(), email, role, status, branch, selectedModules) 
                         },
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(8.dp),

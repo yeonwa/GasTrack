@@ -345,9 +345,9 @@ fun ReportComplianceScreen(
                                                                 .clip(CircleShape)
                                                                 .background(
                                                                     when (primaryStatus) {
-                                                                        "Overdue" -> GasTrackRed
+                                                                        "Overdue" -> StatusInactive
                                                                         "Due Soon" -> Color(0xFFF59E0B)
-                                                                        "Submitted" -> Color(0xFF16A34A)
+                                                                        "Submitted" -> StatusActive
                                                                         else -> StaffPortalButtonBlue
                                                                     }
                                                                 )
@@ -541,16 +541,16 @@ fun ReportItemRow(
     var menuExpanded by remember { mutableStateOf(false) }
 
     val statusColor = when (report.status) {
-        "Overdue" -> GasTrackRed
+        "Overdue" -> StatusInactive
         "Due Soon" -> Color(0xFFD97706)
-        "Submitted" -> Color(0xFF16A34A)
+        "Submitted" -> StatusActive
         else -> StaffPortalButtonBlue
     }
 
     val statusBg = when (report.status) {
-        "Overdue" -> Color(0xFFFEE2E2)
+        "Overdue" -> StatusInactive.copy(alpha = 0.15f)
         "Due Soon" -> Color(0xFFFEF3C7)
-        "Submitted" -> Color(0xFFDCFCE7)
+        "Submitted" -> StatusActive.copy(alpha = 0.15f)
         else -> Color(0xFFDBEAFE)
     }
 
@@ -626,9 +626,9 @@ fun ReportItemRow(
 @Composable
 fun SelectedDateReportItem(report: ComplianceReport) {
     val statusColor = when (report.status) {
-        "Overdue" -> GasTrackRed
+        "Overdue" -> StatusInactive
         "Due Soon" -> Color(0xFFD97706)
-        "Submitted" -> Color(0xFF16A34A)
+        "Submitted" -> StatusActive
         else -> StaffPortalButtonBlue
     }
 
