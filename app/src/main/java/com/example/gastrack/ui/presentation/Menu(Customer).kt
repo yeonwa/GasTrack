@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
@@ -32,7 +31,6 @@ fun MenuScreen(
     onNavigateToHistory: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToPaymentMethods: () -> Unit = {},
-    onNavigateToHelpCenter: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToPrivacyPolicy: () -> Unit = {},
     onNavigateToTermsOfService: () -> Unit = {},
@@ -108,7 +106,6 @@ fun MenuScreen(
                 item { Spacer(modifier = Modifier.height(16.dp)) }
 
                 item { MenuSectionLabel("Support") }
-                item { SimpleMenuItem(Icons.AutoMirrored.Filled.HelpOutline, "Help Center", onNavigateToHelpCenter) }
                 item { SimpleMenuItem(Icons.Default.Info, "About GasTrack", onNavigateToAbout) }
                 item { SimpleMenuItem(Icons.Default.Policy, "Privacy Policy", onNavigateToPrivacyPolicy) }
                 item { SimpleMenuItem(Icons.Default.Description, "Terms of Service", onNavigateToTermsOfService) }

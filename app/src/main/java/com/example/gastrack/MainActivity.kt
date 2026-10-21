@@ -347,9 +347,6 @@ fun AppNavigation() {
                 onNavigateToPaymentMethods = {
                     navController.navigate("payment_methods")
                 },
-                onNavigateToHelpCenter = {
-                    navController.navigate("help_center")
-                },
                 onNavigateToAbout = {
                     navController.navigate("about")
                 },
@@ -475,13 +472,6 @@ fun AppNavigation() {
         }
         composable("payment_methods") {
             PaymentMethodsScreen(
-                onBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-        composable("help_center") {
-            HelpCenterScreen(
                 onBack = {
                     navController.popBackStack()
                 }

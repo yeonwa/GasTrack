@@ -30,6 +30,7 @@ import androidx.compose.ui.window.Dialog
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun EmployeePortalHeader(
@@ -138,6 +139,19 @@ fun EmployeeTabSelector(
     selectedTab: String,
     onTabSelected: (String) -> Unit
 ) {
+    EmployeeTabSelector(
+        tabs = DropdownOptions(tabs),
+        selectedTab = selectedTab,
+        onTabSelected = onTabSelected
+    )
+}
+
+@Composable
+fun EmployeeTabSelector(
+    tabs: DropdownOptions,
+    selectedTab: String,
+    onTabSelected: (String) -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -147,7 +161,7 @@ fun EmployeeTabSelector(
         color = Color(0xFFF1F3F4)
     ) {
         Row(modifier = Modifier.fillMaxSize().padding(3.dp), verticalAlignment = Alignment.CenterVertically) {
-            tabs.forEach { tab ->
+            tabs.items.forEach { tab ->
                 val isSelected = selectedTab == tab
                 Surface(
                     modifier = Modifier
@@ -283,9 +297,9 @@ fun ActionFeedbackDialog(message: String, onDismiss: () -> Unit) {
     var step by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        delay(1000)
+        delay(1.seconds)
         step = 1
-        delay(1500)
+        delay(1.5.seconds)
         step = 2
     }
 
@@ -379,30 +393,11 @@ fun InventoryStatCard(
 }
 
 @Composable
-fun StockFormField(label: String, value: String, isDropdown: Boolean = false, onClick: (() -> Unit)? = null) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(text = label, modifier = Modifier.weight(1.2f), fontSize = 12.sp, color = TextDark, fontWeight = FontWeight.Bold)
-        Text(text = ":", modifier = Modifier.padding(horizontal = 4.dp), fontSize = 12.sp, color = TextDark)
-        Surface(
-            modifier = Modifier.weight(2.5f).height(36.dp).then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
-            shape = RoundedCornerShape(6.dp),
-            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-            color = Color(0xFFFBFBFE)
-        ) {
-            Row(modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(text = value, fontSize = 12.sp, color = if(isDropdown && value.startsWith("Select")) Color.LightGray else TextDark, fontWeight = FontWeight.Medium)
-                if(isDropdown) Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp), tint = TextGray)
-            }
-        }
-    }
-}
-
-@Composable
 fun EmployeeSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    placeholder: String = "Search...",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    placeholder: String = "Search..."
 ) {
     OutlinedTextField(
         value = query,
@@ -427,6 +422,21 @@ fun EmployeeSearchBar(
 @Composable
 fun FilterDropdown(
     options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    FilterDropdown(
+        options = DropdownOptions(options),
+        selectedOption = selectedOption,
+        onOptionSelected = onOptionSelected,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun FilterDropdown(
+    options: DropdownOptions,
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -457,7 +467,7 @@ fun FilterDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            options.forEach { option ->
+            options.items.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(text = option, fontSize = 12.sp) },
                     onClick = {
