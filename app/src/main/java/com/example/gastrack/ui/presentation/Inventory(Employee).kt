@@ -1,3 +1,5 @@
+@file:Suppress("UnstableCollections", "ComposeUnstableCollections", "Stability", "unused")
+
 package com.example.gastrack.ui.presentation
 
 import androidx.compose.foundation.*

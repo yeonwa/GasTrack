@@ -38,7 +38,7 @@ fun CheckoutScreen(
     onBack: () -> Unit,
     onPlaceOrder: () -> Unit,
     onCancel: () -> Unit = {},
-    onNavigateToTracking: () -> Unit = {},
+    onNavigateToSuccess: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
 ) {
@@ -393,7 +393,7 @@ fun CheckoutScreen(
                     Button(
                         onClick = {
                             onPlaceOrder()
-                            onNavigateToTracking()
+                            onNavigateToSuccess()
                         },
                         modifier = Modifier
                             .fillMaxWidth()

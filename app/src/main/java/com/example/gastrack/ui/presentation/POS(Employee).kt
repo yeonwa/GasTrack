@@ -18,6 +18,8 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +42,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+@Stable
 data class POSCustomerData(
     val id: Int, 
     val name: String, 
@@ -49,9 +52,10 @@ data class POSCustomerData(
     val status: String, 
     val registeredBy: String, 
     val lastOrder: String, 
-    val initials: String
+    val initials: String,
 )
 
+@Stable
 data class HeldCartData(
     val id: String,
     val timestamp: String,
@@ -66,12 +70,12 @@ data class HeldCartData(
     val vehicleType: String = "",
     val assignedRider: String = "",
     val paymentMethod: String = "",
-    val selectedCustomer: POSCustomerData? = null
+    val selectedCustomer: POSCustomerData? = null,
 )
 
 @Composable
 fun POSEmployeeScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
 ) {
     var selectedTab by remember { mutableStateOf("Products") }
     var showPayPopup by remember { mutableStateOf(false) }
@@ -116,7 +120,7 @@ fun POSEmployeeScreen(
     ) }
     
     // Master Product List (using POSProductData from OrderComponents)
-    val products = listOf(
+    val products = remember { mutableStateListOf(
         POSProductData(1, "Gasul LPG 2.7 kg", 250.0, R.drawable.tank_2_7kg, 15, "Petron", "Gasul LPG", "Pasig Warehouse"),
         POSProductData(2, "Gasul LPG 7 kg", 650.0, R.drawable.tank_11kg, 20, "Petron", "Gasul LPG", "Pasig Warehouse"),
         POSProductData(3, "Gasul LPG 11 kg Elite", 1050.0, R.drawable.tank_11kg, 30, "Petron", "Gasul LPG", "San Juan Warehouse"),
@@ -135,10 +139,10 @@ fun POSEmployeeScreen(
         POSProductData(16, "POL Regulator", 450.0, R.drawable.tank_11kg, 25, "Generic", "Accessories", "Pasig Warehouse"),
         POSProductData(17, "TPA Regulator", 550.0, R.drawable.tank_11kg, 30, "Generic", "Accessories", "San Juan Warehouse"),
         POSProductData(18, "Reyna Gas Stove", 1200.0, R.drawable.tank_50kg, 15, "Reyna", "Accessories", "Pasig Warehouse")
-    )
+    ) }
 
     // Financial Calculation Breakdown
-    val subtotalInclusive = products.sumOf { product -> (cart[product.id] ?: 0) * product.price }
+    val subtotalInclusive = products.sumOf { (id, _, price) -> (cart[id] ?: 0) * price }
     val discountAmount = subtotalInclusive * discountRate
     val totalSalesInclusive = subtotalInclusive - discountAmount
     val vatAmount = totalSalesInclusive * (0.12 / 1.12)
@@ -160,26 +164,24 @@ fun POSEmployeeScreen(
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 EmployeeTabSelector(
                     tabs = listOf("Products", "Cart (${cart.values.sum()})"),
-                    selectedTab = if (selectedTab.startsWith("Cart")) "Cart (${cart.values.sum()})" else selectedTab,
-                    onTabSelected = { tab ->
-                        selectedTab = if (tab.startsWith("Cart")) "Cart" else tab
-                    }
-                )
+                    selectedTab = if (selectedTab.startsWith("Cart")) "Cart (${cart.values.sum()})" else selectedTab
+                ) { tab ->
+                    selectedTab = if (tab.startsWith("Cart")) "Cart" else tab
+                }
             }
 
             Box(modifier = Modifier.weight(1f)) {
                 if (selectedTab == "Products") {
                     POSProductsTab(
                         products = products,
-                        cart = cart,
-                        onUpdateQuantity = { id, qty -> 
-                            val product = products.find { it.id == id }
-                            if (product != null) {
-                                val clampedQty = qty.coerceIn(0, product.stock)
-                                if (clampedQty <= 0) cart.remove(id) else cart[id] = clampedQty 
-                            }
+                        cart = cart
+                    ) { id, qty ->
+                        val product = products.find { it.id == id }
+                        if (product != null) {
+                            val clampedQty = qty.coerceIn(0, product.stock)
+                            if (clampedQty <= 0) cart.remove(id) else cart[id] = clampedQty
                         }
-                    )
+                    }
                 } else {
                     POSCartTabView(
                         cart = cart,
@@ -213,9 +215,8 @@ fun POSEmployeeScreen(
                             pickupTime = ""
                             deliveryAddress = ""
                             deliveryInstructions = ""
-                        },
-                        onShowHeldClick = { showHeldModal = true }
-                    )
+                        }
+                    ) { showHeldModal = true }
                 }
             }
             
@@ -225,7 +226,7 @@ fun POSEmployeeScreen(
                     if (totalSalesInclusive > 0) {
                         when (customerType) {
                             "Pickup" -> if (selectedCustomer == null) showPickupModal = true else showPayPopup = true
-                            "Delivery" -> if (selectedCustomer == null || deliveryAddress.isEmpty()) showDeliveryModal = true else showPayPopup = true
+                            "Delivery" -> if ((selectedCustomer == null) || deliveryAddress.isEmpty()) showDeliveryModal = true else showPayPopup = true
                             else -> showPayPopup = true
                         }
                     } 
@@ -390,7 +391,7 @@ fun POSEmployeeScreen(
         )
     }
 
-    if (showEditCustomerDialog && customerToEdit != null) {
+    if (showEditCustomerDialog && (customerToEdit != null)) {
         AddCustomerDialog(
             customer = customerToEdit,
             onDismiss = { showEditCustomerDialog = false },
@@ -404,7 +405,7 @@ fun POSEmployeeScreen(
         )
     }
 
-    if (showViewCustomerDialog && customerToView != null) {
+    if (showViewCustomerDialog && (customerToView != null)) {
         ViewCustomerDialog(customer = customerToView!!, onDismiss = { showViewCustomerDialog = false })
     }
 
@@ -414,10 +415,12 @@ fun POSEmployeeScreen(
             title = { Text("Delete Customer", fontWeight = FontWeight.Black) },
             text = { Text("Are you sure you want to delete ${customerToDelete!!.name}?") },
             confirmButton = {
-                TextButton(onClick = {
-                    customers.removeAll { it.id == customerToDelete!!.id }
-                    showDeleteConfirm = false
-                }) { Text("Delete", color = GasTrackRed, fontWeight = FontWeight.Bold) }
+                TextButton(
+                    onClick = {
+                        customers.removeAll { it.id == customerToDelete!!.id }
+                        showDeleteConfirm = false
+                    }
+                ) { Text("Delete", color = GasTrackRed, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
@@ -430,8 +433,8 @@ fun POSEmployeeScreen(
 
 @Composable
 fun POSProductsTab(
-    products: List<POSProductData>,
-    cart: Map<Int, Int>,
+    products: SnapshotStateList<POSProductData>,
+    cart: SnapshotStateMap<Int, Int>,
     onUpdateQuantity: (Int, Int) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -544,8 +547,8 @@ fun POSProductCard(product: POSProductData, quantity: Int, onUpdateQuantity: (In
 
 @Composable
 fun POSCartTabView(
-    cart: Map<Int, Int>,
-    products: List<POSProductData>,
+    cart: SnapshotStateMap<Int, Int>,
+    products: SnapshotStateList<POSProductData>,
     discountRate: Double,
     customerType: String,
     selectedCustomer: POSCustomerData?,
@@ -597,7 +600,7 @@ fun POSCartTabView(
             ) {
                 Icon(Icons.Default.PauseCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Held (${heldCount})", fontWeight = FontWeight.Black, fontSize = 12.sp)
+                Text("Held ($heldCount)", fontWeight = FontWeight.Black, fontSize = 12.sp)
             }
         }
 
@@ -799,7 +802,7 @@ fun POSBottomBar(totalAmount: Double, onCheckoutClick: () -> Unit, onHoldClick: 
 @Suppress("unused")
 @Composable
 private fun POSCustomersTab(
-    customers: List<POSCustomerData>,
+    customers: SnapshotStateList<POSCustomerData>,
     selectedCustomer: POSCustomerData?,
     onCustomerSelected: (POSCustomerData?) -> Unit,
     onAddNewClick: () -> Unit,
@@ -1085,8 +1088,8 @@ fun PayPopup(
 
 @Composable
 fun OrderDetailsPopup(
-    cart: Map<Int, Int>, 
-    products: List<POSProductData>, 
+    cart: SnapshotStateMap<Int, Int>, 
+    products: SnapshotStateList<POSProductData>, 
     customer: POSCustomerData?, 
     orderType: String,
     paymentMethod: String,
@@ -1156,7 +1159,7 @@ fun OrderDetailsPopup(
 
 @Composable
 fun HeldCartsModalDialog(
-    heldCarts: List<HeldCartData>,
+    heldCarts: SnapshotStateList<HeldCartData>,
     onDismiss: () -> Unit,
     onRestore: (HeldCartData) -> Unit,
     onDiscard: (HeldCartData) -> Unit
@@ -1212,7 +1215,7 @@ fun PickupDetailsModalDialog(
     pickupDate: String,
     pickupTime: String,
     selectedCustomer: POSCustomerData?,
-    customers: List<POSCustomerData>,
+    customers: SnapshotStateList<POSCustomerData>,
     onCustomerSelect: (POSCustomerData) -> Unit,
     onAddNewCustomer: () -> Unit = {},
     onDismiss: () -> Unit,
@@ -1242,9 +1245,9 @@ fun PickupDetailsModalDialog(
         { _, year, month, dayOfMonth ->
             date = String.format(Locale.US, "%02d/%02d/%04d", month + 1, dayOfMonth, year)
         },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
+        calendar[Calendar.YEAR],
+        calendar[Calendar.MONTH],
+        calendar[Calendar.DAY_OF_MONTH]
     )
 
     // Native Clock Time Picker Dialog
@@ -1255,8 +1258,8 @@ fun PickupDetailsModalDialog(
             val hour12 = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
             time = String.format(Locale.US, "%02d:%02d %s", hour12, minute, amPm)
         },
-        calendar.get(Calendar.HOUR_OF_DAY),
-        calendar.get(Calendar.MINUTE),
+        calendar[Calendar.HOUR_OF_DAY],
+        calendar[Calendar.MINUTE],
         false
     )
 
@@ -1560,7 +1563,7 @@ fun DeliveryDetailsModalDialog(
     vehicleType: String,
     assignedRider: String,
     selectedCustomer: POSCustomerData?,
-    customers: List<POSCustomerData>,
+    customers: SnapshotStateList<POSCustomerData>,
     onCustomerSelect: (POSCustomerData) -> Unit,
     onAddNewCustomer: () -> Unit = {},
     onDismiss: () -> Unit,

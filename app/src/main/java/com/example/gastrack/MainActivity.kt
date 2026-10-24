@@ -418,16 +418,26 @@ fun AppNavigation() {
                 onPlaceOrder = {
                     // Handle Order Placement
                 },
-                onNavigateToTracking = {
-                    navController.navigate("customer_home") {
-                        popUpTo("customer_home") { inclusive = true }
-                    }
+                onNavigateToSuccess = {
+                    navController.navigate("order_success")
                 },
                 onNavigateToAddresses = {
                     navController.navigate("addresses")
                 },
                 onNavigateToProfile = {
                     navController.navigate("profile")
+                }
+            )
+        }
+        composable("order_success") {
+            OrderSuccessScreen(
+                onNavigateToHome = {
+                    navController.navigate("customer_home") {
+                        popUpTo("startup") { inclusive = true }
+                    }
+                },
+                onNavigateToOrders = {
+                    navController.navigate("order_history")
                 }
             )
         }
