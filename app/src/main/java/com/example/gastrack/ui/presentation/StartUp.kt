@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -844,7 +845,7 @@ fun StartUpPrivacyContent(onBack: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, modifier = Modifier.padding(end = 12.dp).size(24.dp)) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
             }
             Text(
                 text = "PRIVACY POLICY",
@@ -919,7 +920,7 @@ fun StartUpTermsContent(onBack: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, modifier = Modifier.padding(end = 12.dp).size(24.dp)) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
             }
             Text(
                 text = "TERMS OF SERVICE",

@@ -1,3 +1,5 @@
+@file:Suppress("UnstableCollections", "ComposeUnstableCollections", "Stability")
+
 package com.example.gastrack.ui.presentation
 
 import androidx.compose.animation.Crossfade
@@ -338,11 +340,27 @@ fun SettingsTextField(
     }
 }
 
+@Suppress("UnstableCollections")
 @Composable
 fun SettingsDropdownField(
     label: String,
     selectedOption: String,
     options: List<String>,
+    onSelect: (String) -> Unit
+) {
+    SettingsDropdownField(
+        label = label,
+        selectedOption = selectedOption,
+        options = DropdownOptions(options),
+        onSelect = onSelect
+    )
+}
+
+@Composable
+fun SettingsDropdownField(
+    label: String,
+    selectedOption: String,
+    options: DropdownOptions,
     onSelect: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -363,7 +381,7 @@ fun SettingsDropdownField(
                 }
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                options.forEach { option ->
+                options.items.forEach { option ->
                     DropdownMenuItem(text = { Text(option) }, onClick = { onSelect(option); expanded = false })
                 }
             }

@@ -289,13 +289,13 @@ fun LogInEmployeeScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "New Staff? ",
+                            text = "New LPG Business? ",
                             fontSize = 15.sp,
                             color = TextGray,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = "Request ID Activation",
+                            text = "Register Company",
                             fontSize = 15.sp,
                             color = StaffPortalButtonBlue,
                             fontWeight = FontWeight.Black,
