@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -250,41 +251,42 @@ fun SalesEmployeeScreen(
 @Composable
 fun SalesStatCard(label: String, value: String, icon: ImageVector, accentColor: Color, modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier.shadow(4.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.shadow(3.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
         color = Color.White
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 14.dp),
+                .padding(horizontal = 14.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(38.dp),
-                shape = RoundedCornerShape(10.dp),
-                color = accentColor.copy(alpha = 0.1f)
+                modifier = Modifier.size(42.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = accentColor.copy(alpha = 0.12f)
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = accentColor, modifier = Modifier.padding(8.dp))
+                Icon(imageVector = icon, contentDescription = null, tint = accentColor, modifier = Modifier.padding(10.dp))
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label, 
-                    fontSize = 9.sp, 
-                    fontWeight = FontWeight.Black, 
+                    fontSize = 10.sp, 
+                    fontWeight = FontWeight.Bold, 
                     color = TextDark, 
                     letterSpacing = 0.5.sp, 
-                    maxLines = 2, 
-                    lineHeight = 11.sp
+                    maxLines = 1, 
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = value, 
                     fontSize = 15.sp, 
                     fontWeight = FontWeight.Black, 
-                    color = TextDark, 
-                    maxLines = 1
+                    color = accentColor, 
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
