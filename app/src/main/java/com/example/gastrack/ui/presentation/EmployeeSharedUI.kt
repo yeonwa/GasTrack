@@ -364,8 +364,8 @@ fun InventoryStatCard(
                 Text(
                     text = label,
                     fontSize = 10.sp,
-                    color = TextGray,
-                    fontWeight = FontWeight.Medium,
+                    color = TextDark,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -381,8 +381,8 @@ fun InventoryStatCard(
                     Text(
                         text = sub,
                         fontSize = 9.sp,
-                        color = TextGray,
-                        fontWeight = FontWeight.Normal,
+                        color = TextDark,
+                        fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

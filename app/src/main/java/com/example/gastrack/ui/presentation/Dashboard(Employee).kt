@@ -148,7 +148,7 @@ fun SectionHeader(text: String) {
         text = text,
         fontSize = 11.sp,
         fontWeight = FontWeight.Black,
-        color = TextGray,
+        color = TextDark,
         letterSpacing = 1.2.sp
     )
 }

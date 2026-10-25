@@ -273,7 +273,7 @@ fun SalesStatCard(label: String, value: String, icon: ImageVector, accentColor: 
                     text = label, 
                     fontSize = 9.sp, 
                     fontWeight = FontWeight.Black, 
-                    color = TextGray, 
+                    color = TextDark, 
                     letterSpacing = 0.5.sp, 
                     maxLines = 2, 
                     lineHeight = 11.sp

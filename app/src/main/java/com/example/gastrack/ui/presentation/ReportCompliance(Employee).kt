@@ -411,7 +411,7 @@ fun ReportComplianceScreen(
                             text = "ALL SCHEDULED REPORTS",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Black,
-                            color = TextGray,
+                            color = TextDark,
                             letterSpacing = 1.sp
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -523,9 +523,9 @@ fun StatCard(label: String, value: String, sub: String, tone: StatTone, icon: Im
                 }
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = label, fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = label, fontSize = 10.sp, color = TextDark, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = value, fontSize = 15.sp, fontWeight = FontWeight.Black, color = contentColor, maxLines = 1)
-                Text(text = sub, fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = sub, fontSize = 9.sp, color = TextDark, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
