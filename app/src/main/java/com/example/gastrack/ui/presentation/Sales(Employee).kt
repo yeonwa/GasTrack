@@ -1,25 +1,25 @@
 package com.example.gastrack.ui.presentation
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,10 +44,10 @@ data class SalesData(
 @Immutable
 data class PaymentData(
     val paymentId: String,
-    val paymentType: String, // e.g., "Sale", "Purchase Order"
+    val paymentType: String,
     val saleId: String? = null,
     val purchaseOrderId: String? = null,
-    val paymentMethod: String, // e.g., "Cash", "GCash", "Card"
+    val paymentMethod: String,
     val amountPaid: Double,
     val paymentDate: String,
     val referenceNo: String = "N/A",
@@ -58,12 +58,13 @@ data class PaymentData(
 fun SalesEmployeeScreen(
     onBack: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableStateOf("Dashboard") }
     var showDetailDialog by remember { mutableStateOf(false) }
     var selectedSale by remember { mutableStateOf<SalesData?>(null) }
     
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var saleToDelete by remember { mutableStateOf<SalesData?>(null) }
+    
+    var showSuccessMessage by remember { mutableStateOf<String?>(null) }
 
     // Mock Data
     val salesRecords = remember { mutableStateListOf(
@@ -79,41 +80,135 @@ fun SalesEmployeeScreen(
         PaymentData("P-003", "Sale", "S-003", null, "Card", 550.0, "2026-01-04 03:30 PM", "AUTH-9912")
     ) }
 
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCashier by remember { mutableStateOf("All Cashier") }
+    var selectedStatus by remember { mutableStateOf("All Status") }
+
+    val filteredSales = salesRecords.filter { sale ->
+        val payment = paymentRecords.find { it.saleId == sale.salesId }
+        val matchesSearch = sale.saleNo.contains(searchQuery, ignoreCase = true)
+        val matchesCashier = selectedCashier == "All Cashier" || sale.processedBy == selectedCashier
+        val matchesStatus = selectedStatus == "All Status" || payment?.paymentMethod == selectedStatus
+        matchesSearch && matchesCashier && matchesStatus
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(EmployeePortalBackground)
     ) {
         EmployeePortalHeader(
-            title = "Sales Analytics",
+            title = "Sales",
             onBack = onBack
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            EmployeeTabSelector(
-                tabs = listOf("Dashboard", "Records"),
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
-            )
-        }
-
-        Crossfade(targetState = selectedTab, label = "SalesTabTransition") { tab ->
-            when (tab) {
-                "Dashboard" -> SalesDashboardTab()
-                "Records" -> SalesRecordsTab(
-                    sales = salesRecords,
-                    payments = paymentRecords,
-                    onViewClick = { sale -> 
-                        selectedSale = sale
-                        showDetailDialog = true 
-                    },
-                    onDeleteClick = { sale ->
-                        saleToDelete = sale
-                        showDeleteConfirm = true
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        ) {
+            // STATS GRID SECTION
+            item {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SalesStatCard("TODAY'S SALE", "₱ 15,240.50", Icons.AutoMirrored.Filled.TrendingUp, Color(0xFF3F51B5), modifier = Modifier.weight(1f))
+                        SalesStatCard("TOTAL TRANSACTIONS", "50", Icons.AutoMirrored.Filled.ReceiptLong, Color(0xFF4CAF50), modifier = Modifier.weight(1f))
                     }
-                )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SalesStatCard("AVERAGE ORDER VALUE", "₱ 500.00", Icons.Default.ShoppingCart, Color(0xFFFF9800), modifier = Modifier.weight(1f))
+                        SalesStatCard("TODAY'S TRANSACTIONS", "12", Icons.Default.DateRange, Color(0xFF9C27B0), modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // TOOLBAR (Search, Filters, Import Buttons)
+            item {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    EmployeeSearchBar(
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        placeholder = "Search By Sales ID"
+                    )
+                    
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterDropdown(
+                            options = listOf("All Cashier", "EMP-001", "EMP-002", "EMP-003"),
+                            selectedOption = selectedCashier,
+                            onOptionSelected = { selectedCashier = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterDropdown(
+                            options = listOf("All Status", "Cash", "GCash", "Card"), // Payment method mock
+                            selectedOption = selectedStatus,
+                            onOptionSelected = { selectedStatus = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { showSuccessMessage = "CSV Template Downloaded" },
+                            modifier = Modifier.weight(1f).height(42.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("CSV Template", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Button(
+                            onClick = { showSuccessMessage = "Sales Data Imported Successfully" },
+                            modifier = Modifier.weight(1f).height(42.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Import Sales", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+
+            // SALES RECORDS LIST
+            if (filteredSales.isEmpty()) {
+                item {
+                    Text(
+                        text = "No sales match your filters.",
+                        color = TextGray,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                items(filteredSales) { sale ->
+                    val payment = paymentRecords.find { it.saleId == sale.salesId }
+                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)) {
+                        SalesRecordCard(
+                            sale = sale,
+                            paymentMethod = payment?.paymentMethod ?: "Unknown",
+                            onViewClick = { 
+                                selectedSale = sale
+                                showDetailDialog = true 
+                            },
+                            onDeleteClick = { 
+                                saleToDelete = sale
+                                showDeleteConfirm = true
+                            }
+                        )
+                    }
+                }
             }
         }
     }
@@ -130,146 +225,66 @@ fun SalesEmployeeScreen(
     if (showDeleteConfirm && saleToDelete != null) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Transaction", fontWeight = FontWeight.Black) },
-            text = { Text("Are you sure you want to delete ${saleToDelete!!.saleNo}? This will permanently remove the record from system audit.") },
+            title = { Text("Void Sale", fontWeight = FontWeight.Black) },
+            text = { Text("Void sale ${saleToDelete!!.saleNo}? This restores the sold stock back to inventory and cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
                     salesRecords.remove(saleToDelete)
                     showDeleteConfirm = false
-                }) { Text("Delete", color = GasTrackRed, fontWeight = FontWeight.Bold) }
+                }) { Text("Void", color = GasTrackRed, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
             }
         )
     }
-}
 
-
-
-@Composable
-fun SalesDashboardTab() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        // Today's Performance Banner
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .shadow(6.dp, RoundedCornerShape(20.dp)),
-            color = Color.White,
-            shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(1.dp, StaffPortalButtonBlue.copy(alpha = 0.1f))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(text = "Today's Gross Revenue", color = TextGray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "₱ 15,240.50", color = StaffPortalButtonBlue, fontSize = 28.sp, fontWeight = FontWeight.Black)
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(color = Color(0xFFE8F5E9), shape = RoundedCornerShape(6.dp)) {
-                        Text(text = "+12.5%", color = StatusActive, fontSize = 9.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "vs yesterday", color = TextGray, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-                }
-            }
-        }
-
-        // Stats Grid
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SalesStatCard("TOTAL SALES", "₱ 15,000", Color(0xFF3F51B5), modifier = Modifier.weight(1f))
-                SalesStatCard("TRANSACTIONS", "50", Color(0xFF4CAF50), modifier = Modifier.weight(1f))
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SalesStatCard("AVG ORDER", "₱ 500", Color(0xFFFF9800), modifier = Modifier.weight(1f))
-                SalesStatCard("PEAK HOUR", "12:00 PM", Color(0xFF9C27B0), modifier = Modifier.weight(1f))
-            }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
+    if (showSuccessMessage != null) {
+        PortalSuccessDialog(
+            message = showSuccessMessage!!,
+            onDismiss = { showSuccessMessage = null }
+        )
     }
 }
 
 @Composable
-fun SalesStatCard(label: String, value: String, accentColor: Color, modifier: Modifier = Modifier) {
+fun SalesStatCard(label: String, value: String, icon: ImageVector, accentColor: Color, modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier.shadow(4.dp, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.shadow(4.dp, RoundedCornerShape(20.dp)),
+        shape = RoundedCornerShape(20.dp),
         color = Color.White
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Surface(
-                modifier = Modifier.size(28.dp),
-                shape = RoundedCornerShape(6.dp),
+                modifier = Modifier.size(38.dp),
+                shape = RoundedCornerShape(10.dp),
                 color = accentColor.copy(alpha = 0.1f)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Box(modifier = Modifier.size(6.dp).background(accentColor, CircleShape))
-                }
+                Icon(imageVector = icon, contentDescription = null, tint = accentColor, modifier = Modifier.padding(8.dp))
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = value, fontSize = 16.sp, fontWeight = FontWeight.Black, color = TextDark)
-            Text(text = label, fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
-        }
-    }
-}
-
-@Composable
-fun SalesRecordsTab(
-    sales: SnapshotStateList<SalesData>,
-    payments: SnapshotStateList<PaymentData>,
-    onViewClick: (SalesData) -> Unit,
-    onDeleteClick: (SalesData) -> Unit
-) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedPaymentType by remember { mutableStateOf("All") }
-
-    val filteredSales = sales.filter { sale ->
-        val payment = payments.find { it.saleId == sale.salesId }
-        val matchesSearch = sale.saleNo.contains(searchQuery, ignoreCase = true)
-        val matchesType = selectedPaymentType == "All" || payment?.paymentMethod == selectedPaymentType
-        matchesSearch && matchesType
-    }
-
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        EmployeeSearchBar(
-            query = searchQuery,
-            onQueryChange = { searchQuery = it },
-            placeholder = "Search by Sale No..."
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        FilterDropdown(
-            options = listOf("All", "Cash", "GCash", "Card"),
-            selectedOption = if (selectedPaymentType == "All") "Filter by Payment Type" else "Payment: $selectedPaymentType",
-            onOptionSelected = { selectedPaymentType = it },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
-        ) {
-            items(filteredSales) { sale ->
-                val payment = payments.find { it.saleId == sale.salesId }
-                SalesRecordCard(
-                    sale = sale,
-                    paymentMethod = payment?.paymentMethod ?: "Unknown",
-                    onViewClick = { onViewClick(sale) },
-                    onDeleteClick = { onDeleteClick(sale) }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label, 
+                    fontSize = 9.sp, 
+                    fontWeight = FontWeight.Black, 
+                    color = TextGray, 
+                    letterSpacing = 0.5.sp, 
+                    maxLines = 2, 
+                    lineHeight = 11.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = value, 
+                    fontSize = 15.sp, 
+                    fontWeight = FontWeight.Black, 
+                    color = TextDark, 
+                    maxLines = 1
                 )
             }
         }
