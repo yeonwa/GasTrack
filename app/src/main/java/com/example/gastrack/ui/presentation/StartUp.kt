@@ -37,7 +37,8 @@ import com.example.gastrack.ui.theme.*
 fun StartUpScreen(
     onNavigateToCustomer: () -> Unit,
     onNavigateToEmployee: () -> Unit,
-    onNavigateToRegisterCompany: () -> Unit = {}
+    onNavigateToRegisterCompany: () -> Unit = {},
+    onNavigateToAR: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf("Home") }
 
@@ -64,6 +65,7 @@ fun StartUpScreen(
                         onNavigateToCustomer = onNavigateToCustomer,
                         onNavigateToEmployee = onNavigateToEmployee,
                         onNavigateToRegisterCompany = onNavigateToRegisterCompany,
+                        onNavigateToAR = onNavigateToAR,
                         onNavigateToPrivacy = { selectedTab = "Privacy" },
                         onNavigateToTerms = { selectedTab = "Terms" }
                     )
@@ -133,6 +135,7 @@ fun StartUpHomeContent(
     onNavigateToCustomer: () -> Unit,
     onNavigateToEmployee: () -> Unit,
     onNavigateToRegisterCompany: () -> Unit,
+    onNavigateToAR: () -> Unit,
     onNavigateToPrivacy: () -> Unit = {},
     onNavigateToTerms: () -> Unit = {}
 ) {
@@ -169,7 +172,7 @@ fun StartUpHomeContent(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Please select your account type to continue to the correct portal.",
+                    text = "Please select your portal below or try out our new AR tank scanner!",
                     fontSize = 13.sp,
                     color = TextGray,
                     lineHeight = 18.sp,
@@ -184,7 +187,7 @@ fun StartUpHomeContent(
                 icon = Icons.Default.Person,
                 overlineText = "I'm a",
                 titleText = "Customer",
-                subtitleText = "Order gas, track deliveries",
+                subtitleText = "Order refills, track deliveries & check status",
                 accentColor = GasTrackRed,
                 onClick = onNavigateToCustomer
             )
@@ -195,10 +198,12 @@ fun StartUpHomeContent(
                 icon = Icons.Default.LocalShipping,
                 overlineText = "I'm an",
                 titleText = "Employee",
-                subtitleText = "Manage stock, do deliveries",
+                subtitleText = "Handle branch stock, dispatch & deliveries",
                 accentColor = GasTrackBlue,
                 onClick = onNavigateToEmployee
             )
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -248,7 +253,7 @@ fun StartUpHomeContent(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Set up your business & branch network",
+                            text = "Set up your business, branches & get started",
                             fontSize = 12.sp,
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -262,6 +267,10 @@ fun StartUpHomeContent(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            ARFloatingButton(onClick = onNavigateToAR)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -957,6 +966,44 @@ fun StartUpTermsContent(onBack: () -> Unit) {
         )
         
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+fun ARFloatingButton(onClick: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .shadow(12.dp, RoundedCornerShape(32.dp))
+                .background(Color.White, RoundedCornerShape(32.dp))
+                .clickable { onClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(GasTrackBlue.copy(alpha = 0.05f), RoundedCornerShape(24.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ViewInAr,
+                    contentDescription = "AR",
+                    modifier = Modifier.size(40.dp),
+                    tint = GasTrackBlue
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = " AR LPG Safety Placement",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextDark
+        )
     }
 }
 

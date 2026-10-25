@@ -55,6 +55,9 @@ fun AppNavigation() {
                 },
                 onNavigateToRegisterCompany = {
                     navController.navigate("register_company")
+                },
+                onNavigateToAR = {
+                    navController.navigate("ar_loading")
                 }
             )
         }
@@ -280,9 +283,6 @@ fun AppNavigation() {
                 onNavigateToOrder = { targetTab ->
                     navController.navigate("order_tab/$targetTab")
                 },
-                onNavigateToAR = {
-                    navController.navigate("ar_loading")
-                },
                 onNavigateToMenu = {
                     navController.navigate("menu")
                 },
@@ -365,6 +365,9 @@ fun AppNavigation() {
             ARChooseScreen(
                 onContinue = {
                     navController.navigate("ar_scan")
+                },
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }

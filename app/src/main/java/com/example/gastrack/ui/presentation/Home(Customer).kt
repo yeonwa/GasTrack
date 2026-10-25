@@ -39,7 +39,6 @@ val BuyTankGradient = listOf(Color(0xFF8D99D5), Color(0xFF5C6BC0))
 @Composable
 fun CustomerHomeScreen(
     onNavigateToOrder: (String) -> Unit,
-    onNavigateToAR: () -> Unit,
     onNavigateToMenu: () -> Unit,
     onNavigateToCart: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
@@ -112,9 +111,6 @@ fun CustomerHomeScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // --- AR Experience Button ---
-            ARFloatingButton(onClick = onNavigateToAR)
-            
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -353,44 +349,6 @@ fun ActionTile(text: String, subText: String, gradient: List<Color>, icon: Image
 }
 
 @Composable
-fun ARFloatingButton(onClick: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(88.dp)
-                .shadow(12.dp, RoundedCornerShape(32.dp))
-                .background(Color.White, RoundedCornerShape(32.dp))
-                .clickable { onClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(GasTrackBlue.copy(alpha = 0.05f), RoundedCornerShape(24.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ViewInAr,
-                    contentDescription = "AR",
-                    modifier = Modifier.size(40.dp),
-                    tint = GasTrackBlue
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "AI Visual Scan",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextDark
-        )
-    }
-}
-
-@Composable
 fun BottomNavigationBar(
     currentRoute: String,
     onHomeClick: () -> Unit = {},
@@ -456,5 +414,5 @@ fun NavigationBarItem(isSelected: Boolean, icon: ImageVector, label: String, onC
 @Preview(showBackground = true)
 @Composable
 fun CustomerHomeScreenPreview() {
-    CustomerHomeScreen(onNavigateToOrder = {}, onNavigateToAR = {}, onNavigateToMenu = {})
+    CustomerHomeScreen(onNavigateToOrder = {}, onNavigateToMenu = {})
 }

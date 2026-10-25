@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
@@ -28,7 +29,8 @@ import com.example.gastrack.ui.theme.*
 
 @Composable
 fun ARChooseScreen(
-    onContinue: () -> Unit
+    onContinue: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     var selectedType by remember { mutableStateOf("11kg Standard") }
 
@@ -50,6 +52,14 @@ fun ARChooseScreen(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "AI Visual Scan",
                         fontWeight = FontWeight.Black,
@@ -223,5 +233,5 @@ fun ARTankOption(
 @Preview(showBackground = true)
 @Composable
 fun ARChooseScreenPreview() {
-    ARChooseScreen(onContinue = {})
+    ARChooseScreen(onContinue = {}, onBack = {})
 }
