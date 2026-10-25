@@ -178,7 +178,7 @@ fun AppNavigation() {
             )
         }
         composable("employee_orders") {
-            OrdersEmployeeScreen(
+            OrdersAndDeliveryEmployeeScreen(
                 onBack = {
                     navController.popBackStack()
                 }

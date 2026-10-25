@@ -1273,7 +1273,7 @@ fun PickupDetailsModalDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 // Header Row
@@ -1289,7 +1289,7 @@ fun PickupDetailsModalDialog(
                     ) {
                         Text(
                             text = "Pickup Details",
-                            fontSize = 18.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Black,
                             color = TextDark,
                             maxLines = 1
@@ -1306,17 +1306,47 @@ fun PickupDetailsModalDialog(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
                             tint = TextDark,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+                
+                // Add New Customer Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    TextButton(
+                        onClick = onAddNewCustomer,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        modifier = Modifier.height(32.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = ButtonDefaults.textButtonColors(containerColor = StaffPortalButtonBlue)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Add New Customer",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Search Customer Section
                 Text(
                     text = "Search Customer",
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextDark
                 )
@@ -1325,7 +1355,7 @@ fun PickupDetailsModalDialog(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search Customer...", color = Color(0xFF9CA3AF), fontSize = 12.sp) },
+                    placeholder = { Text("Search Customer...", color = Color(0xFF9CA3AF), fontSize = 13.sp) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
@@ -1342,7 +1372,7 @@ fun PickupDetailsModalDialog(
                         focusedBorderColor = StaffPortalButtonBlue
                     ),
                     singleLine = true,
-                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium)
                 )
 
                 // Search Results Dropdown List
@@ -1385,34 +1415,6 @@ fun PickupDetailsModalDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Move Add New Customer Button here
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    TextButton(
-                        onClick = onAddNewCustomer,
-                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
-                        modifier = Modifier.height(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PersonAdd,
-                            contentDescription = null,
-                            tint = StaffPortalButtonBlue,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Add New Customer",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = StaffPortalButtonBlue
-                        )
-                    }
-                }
-
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // SELECTED CUSTOMER Card Box
@@ -1433,13 +1435,13 @@ fun PickupDetailsModalDialog(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = currentSelectedCustomer?.name ?: "No customer selected",
-                            fontSize = 12.sp,
+                            fontSize = 13.sp,
                             fontWeight = if (currentSelectedCustomer != null) FontWeight.Bold else FontWeight.Normal,
                             color = if (currentSelectedCustomer != null) TextDark else Color(0xFF94A3B8)
                         )
                         Text(
                             text = currentSelectedCustomer?.phone ?: "—",
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             color = Color(0xFF64748B)
                         )
                     }
@@ -1450,7 +1452,7 @@ fun PickupDetailsModalDialog(
                 // Pickup Schedule Section
                 Text(
                     text = "Pickup Schedule",
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextDark
                 )
@@ -1468,7 +1470,7 @@ fun PickupDetailsModalDialog(
                             value = date,
                             onValueChange = {},
                             readOnly = true,
-                            placeholder = { Text("mm/dd/yyyy", color = Color(0xFF9CA3AF), fontSize = 11.sp) },
+                            placeholder = { Text("mm/dd/yyyy", color = Color(0xFF9CA3AF), fontSize = 13.sp) },
                             trailingIcon = {
                                 IconButton(onClick = { datePickerDialog.show() }, modifier = Modifier.size(20.dp)) {
                                     Icon(Icons.Default.CalendarToday, contentDescription = "Select Date", tint = TextDark, modifier = Modifier.size(16.dp))
@@ -1483,7 +1485,7 @@ fun PickupDetailsModalDialog(
                                 focusedBorderColor = StaffPortalButtonBlue
                             ),
                             singleLine = true,
-                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium, color = TextDark)
+                            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextDark)
                         )
                     }
 
@@ -1495,7 +1497,7 @@ fun PickupDetailsModalDialog(
                             value = time,
                             onValueChange = {},
                             readOnly = true,
-                            placeholder = { Text("--:-- --", color = Color(0xFF9CA3AF), fontSize = 11.sp) },
+                            placeholder = { Text("--:-- --", color = Color(0xFF9CA3AF), fontSize = 13.sp) },
                             trailingIcon = {
                                 IconButton(onClick = { timePickerDialog.show() }, modifier = Modifier.size(20.dp)) {
                                     Icon(Icons.Default.Schedule, contentDescription = "Select Time", tint = TextDark, modifier = Modifier.size(16.dp))
