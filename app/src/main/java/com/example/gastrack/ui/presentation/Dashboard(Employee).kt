@@ -189,7 +189,7 @@ fun StatCard(
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = label, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = TextGray, letterSpacing = 0.5.sp)
+            Text(text = label, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = TextDark, letterSpacing = 0.5.sp)
         }
     }
 }

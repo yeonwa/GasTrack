@@ -260,7 +260,6 @@ fun RestockingEmployeeScreen(
                     items = poItems
                 )
                 savedPoId = null
-                activeTab = "purchaseOrder"
             }
         }
     }
@@ -294,11 +293,14 @@ fun RestockingEmployeeScreen(
             savedPoId = newPo.purchaseOrderId
             selectedRows.clear()
             isSavingDraft = false
+            poDraft = null
             newPo.purchaseOrderId
         } else {
             null
         }
     }
+
+    val activePoCount = purchaseOrderHistory.count { it.status !in listOf("Received", "Cancelled", "Rejected") }
 
     Column(
         modifier = Modifier
@@ -373,23 +375,10 @@ fun RestockingEmployeeScreen(
                 // Navigation Tabs & Actions Bar
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     EmployeeTabSelector(
-                        tabs = listOf("Restocking", "Purchase Order", "PO History"),
-                        selectedTab = when (activeTab) {
-                            "restocking" -> "Restocking"
-                            "purchaseOrder" -> "Purchase Order"
-                            else -> "PO History"
-                        },
+                        tabs = listOf("Restocking", "Purchase Order ($activePoCount)"),
+                        selectedTab = if (activeTab == "restocking") "Restocking" else "Purchase Order ($activePoCount)",
                         onTabSelected = { tab ->
-                            if (tab == "Purchase Order" && poDraft == null) {
-                                actionError = "Select items in Restocking first to build a purchase order"
-                            } else {
-                                actionError = ""
-                                activeTab = when (tab) {
-                                    "Restocking" -> "restocking"
-                                    "Purchase Order" -> "purchaseOrder"
-                                    else -> "purchaseOrderHistory"
-                                }
-                            }
+                            activeTab = if (tab.startsWith("Purchase Order")) "purchaseOrderHistory" else "restocking"
                         }
                     )
 
@@ -397,44 +386,45 @@ fun RestockingEmployeeScreen(
 
                     if (activeTab == "restocking") {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Row(
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Button(
-                                onClick = handleGenerate,
-                                enabled = !isGenerating,
-                                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.weight(1f).height(44.dp).shadow(2.dp, RoundedCornerShape(10.dp)),
-                                contentPadding = PaddingValues(4.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(if (isGenerating) "Generating..." else "Generate", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                Button(
+                                    onClick = handleGenerate,
+                                    enabled = !isGenerating,
+                                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.weight(1f).height(44.dp).shadow(2.dp, RoundedCornerShape(10.dp))
+                                ) {
+                                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(if (isGenerating) "Generating..." else "Generate", fontSize = 12.sp, fontWeight = FontWeight.Black, maxLines = 1)
+                                }
+                                Button(
+                                    onClick = { isCustomizeOpen = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.weight(1f).height(44.dp).shadow(2.dp, RoundedCornerShape(10.dp))
+                                ) {
+                                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Customize", fontSize = 12.sp, fontWeight = FontWeight.Black, maxLines = 1)
+                                }
                             }
                             Button(
                                 onClick = handleBuildFromSelection,
                                 colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                                 shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.weight(1f).height(44.dp).shadow(2.dp, RoundedCornerShape(10.dp)),
-                                contentPadding = PaddingValues(4.dp)
+                                modifier = Modifier.fillMaxWidth().height(44.dp).shadow(2.dp, RoundedCornerShape(10.dp))
                             ) {
                                 Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("PO (${selectedRows.size})", fontSize = 11.sp, fontWeight = FontWeight.Black)
-                            }
-                            Button(
-                                onClick = { isCustomizeOpen = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.weight(1f).height(44.dp).shadow(2.dp, RoundedCornerShape(10.dp)),
-                                contentPadding = PaddingValues(4.dp)
-                            ) {
-                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Customize", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Purchase Order (${selectedRows.size})", fontSize = 14.sp, fontWeight = FontWeight.Black, maxLines = 1)
                             }
                         }
                     }
@@ -714,7 +704,7 @@ fun RestockingEmployeeScreen(
                 }
             }
 
-            // TAB 3: PURCHASE ORDER HISTORY
+            // TAB 2: PURCHASE ORDER HISTORY
             if (activeTab == "purchaseOrderHistory") {
                 item {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -726,13 +716,13 @@ fun RestockingEmployeeScreen(
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text("Purchase Order History", fontSize = 15.sp, fontWeight = FontWeight.Black, color = TextDark, modifier = Modifier.padding(bottom = 12.dp))
 
-                                if (purchaseOrderHistory.isEmpty()) {
+                                if (purchaseOrderHistory.none { it.status !in listOf("Received", "Cancelled", "Rejected") }) {
                                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                                        Text("No purchase order history yet.", fontSize = 13.sp, color = TextGray)
+                                        Text("No active purchase orders.", fontSize = 13.sp, color = TextGray)
                                     }
                                 } else {
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        paginatedPurchaseOrderHistory.forEach { po ->
+                                        paginatedPurchaseOrderHistory.filter { it.status !in listOf("Received", "Cancelled", "Rejected") }.forEach { po ->
                                             val displayStatus = displayPurchaseOrderStatus(po.status)
                                             Surface(
                                                 modifier = Modifier.fillMaxWidth(),
@@ -1151,7 +1141,7 @@ fun RestockRecommendationCardItem(
 @Composable
 fun DataPoint(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+        Text(text = label, fontSize = 10.sp, color = TextDark, fontWeight = FontWeight.Bold)
         Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Black, color = TextDark)
     }
 }
@@ -1197,72 +1187,75 @@ fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onA
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.85f),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(12.dp),
             color = Color.White
         ) {
-            Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Restocking Customize", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
+            Column(modifier = Modifier.padding(32.dp).verticalScroll(rememberScrollState())) {
+                Text("Restocking Customize", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = TextDark)
+                
+                Spacer(modifier = Modifier.height(20.dp))
 
                 if (error.isNotEmpty()) {
-                    Text(error, color = GasTrackRed, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(error, color = GasTrackRed, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                Text("Selected Items (${rows.size})", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Selected Items (${rows.size})", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = TextDark)
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (rows.isEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text("No items selected. Check items in the Restocking table first.", fontSize = 13.sp, color = TextGray)
+                        Text("No items selected. Check items in the Restocking table first.", fontSize = 14.sp, color = TextDark)
                     }
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        rows.forEachIndexed { idx, row ->
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                color = Color(0xFFF8FAFC),
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.dp, EmployeePortalBackground)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1.5f)) {
-                                        Text("${idx + 1}. ${row.productName}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                                        Text("Suggested: ${row.suggestedQty}", fontSize = 11.sp, color = TextGray)
-                                    }
-                                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("Preferred", fontSize = 10.sp, color = TextGray)
-                                        OutlinedTextField(
-                                            value = row.preferredQtyText,
-                                            onValueChange = { newText ->
-                                                val i = rows.indexOfFirst { r -> r.restockId == row.restockId }
-                                                if (i != -1) {
-                                                    rows[i] = rows[i].copy(preferredQtyText = newText)
-                                                }
-                                            },
-                                            modifier = Modifier.width(80.dp).height(50.dp),
-                                            singleLine = true,
-                                            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, textAlign = TextAlign.Center)
-                                        )
-                                    }
-                                    Column(modifier = Modifier.weight(1.2f), horizontalAlignment = Alignment.End) {
-                                        Text("Est. Cost", fontSize = 10.sp, color = TextGray)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.White
+                    ) {
+                        Column {
+                            // Table Header
+                            Surface(color = StaffPortalButtonBlue) {
+                                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text("#", modifier = Modifier.weight(0.1f), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
+                                    Text("Product", modifier = Modifier.weight(0.4f), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
+                                    Text("Suggested", modifier = Modifier.weight(0.2f), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
+                                    Text("Preferred", modifier = Modifier.weight(0.3f), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
+                                    Text("Est. Cost", modifier = Modifier.weight(0.3f), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
+                                }
+                            }
+                            
+                            // Table Body
+                            rows.forEachIndexed { idx, row ->
+                                val isEven = idx % 2 == 0
+                                Surface(color = if (isEven) Color.White else Color(0xFFF3F4F6)) {
+                                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Text("${idx + 1}", modifier = Modifier.weight(0.1f), fontSize = 14.sp, color = TextDark, textAlign = TextAlign.Center)
+                                        Text(row.productName, modifier = Modifier.weight(0.4f), fontSize = 14.sp, color = TextDark, textAlign = TextAlign.Center)
+                                        Text(row.suggestedQty.toString(), modifier = Modifier.weight(0.2f), fontSize = 14.sp, color = TextDark, textAlign = TextAlign.Center)
+                                        Box(modifier = Modifier.weight(0.3f), contentAlignment = Alignment.Center) {
+                                            OutlinedTextField(
+                                                value = row.preferredQtyText,
+                                                onValueChange = { newText ->
+                                                    val i = rows.indexOfFirst { r -> r.restockId == row.restockId }
+                                                    if (i != -1) {
+                                                        rows[i] = rows[i].copy(preferredQtyText = newText)
+                                                    }
+                                                },
+                                                modifier = Modifier.width(70.dp).height(44.dp),
+                                                singleLine = true,
+                                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, textAlign = TextAlign.Center),
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = StaffPortalButtonBlue,
+                                                    unfocusedBorderColor = Color(0xFFD1D5DB)
+                                                )
+                                            )
+                                        }
                                         val qty = row.preferredQtyText.toIntOrNull() ?: 0
-                                        Text(formatPeso(qty * row.costPrice), fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
+                                        Text(formatPeso(qty * row.costPrice), modifier = Modifier.weight(0.3f), fontSize = 14.sp, color = TextDark, textAlign = TextAlign.Center)
                                     }
                                 }
                             }
@@ -1271,23 +1264,22 @@ fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onA
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = EmployeePortalBackground)
-                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = Color(0xFFE5E7EB))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Estimated Total:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                    Text(formatPeso(totalBudget), fontSize = 16.sp, fontWeight = FontWeight.Black, color = GasTrackRed)
-                }
+                Text("Estimated Total: ${formatPeso(totalBudget)}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(
+                    Button(
                         onClick = onClose,
-                        modifier = Modifier.weight(1f).height(45.dp),
-                        shape = RoundedCornerShape(8.dp)
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0), contentColor = Color.Black),
+                        border = BorderStroke(1.dp, Color(0xFFD1D5DB))
                     ) {
-                        Text("Cancel", fontWeight = FontWeight.Bold)
+                        Text("Cancel", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                     Button(
                         onClick = {
@@ -1296,12 +1288,12 @@ fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onA
                             isSubmitting = false
                             onClose()
                         },
-                        modifier = Modifier.weight(1f).height(45.dp),
+                        modifier = Modifier.weight(1f).height(48.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                         shape = RoundedCornerShape(8.dp),
                         enabled = !isSubmitting && rows.isNotEmpty()
                     ) {
-                        Text(if (isSubmitting) "Applying..." else "Apply", fontWeight = FontWeight.Bold)
+                        Text(if (isSubmitting) "Applying..." else "Apply", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                 }
             }
@@ -1312,25 +1304,105 @@ fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onA
 @Composable
 fun CustomizeSingleItemModal(onClose: () -> Unit, selectedItem: RestockRecommendationData, onSaved: (Int) -> Unit) {
     var qty by remember { mutableStateOf(selectedItem.suggestedQty.toString()) }
-    Dialog(onDismissRequest = onClose) {
-        Surface(modifier = Modifier.fillMaxWidth(0.85f), shape = RoundedCornerShape(16.dp), color = Color.White) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("Customize: ${selectedItem.productName}", fontSize = 16.sp, fontWeight = FontWeight.Black)
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = qty,
-                    onValueChange = { qty = it },
-                    label = { Text("Suggested Quantity") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(modifier = Modifier.fillMaxWidth(0.9f), shape = RoundedCornerShape(12.dp), color = Color.White) {
+            Column(modifier = Modifier.padding(32.dp)) {
+                Text("Customize Restock Quantity", fontSize = 21.sp, fontWeight = FontWeight.ExtraBold, color = TextDark)
                 Spacer(modifier = Modifier.height(20.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = onClose, modifier = Modifier.weight(1f)) { Text("Cancel") }
-                    Button(onClick = {
-                        val newQty = qty.toIntOrNull() ?: selectedItem.suggestedQty
-                        onSaved(newQty)
-                    }, modifier = Modifier.weight(1f)) { Text("Save") }
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Restock ID", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = selectedItem.restockId, onValueChange = {}, readOnly = true,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFD1D5DB)),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = TextDark)
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Product", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = selectedItem.productName, onValueChange = {}, readOnly = true,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFD1D5DB)),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = TextDark)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Current Stock", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = selectedItem.currentStock.toString(), onValueChange = {}, readOnly = true,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFD1D5DB)),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = TextDark)
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Reorder Level", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = selectedItem.reorderLevel.toString(), onValueChange = {}, readOnly = true,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFD1D5DB)),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = TextDark)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("Preferred Order Quantity", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextGray)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = qty,
+                        onValueChange = { qty = it },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = StaffPortalButtonBlue,
+                            unfocusedBorderColor = Color(0xFFD1D5DB)
+                        ),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = TextDark)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Button(
+                        onClick = onClose,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0F0F0), contentColor = Color.Black),
+                        border = BorderStroke(1.dp, Color(0xFFD1D5DB))
+                    ) { 
+                        Text("Cancel", fontWeight = FontWeight.Bold, fontSize = 15.sp) 
+                    }
+                    Button(
+                        onClick = {
+                            val newQty = qty.toIntOrNull() ?: selectedItem.suggestedQty
+                            onSaved(newQty)
+                        }, 
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                        shape = RoundedCornerShape(6.dp)
+                    ) { 
+                        Text("Save", fontWeight = FontWeight.Bold, fontSize = 15.sp) 
+                    }
                 }
             }
         }
