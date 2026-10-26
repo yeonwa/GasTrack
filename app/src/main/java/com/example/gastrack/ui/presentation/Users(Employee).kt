@@ -305,16 +305,15 @@ fun UsersListTab(
         Button(
             onClick = onAddClick,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .height(56.dp)
-                .shadow(8.dp, RoundedCornerShape(28.dp)),
+                .height(44.dp)
+                .shadow(2.dp, RoundedCornerShape(8.dp)),
             colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
-            shape = RoundedCornerShape(28.dp)
+            shape = RoundedCornerShape(8.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
-            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(10.dp))
-            Text("Add User", fontWeight = FontWeight.Black, fontSize = 15.sp)
+            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Add User", fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
     }
 }
@@ -327,9 +326,10 @@ fun UserCard(
     onDelete: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth().shadow(4.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        color = Color.White
+        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -340,14 +340,14 @@ fun UserCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(text = "ID: ${user.companyId}", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark)
                     Surface(
-                        color = if (user.status == "Active") StatusActive.copy(alpha = 0.15f) else StatusInactive.copy(alpha = 0.15f),
+                        color = if (user.status == "Active") Color(0xFFDCFCE7) else Color(0xFFFEE2E2),
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
                             text = user.status.uppercase(), 
-                            color = if (user.status == "Active") StatusActive else StatusInactive, 
-                            fontSize = 8.sp, 
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = if (user.status == "Active") Color(0xFF16A34A) else Color(0xFFDC2626), 
+                            fontSize = 9.sp, 
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             fontWeight = FontWeight.Black
                         )
                     }
@@ -509,9 +509,10 @@ fun ActivityLogTab(
 @Composable
 fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
     Surface(
-        modifier = Modifier.fillMaxWidth().shadow(4.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        color = Color.White
+        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -521,21 +522,21 @@ fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
                 }
                 Surface(
                     color = when(log.activityType) {
-                        "Create" -> StatusActive.copy(alpha = 0.15f)
-                        "Delete" -> StatusInactive.copy(alpha = 0.15f)
-                        else -> Color(0xFFE3F2FD)
+                        "Create" -> Color(0xFFF0FDF4)
+                        "Delete" -> Color(0xFFFEF2F2)
+                        else -> Color(0xFFEFF6FF)
                     },
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
                         text = log.activityType.uppercase(), 
                         color = when(log.activityType) {
-                            "Create" -> StatusActive
-                            "Delete" -> StatusInactive
+                            "Create" -> Color(0xFF16A34A)
+                            "Delete" -> Color(0xFFDC2626)
                             else -> StaffPortalButtonBlue
                         }, 
-                        fontSize = 8.sp, 
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontSize = 9.sp, 
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontWeight = FontWeight.Black
                     )
                 }

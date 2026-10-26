@@ -37,7 +37,8 @@ fun AboutScreen(
                             colors = listOf(GasTrackBlue, StaffPortalBlue)
                         )
                     )
-                    .padding(top = 24.dp)
+                    .statusBarsPadding()
+                    .displayCutoutPadding()
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
@@ -97,6 +98,7 @@ fun AboutScreen(
             
             Text(
                 text = "GasTrack is a purpose-built inventory management system for LPG companies in the Philippines. We help LPG dealers track cylinder movements, deliveries, and stock levels across branches in real time.",
+                modifier = Modifier.widthIn(max = 600.dp),
                 fontSize = 15.sp,
                 color = TextGray,
                 textAlign = TextAlign.Center,
@@ -109,7 +111,7 @@ fun AboutScreen(
             Text(
                 text = "© 2026 GasTrack Inc.\nAll rights reserved.",
                 fontSize = 12.sp,
-                color = Color.LightGray,
+                color = TextGray,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold
             )

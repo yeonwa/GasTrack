@@ -41,6 +41,7 @@ fun SettingsEmployeeScreen(onBack: () -> Unit = {}) {
         modifier = Modifier
             .fillMaxSize()
             .background(EmployeePortalBackground)
+            .systemBarsPadding()
     ) {
         EmployeePortalHeader(title = "Settings", onBack = onBack)
 
@@ -102,7 +103,7 @@ fun SettingsProfileTab(onSave: () -> Unit) {
                 ) {
                     Icon(Icons.Default.CloudUpload, contentDescription = null, tint = TextGray, modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Choose an image file", fontSize = 12.sp, color = StaffPortalButtonBlue, fontWeight = FontWeight.Bold)
+                    Text("Choose an image file", fontSize = 12.sp, color = Color(0xFF0056A6), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -258,9 +259,9 @@ fun SettingsSystemTab(onSave: () -> Unit) {
             OutlinedTextField(
                 value = receiptHeader,
                 onValueChange = { receiptHeader = it },
-                modifier = Modifier.fillMaxWidth().height(100.dp),
+                modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth().height(100.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = BorderColor, focusedBorderColor = StaffPortalButtonBlue)
+                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.DarkGray, focusedBorderColor = StaffPortalButtonBlue)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -328,12 +329,12 @@ fun SettingsTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = BorderColor,
+                unfocusedBorderColor = Color.DarkGray,
                 focusedBorderColor = StaffPortalButtonBlue
             )
         )
@@ -370,9 +371,9 @@ fun SettingsDropdownField(
         Box {
             OutlinedButton(
                 onClick = { expanded = true },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, BorderColor),
+                border = BorderStroke(1.dp, Color.DarkGray),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -392,13 +393,15 @@ fun SettingsDropdownField(
 @Composable
 fun SaveActionRow(onSave: () -> Unit) {
     Spacer(modifier = Modifier.height(24.dp))
-    Button(
-        onClick = onSave,
-        modifier = Modifier.fillMaxWidth().height(52.dp).shadow(4.dp, RoundedCornerShape(14.dp)),
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
-    ) {
-        Text("Save Changes", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Button(
+            onClick = onSave,
+            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(52.dp).shadow(4.dp, RoundedCornerShape(14.dp)),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0056A6))
+        ) {
+            Text("Save Changes", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
     }
     Spacer(modifier = Modifier.height(32.dp))
 }

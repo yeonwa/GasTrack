@@ -89,7 +89,7 @@ fun EmployeePortalHeader(
                         Text(
                             text = buildAnnotatedString {
                                 withStyle(style = SpanStyle(color = Color.White, fontWeight = FontWeight.Black)) { append("Gas") }
-                                withStyle(style = SpanStyle(color = GasTrackRed, fontWeight = FontWeight.Black)) { append("Track") }
+                                withStyle(style = SpanStyle(color = Color(0xFFFF99A8), fontWeight = FontWeight.Black)) { append("Track") }
                             },
                             fontSize = 18.sp,
                             letterSpacing = (-0.5).sp
@@ -175,7 +175,7 @@ fun EmployeeTabSelector(
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = tab,
-                            color = if (isSelected) TextDark else TextGray,
+                            color = if (isSelected) TextDark else Color.DarkGray,
                             fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
                             fontSize = 12.sp
                         )
@@ -218,7 +218,7 @@ fun EmployeeInputField(
             },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color(0xFFE9ECEF),
+                unfocusedBorderColor = Color.DarkGray,
                 focusedBorderColor = StaffPortalButtonBlue,
                 unfocusedContainerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent
@@ -411,7 +411,7 @@ fun EmployeeSearchBar(
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = Color.White,
             focusedContainerColor = Color.White,
-            unfocusedBorderColor = Color(0xFFE9ECEF),
+            unfocusedBorderColor = Color.DarkGray,
             focusedBorderColor = StaffPortalButtonBlue
         ),
         singleLine = true,
@@ -450,7 +450,7 @@ fun FilterDropdown(
                 .height(40.dp)
                 .clickable { expanded = true },
             shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
+            border = BorderStroke(1.dp, Color.DarkGray),
             color = Color.White
         ) {
             Row(
