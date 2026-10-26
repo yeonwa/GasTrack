@@ -60,7 +60,7 @@ fun ReportComplianceScreen(
             ComplianceReport("REP-001", "Sales Summary", "Sales Summary", "Current Week", getDateStr(2), "Due Soon", "sales_summary_current.csv"),
             ComplianceReport("REP-002", "Inventory Audit", "Inventory Audit", "Previous Period", getDateStr(-3), "Overdue", null),
             ComplianceReport("REP-003", "Restocking Logs", "Restocking Logs", "Next Period", getDateStr(10), "Upcoming", null),
-            ComplianceReport("REP-004", "Tax & Revenue Compliance", "Tax Compliance", "Last Period", getDateStr(-1), "Submitted", "tax_compliance_submitted.csv")
+            ComplianceReport("REP-004", "Monthly Sales Summary", "Sales Summary", "Last Period", getDateStr(-1), "Submitted", "monthly_sales_submitted.csv")
         )
     }
 
@@ -262,7 +262,7 @@ fun ReportComplianceScreen(
                                     textAlign = TextAlign.Center,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextGray
+                                    color = TextDark
                                 )
                             }
                         }
@@ -386,13 +386,35 @@ fun ReportComplianceScreen(
                             Text(
                                 text = "No compliance reports scheduled for this date.",
                                 fontSize = 12.sp,
-                                color = TextGray
+                                color = TextDark
                             )
                         } else {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 reportsForSelectedDate.forEach { report ->
                                     SelectedDateReportItem(report = report)
                                 }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Legend
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(StatusInactive))
+                                Text(text = "Due Soon / Overdue", fontSize = 11.sp, color = TextDark)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFF59E0B)))
+                                Text(text = "Upcoming", fontSize = 11.sp, color = TextDark)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(StatusActive))
+                                Text(text = "Submitted", fontSize = 11.sp, color = TextDark)
                             }
                         }
                     }
@@ -683,16 +705,22 @@ fun DatePickerField(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+        Text(label, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = dateValue,
             onValueChange = { onDateSelected(it) },
-            placeholder = { Text("YYYY-MM-DD", color = Color.LightGray, fontSize = 10.sp, maxLines = 1) },
+            placeholder = { Text("YYYY-MM-DD", color = Color.LightGray, fontSize = 13.sp, maxLines = 1) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
-            textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White,
+                unfocusedBorderColor = Color(0xFFD1D5DB),
+                focusedBorderColor = StaffPortalButtonBlue
+            ),
             trailingIcon = {
                 IconButton(onClick = { datePickerDialog.show() }, modifier = Modifier.size(32.dp)) {
                     Icon(Icons.Default.DateRange, contentDescription = "Select Date", tint = StaffPortalButtonBlue, modifier = Modifier.size(16.dp))
@@ -721,7 +749,7 @@ fun NewComplianceReportDialog(
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var typeExpanded by remember { mutableStateOf(false) }
 
-    val reportTypes = listOf("Sales Summary", "Inventory Audit", "Restocking Logs", "Tax & Revenue Compliance")
+    val reportTypes = listOf("Sales Summary", "Inventory Audit", "Restocking Logs")
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -749,7 +777,7 @@ fun NewComplianceReportDialog(
                 }
 
                 // Report Name
-                Text("Report Name", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                Text("Report Name", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = reportName,
@@ -757,21 +785,27 @@ fun NewComplianceReportDialog(
                     placeholder = { Text("e.g. July Sales Summary", color = Color.LightGray) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        unfocusedBorderColor = Color(0xFFD1D5DB),
+                        focusedBorderColor = StaffPortalButtonBlue
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Report Type Dropdown
-                Text("Report Type", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                Text("Report Type", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 Spacer(modifier = Modifier.height(4.dp))
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(
                         onClick = { typeExpanded = true },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color.LightGray),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark)
+                        border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = TextDark)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -802,7 +836,7 @@ fun NewComplianceReportDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Period Label
-                Text("Period Label", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                Text("Period Label", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = periodLabel,
@@ -810,7 +844,13 @@ fun NewComplianceReportDialog(
                     placeholder = { Text("e.g. July 2026", color = Color.LightGray) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        unfocusedBorderColor = Color(0xFFD1D5DB),
+                        focusedBorderColor = StaffPortalButtonBlue
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
