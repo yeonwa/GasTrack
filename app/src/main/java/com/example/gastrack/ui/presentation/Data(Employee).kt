@@ -1,12 +1,10 @@
 package com.example.gastrack.ui.presentation
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -23,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.example.gastrack.ui.theme.*
 import java.util.*
 
@@ -45,7 +42,7 @@ fun DataModuleEmployeeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE2E8F0))
+            .background(Color(0xFFF3F5F8))
     ) {
         EmployeePortalHeader(
             title = when (selectedTab) {
@@ -75,12 +72,7 @@ fun DataModuleEmployeeScreen(
                         }
                     )
                     "Export Logs" -> LogsTab(activityType = "Export")
-                    "Import" -> ImportTab(
-                        onAction = { msg ->
-                            feedbackMessage = msg
-                            isProcessing = true
-                        }
-                    )
+                    "Import" -> ImportTab()
                     "Import Logs" -> LogsTab(activityType = "Import")
                 }
             }
@@ -111,14 +103,14 @@ fun ExportTab(
         Spacer(modifier = Modifier.height(20.dp))
 
         Surface(
-            modifier = Modifier.fillMaxWidth().shadow(8.dp, RoundedCornerShape(24.dp)),
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
             color = Color.White,
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.dp, StaffPortalButtonBlue.copy(alpha = 0.1f))
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, Color(0xFFF0F0F0))
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("EXPORT OPTIONS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                Spacer(modifier = Modifier.height(12.dp))
+                Text("Export Options", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Data Type Selection
                 Text("Data Type", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
@@ -233,10 +225,10 @@ fun ExportTab(
 
         // Ready to Export / Format Action Card
         Surface(
-            modifier = Modifier.fillMaxWidth().shadow(4.dp, RoundedCornerShape(24.dp)),
-            color = Color(0xFFF1F5F9),
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
+            color = Color(0xFFF8FAFC),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, Color(0xFFF0F0F0))
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -294,9 +286,7 @@ fun ExportTab(
 }
 
 @Composable
-fun ImportTab(
-    onAction: (String) -> Unit = {}
-) {
+fun ImportTab() {
     var importDataType by remember { mutableStateOf("Sales Data") }
     var importDateRange by remember { mutableStateOf("Today") }
 
@@ -309,22 +299,32 @@ fun ImportTab(
         Spacer(modifier = Modifier.height(20.dp))
 
         Surface(
-            modifier = Modifier.fillMaxWidth().shadow(8.dp, RoundedCornerShape(24.dp)),
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
             color = Color.White,
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.dp, StaffPortalButtonBlue.copy(alpha = 0.1f))
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, Color(0xFFF0F0F0))
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text(
-                    text = "For importing Sales data specifically, use the 'Import Sales Data' button on the Sales page. General bulk import for other data types isn't wired up yet.",
-                    fontSize = 13.sp,
-                    color = TextGray,
-                    fontWeight = FontWeight.Medium
-                )
+                Surface(
+                    color = Color(0xFFEFF6FF),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Info, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "For importing Sales data specifically, use the 'Import Sales Data' button on the Sales page. General bulk import for other data types isn't wired up yet.",
+                            fontSize = 12.sp,
+                            color = StaffPortalButtonBlue,
+                            fontWeight = FontWeight.Medium,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(20.dp))
-                Text("IMPORT OPTIONS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("Import Options", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Data Type", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 Spacer(modifier = Modifier.height(6.dp))
@@ -350,10 +350,10 @@ fun ImportTab(
         Spacer(modifier = Modifier.height(24.dp))
 
         Surface(
-            modifier = Modifier.fillMaxWidth().shadow(4.dp, RoundedCornerShape(24.dp)),
-            color = Color(0xFFF1F5F9),
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
+            color = Color(0xFFF8FAFC),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, Color(0xFFF0F0F0))
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -367,15 +367,6 @@ fun ImportTab(
                     fontSize = 12.sp,
                     color = TextGray
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { onAction("Importing $importDataType...") },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
-                ) {
-                    Text("Proceed Import", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                }
             }
         }
 
@@ -385,8 +376,7 @@ fun ImportTab(
 
 @Composable
 fun LogsTab(activityType: String) {
-    var showDetailDialog by remember { mutableStateOf(false) }
-    var selectedActivity by remember { mutableStateOf<DataActivityData?>(null) }
+    var selectedLogId by remember { mutableStateOf<String?>(null) }
 
     val logs = remember {
         mutableStateListOf(
@@ -398,54 +388,110 @@ fun LogsTab(activityType: String) {
 
     val filteredLogs = logs.filter { it.activityType.equals(activityType, ignoreCase = true) }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(20.dp))
-                Text(
-                    text = if (activityType == "Export") "Data Export History" else "Data Import History",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = TextDark
-                )
-            }
-        }
-
-        if (filteredLogs.isEmpty()) {
-            item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.White
+        Surface(
+            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
+            shape = RoundedCornerShape(16.dp),
+            color = Color.White,
+            border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+        ) {
+            Column {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Box(modifier = Modifier.padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text("No $activityType history yet.", color = TextGray, fontWeight = FontWeight.Medium)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFFEF3C7),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(20.dp))
+                        }
+                    }
+                    Text(
+                        text = if (activityType == "Export") "Data Export History" else "Data Import History",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        color = TextDark,
+                        letterSpacing = (-0.1).sp
+                    )
+                }
+
+                HorizontalDivider(color = Color(0xFFF3F4F6))
+
+                // Table Layout
+                if (filteredLogs.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.History, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("No $activityType history yet.", color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                } else {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF1E3A5F))
+                                .padding(vertical = 14.dp, horizontal = 24.dp)
+                        ) {
+                            Text("File", modifier = Modifier.weight(1.5f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Type", modifier = Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Format", modifier = Modifier.weight(0.8f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Status", modifier = Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            Text("Date", modifier = Modifier.weight(1.2f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        }
+
+                        filteredLogs.forEachIndexed { index, log ->
+                            val isSelected = selectedLogId == log.id
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(if (isSelected) Color(0xFFF0F7FF) else Color.White)
+                                    .clickable { selectedLogId = log.id }
+                                    .padding(vertical = 16.dp, horizontal = 24.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(log.fileName, modifier = Modifier.weight(1.5f), color = TextDark, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1)
+                                Text(log.dataType, modifier = Modifier.weight(1f), color = TextGray, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 1)
+                                Text(log.fileFormat, modifier = Modifier.weight(0.8f), color = TextGray, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 1)
+                                
+                                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                    Surface(
+                                        color = if (log.status == "Successful") Color(0xFF22C55E) else Color(0xFFEF4444),
+                                        shape = RoundedCornerShape(50)
+                                    ) {
+                                        Text(
+                                            text = log.status,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                                
+                                Text(log.activityDate, modifier = Modifier.weight(1.2f), color = TextGray, fontWeight = FontWeight.Medium, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1)
+                            }
+                            if (index < filteredLogs.size - 1) {
+                                HorizontalDivider(color = Color(0xFFF3F4F6))
+                            }
+                        }
                     }
                 }
             }
-        } else {
-            items(filteredLogs) { log ->
-                DataActivityCard(
-                    log = log,
-                    onView = {
-                        selectedActivity = log
-                        showDetailDialog = true
-                    }
-                )
-            }
         }
-    }
-
-    if (showDetailDialog && selectedActivity != null) {
-        DataActivityDetailDialog(activity = selectedActivity!!, onDismiss = { showDetailDialog = false })
     }
 }
 
@@ -507,84 +553,7 @@ data class DataActivityData(
     val activityDate: String
 )
 
-@Composable
-fun DataActivityCard(log: DataActivityData, onView: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().shadow(4.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        color = Color.White
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(text = log.id, fontWeight = FontWeight.Black, fontSize = 16.sp, color = TextDark)
-                    Text(text = log.activityDate, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
-                }
-                Surface(
-                    color = if (log.status == "Successful") Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text(
-                        text = log.status.uppercase(), 
-                        color = if (log.status == "Successful") Color(0xFF2E7D32) else GasTrackRed, 
-                        fontSize = 8.sp, fontWeight = FontWeight.Black,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Surface(color = Color(0xFFFBFBFE), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFF1F3F4)), modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("ACTIVITY", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black)
-                        Text(log.activityType, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDark)
-                    }
-                    Box(modifier = Modifier.width(1.dp).height(20.dp).background(Color(0xFFE9ECEF)))
-                    Column(modifier = Modifier.weight(1.5f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("FILE NAME", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black)
-                        Text(log.fileName, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = StaffPortalButtonBlue, maxLines = 1)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "By: ${log.userId}", fontSize = 10.sp, color = Color.LightGray, fontWeight = FontWeight.Bold)
-                EmployeeActionItem(Icons.Default.Visibility, "View", StaffPortalButtonBlue, modifier = Modifier.width(100.dp), onClick = onView)
-            }
-        }
-    }
-}
-
-@Composable
-fun DataActivityDetailDialog(activity: DataActivityData, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(24.dp), color = Color.White, modifier = Modifier.fillMaxWidth(0.92f)) {
-            Column(modifier = Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
-                Text("Activity Insight", fontSize = 22.sp, fontWeight = FontWeight.Black, color = TextDark)
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                DetailValueRow("Activity ID", activity.id)
-                DetailValueRow("Processed By", activity.userId)
-                DetailValueRow("Activity Type", activity.activityType, isBold = true, color = StaffPortalButtonBlue)
-                DetailValueRow("Data Source", activity.dataType)
-                DetailValueRow("File Name", activity.fileName)
-                DetailValueRow("File Format", activity.fileFormat, isBold = true)
-                DetailValueRow("Coverage From", activity.dateFrom)
-                DetailValueRow("Coverage To", activity.dateTo)
-                DetailValueRow("Status", activity.status, color = if(activity.status == "Successful") Color(0xFF2E7D32) else GasTrackRed)
-                DetailValueRow("Timestamp", activity.activityDate)
-
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)) {
-                    Text("Close Audit", fontWeight = FontWeight.Black)
-                }
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
