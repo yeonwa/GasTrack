@@ -399,6 +399,9 @@ fun ActivityLogTab(
     onViewDetails: (ActivityLogEntry) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var selectedModuleFilter by remember { mutableStateOf("") }
+    var selectedActionFilter by remember { mutableStateOf("All Actions") }
+    
     var currentPage by remember { mutableIntStateOf(1) }
     val pageSize = 7
 
@@ -413,17 +416,28 @@ fun ActivityLogTab(
         ActivityLogEntry("LOG-008", "U-004", "Yvonne Cruz", "Login", "System", "Auth", "User authenticated successfully", "01/03/2026 09:15 AM")
     ) }
 
-    val filteredLogs = remember(logs, searchQuery) {
+    val actionOptions = listOf("All Actions", "Login", "Logout", "View", "Preview", "Create", "Update", "Delete", "Approve", "Reject", "Dispatch", "Complete", "Failed Attempt", "Settle", "Cancel", "Receive", "Refund", "Claim", "Generate", "Send", "Send Payment", "Import", "Export", "Access Denied", "Action")
+
+    val filteredLogs = remember(logs, searchQuery, selectedModuleFilter, selectedActionFilter) {
         logs.filter {
             val term = searchQuery.lowercase()
-            it.userId.lowercase().contains(term) || it.userName.lowercase().contains(term)
+            val matchesSearch = it.userId.lowercase().contains(term) || 
+                                it.userName.lowercase().contains(term) ||
+                                it.module.lowercase().contains(term) ||
+                                it.recordId.lowercase().contains(term) ||
+                                it.description.lowercase().contains(term)
+                                
+            val matchesModule = selectedModuleFilter.isBlank() || it.module.equals(selectedModuleFilter, ignoreCase = true)
+            val matchesAction = selectedActionFilter == "All Actions" || it.activityType == selectedActionFilter
+            
+            matchesSearch && matchesModule && matchesAction
         }
     }
 
     val totalPages = maxOf(1, (filteredLogs.size + pageSize - 1) / pageSize)
     val safeCurrentPage = minOf(maxOf(1, currentPage), totalPages)
     
-    LaunchedEffect(searchQuery) {
+    LaunchedEffect(searchQuery, selectedModuleFilter, selectedActionFilter) {
         currentPage = 1
     }
 
@@ -431,20 +445,45 @@ fun ActivityLogTab(
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = searchQuery, onValueChange = { searchQuery = it },
-            modifier = Modifier.fillMaxWidth(), placeholder = { Text("Search by Full Name or User ID...", color = Color.LightGray, fontSize = 13.sp) },
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White, unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = GasTrackBlue),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
-            singleLine = true
-        )
+        
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.weight(1f)) {
+                EmployeeSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    placeholder = "Search user, module, target..."
+                )
+            }
+            
+            OutlinedTextField(
+                value = selectedModuleFilter,
+                onValueChange = { selectedModuleFilter = it },
+                placeholder = { Text("Exact module", fontSize = 12.sp) },
+                modifier = Modifier.width(120.dp).height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White,
+                    unfocusedBorderColor = Color(0xFFE9ECEF),
+                    focusedBorderColor = StaffPortalButtonBlue
+                )
+            )
+
+            FilterDropdown(
+                options = actionOptions,
+                selectedOption = selectedActionFilter,
+                onOptionSelected = { selectedActionFilter = it },
+                modifier = Modifier.width(130.dp)
+            )
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
 
         if (paginatedLogs.isEmpty()) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("No activity matches your search.", color = Color.Gray, fontWeight = FontWeight.Medium)
+                Text("No activity matches your filters.", color = Color.Gray, fontWeight = FontWeight.Medium)
             }
         } else {
             LazyColumn(
