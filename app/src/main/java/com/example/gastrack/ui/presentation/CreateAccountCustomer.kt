@@ -35,6 +35,9 @@ import androidx.compose.ui.window.Dialog
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 import org.json.JSONObject
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,11 +58,13 @@ fun CreateAccountCustomerScreen(
     var city by remember { mutableStateOf("") }
     var barangay by remember { mutableStateOf("") }
     var houseNoStreet by remember { mutableStateOf("") }
+    
+    val isInspection = androidx.compose.ui.platform.LocalInspectionMode.current
 
-    val locationsMap = remember {
+    val locationsMap = remember(isInspection) {
         val map = mutableMapOf<String, Map<String, Map<String, List<String>>>>()
         try {
-            val jsonString = context.assets.open("psgc_locations.json").bufferedReader().use { it.readText() }
+            val jsonString = if (isInspection) "{}" else context.assets.open("psgc_locations.json").bufferedReader().use { it.readText() }
             val rootObj = JSONObject(jsonString)
             for (regKey in rootObj.keys()) {
                 val provObj = rootObj.getJSONObject(regKey)
@@ -106,6 +111,7 @@ fun CreateAccountCustomerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+            .systemBarsPadding()
     ) {
         // --- Header Section ---
         Column(
@@ -133,7 +139,7 @@ fun CreateAccountCustomerScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.favicon),
-                    contentDescription = "Logo Icon",
+                    contentDescription = "GasTrack Logo",
                     modifier = Modifier.size(60.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -229,7 +235,8 @@ fun CreateAccountCustomerScreen(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
                     color = TextGray,
-                    letterSpacing = 1.sp
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.clearAndSetSemantics { }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 ExposedDropdownMenuBox(
@@ -240,14 +247,18 @@ fun CreateAccountCustomerScreen(
                         value = customerType,
                         onValueChange = {},
                         readOnly = true,
+                        textStyle = LocalTextStyle.current.copy(color = TextDark),
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
-                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Customer Type" },
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
                             focusedBorderColor = GasTrackBlue,
                             unfocusedContainerColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedTextColor = TextDark,
+                            focusedTextColor = TextDark,
+                            disabledTextColor = TextDark
                         )
                     )
                     ExposedDropdownMenu(
@@ -277,7 +288,7 @@ fun CreateAccountCustomerScreen(
                     fontWeight = FontWeight.Black,
                     color = TextGray,
                     letterSpacing = 1.sp,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
                 )
                 Row(
                     modifier = Modifier
@@ -300,8 +311,8 @@ fun CreateAccountCustomerScreen(
                     TextField(
                         value = mobileNumber,
                         onValueChange = { if (it.length <= 10) mobileNumber = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("987 654 321", color = Color.LightGray) },
+                        modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Mobile Number" },
+                        placeholder = { Text("987 654 321", color = TextGray) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -400,18 +411,18 @@ fun CreateAccountCustomerScreen(
                     fontWeight = FontWeight.Black,
                     color = TextGray,
                     letterSpacing = 1.sp,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Set a secure password", color = Color.LightGray) },
+                    placeholder = { Text("Set a secure password", color = TextGray) },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = null,
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
                                 tint = TextGray
                             )
                         }
@@ -577,13 +588,13 @@ fun CustomerInputField(
             fontWeight = FontWeight.Black,
             color = TextGray,
             letterSpacing = 1.sp,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
         )
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = Color.LightGray) },
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
+            placeholder = { Text(placeholder, color = TextGray) },
             shape = RoundedCornerShape(16.dp),
             minLines = minLines,
             colors = OutlinedTextFieldDefaults.colors(
@@ -615,7 +626,7 @@ fun CustomerDropdownField(
             fontWeight = FontWeight.Black,
             color = TextGray,
             letterSpacing = 1.sp,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
         )
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -625,15 +636,19 @@ fun CustomerDropdownField(
                 value = selectedOption,
                 onValueChange = {},
                 readOnly = true,
-                placeholder = { Text("Select $label", color = Color.LightGray) },
+                textStyle = LocalTextStyle.current.copy(color = TextDark),
+                placeholder = { Text("Select $label", color = TextGray) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth().semantics { contentDescription = label },
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
                     focusedBorderColor = GasTrackBlue,
                     unfocusedContainerColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedTextColor = TextDark,
+                    focusedTextColor = TextDark,
+                    disabledTextColor = TextDark
                 )
             )
             ExposedDropdownMenu(
