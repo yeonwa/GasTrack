@@ -13,7 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 // Branding Colors
 val GasTrackBlue = Color(0xFF1E3A5F)
 val GasTrackRed = Color(0xFFE44948)
-val ButtonOrange = Color(0xFFFF7A00)
+val ButtonOrange = Color(0xFF8A3B00)
 val TextDark = Color(0xFF111827)
 val TextGray = Color(0xFF6B7280)
 val BorderColor = Color(0xFFE5E7EB)

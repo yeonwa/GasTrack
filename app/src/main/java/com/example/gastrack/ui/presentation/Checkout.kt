@@ -21,7 +21,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -100,8 +107,7 @@ fun CheckoutScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
-                ),
-                modifier = Modifier.shadow(2.dp)
+                )
             )
         }
     ) { paddingValues ->
@@ -111,7 +117,7 @@ fun CheckoutScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            Column(modifier = Modifier.padding(24.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
 
                 // ================= CUSTOMER INFORMATION =================
                 Text(
@@ -146,11 +152,12 @@ fun CheckoutScreen(
                             }
                             Text(
                                 text = "Change",
-                                color = Color(0xFFE74C3C),
+                                color = Color(0xFFC62828),
                                 fontWeight = FontWeight.Black,
                                 fontSize = 13.sp,
                                 modifier = Modifier
                                     .clickable { onNavigateToProfile() }
+                                    .semantics { contentDescription = "Change Customer Name" }
                                     .padding(vertical = 4.dp, horizontal = 8.dp)
                             )
                         }
@@ -169,11 +176,12 @@ fun CheckoutScreen(
                             }
                             Text(
                                 text = "Change",
-                                color = Color(0xFFE74C3C),
+                                color = Color(0xFFC62828),
                                 fontWeight = FontWeight.Black,
                                 fontSize = 13.sp,
                                 modifier = Modifier
                                     .clickable { onNavigateToProfile() }
+                                    .semantics { contentDescription = "Change Contact Number" }
                                     .padding(vertical = 4.dp, horizontal = 8.dp)
                             )
                         }
@@ -198,11 +206,12 @@ fun CheckoutScreen(
                             if (orderType == "Delivery") {
                                 Text(
                                     text = "Change",
-                                    color = Color(0xFFE74C3C),
+                                    color = Color(0xFFC62828),
                                     fontWeight = FontWeight.Black,
                                     fontSize = 13.sp,
                                     modifier = Modifier
                                         .clickable { onNavigateToAddresses() }
+                                        .semantics { contentDescription = "Change Delivery Address" }
                                         .padding(vertical = 4.dp, horizontal = 8.dp)
                                 )
                             }
@@ -231,7 +240,7 @@ fun CheckoutScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(64.dp)
-                            .shadow(2.dp, RoundedCornerShape(16.dp))
+                            .semantics(mergeDescendants = true) { contentDescription = "Delivery Order Type" }
                             .clickable { orderType = "Delivery" },
                         shape = RoundedCornerShape(16.dp),
                         color = if (isDelivery) ButtonOrange.copy(alpha = 0.08f) else Color.White,
@@ -253,7 +262,7 @@ fun CheckoutScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(64.dp)
-                            .shadow(2.dp, RoundedCornerShape(16.dp))
+                            .semantics(mergeDescendants = true) { contentDescription = "Pickup Order Type" }
                             .clickable { orderType = "Pickup" },
                         shape = RoundedCornerShape(16.dp),
                         color = if (isPickup) ButtonOrange.copy(alpha = 0.08f) else Color.White,
@@ -372,8 +381,9 @@ fun CheckoutScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.gcash_logo), 
                                 contentDescription = null, 
-                                modifier = Modifier.padding(6.dp).fillMaxSize()
-                            ) 
+                                modifier = Modifier.size(24.dp),
+                                contentScale = ContentScale.Fit
+                            )
                         },
                         onClick = { paymentMethod = "GCash" }
                     )
@@ -389,7 +399,7 @@ fun CheckoutScreen(
                 Spacer(modifier = Modifier.height(36.dp))
 
                 // ================= OPERATION BUTTONS ACTION ZONE =================
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = {
                             onPlaceOrder()
@@ -397,8 +407,7 @@ fun CheckoutScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .shadow(4.dp, RoundedCornerShape(16.dp)),
+                            .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange)
                     ) {
@@ -414,8 +423,8 @@ fun CheckoutScreen(
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.5.dp, Color(0xFFE74C3C)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE74C3C))
+                        border = BorderStroke(1.5.dp, Color(0xFFC62828)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828))
                     ) {
                         Text("Cancel", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
@@ -449,16 +458,20 @@ fun CheckoutPaymentRow(
     onClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(16.dp))
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
         border = BorderStroke(1.5.dp, if (isSelected) ButtonOrange else Color.Transparent)
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectable(
+                    selected = isSelected,
+                    onClick = onClick,
+                    role = Role.RadioButton
+                )
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -469,10 +482,19 @@ fun CheckoutPaymentRow(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { icon() }
             }
             Spacer(modifier = Modifier.width(14.dp))
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDark, modifier = Modifier.weight(1f))
+            Text(
+                text = title, 
+                fontWeight = FontWeight.Bold, 
+                fontSize = 16.sp, 
+                color = TextDark, 
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             RadioButton(
                 selected = isSelected,
-                onClick = onClick,
+                onClick = null,
+                modifier = Modifier.clearAndSetSemantics { },
                 colors = RadioButtonDefaults.colors(selectedColor = ButtonOrange)
             )
         }
