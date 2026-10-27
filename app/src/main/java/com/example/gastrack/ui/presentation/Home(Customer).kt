@@ -32,10 +32,11 @@ import com.example.gastrack.ui.theme.*
 // Modern Home Colors
 val HomeBackground = Color(0xFFFBFBFE)
 val CardDark = Color(0xFF161D27)
-val RefillGradient = listOf(Color(0xFFFFB87A), Color(0xFFFF8E3C))
-val BuyTankGradient = listOf(Color(0xFF8D99D5), Color(0xFF5C6BC0))
+val RefillGradientStart = Color(0xFF9E4B00)
+val RefillGradientEnd = Color(0xFF803D00)
+val BuyTankGradientStart = Color(0xFF4A559E)
+val BuyTankGradientEnd = Color(0xFF333B70)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerHomeScreen(
     onNavigateToOrder: (String) -> Unit,
@@ -94,7 +95,8 @@ fun CustomerHomeScreen(
                 ActionTile(
                     text = "Refill\nLPG",
                     subText = "Quick order",
-                    gradient = RefillGradient,
+                    gradientStart = RefillGradientStart,
+                    gradientEnd = RefillGradientEnd,
                     icon = Icons.Default.Refresh,
                     modifier = Modifier.weight(1f),
                     onClick = { onNavigateToOrder("Refill") }
@@ -102,7 +104,8 @@ fun CustomerHomeScreen(
                 ActionTile(
                     text = "New\nTank",
                     subText = "Buy cylinder",
-                    gradient = BuyTankGradient,
+                    gradientStart = BuyTankGradientStart,
+                    gradientEnd = BuyTankGradientEnd,
                     icon = Icons.Default.Add,
                     modifier = Modifier.weight(1f),
                     onClick = { onNavigateToOrder("New Tank") }
@@ -116,7 +119,6 @@ fun CustomerHomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeHeader(
     onAddressClick: () -> Unit = {},
@@ -135,6 +137,8 @@ fun HomeHeader(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable { onAddressClick() }
         ) {
@@ -151,11 +155,11 @@ fun HomeHeader(
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "DELIVER TO",
                     fontSize = 11.sp,
-                    color = TextGray,
+                    color = Color(0xFF494F59),
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.5.sp
                 )
@@ -164,7 +168,10 @@ fun HomeHeader(
                         text = "Malabon City",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Black,
-                        color = TextDark
+                        color = TextDark,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
@@ -176,17 +183,20 @@ fun HomeHeader(
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             // Cart Icon Button
-            IconButton(
-                onClick = onCartClick,
+            Box(
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .clip(CircleShape)
+                    .clickable(onClick = onCartClick),
+                contentAlignment = Alignment.Center
             ) {
-                Box {
+                Box(modifier = Modifier.padding(12.dp)) {
                     Icon(
                         imageVector = Icons.Outlined.ShoppingCart,
                         contentDescription = "Cart",
-                        tint = TextDark,
-                        modifier = Modifier.size(26.dp)
+                        tint = TextDark
                     )
                     if (totalItems > 0) {
                         Surface(
@@ -201,15 +211,21 @@ fun HomeHeader(
                 }
             }
 
+            Spacer(modifier = Modifier.width(10.dp))
+
             // Notifications Icon Button
-            IconButton(
-                onClick = onNotificationClick,
+            Box(
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .clip(CircleShape)
+                    .clickable(onClick = onNotificationClick),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = "Notifications",
                     tint = TextDark,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.padding(12.dp)
                 )
             }
         }
@@ -289,7 +305,9 @@ fun SmartRefillCard(onReorderClick: () -> Unit = {}) {
                 colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
+                    .widthIn(max = 320.dp)
                     .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
                     .height(50.dp)
                     .shadow(8.dp, RoundedCornerShape(16.dp)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
@@ -306,12 +324,12 @@ fun SmartRefillCard(onReorderClick: () -> Unit = {}) {
 }
 
 @Composable
-fun ActionTile(text: String, subText: String, gradient: List<Color>, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+fun ActionTile(text: String, subText: String, gradientStart: Color, gradientEnd: Color, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Box(
         modifier = modifier
             .height(140.dp)
             .shadow(8.dp, RoundedCornerShape(24.dp))
-            .background(Brush.linearGradient(gradient), RoundedCornerShape(24.dp))
+            .background(Brush.linearGradient(listOf(gradientStart, gradientEnd)), RoundedCornerShape(24.dp))
             .clickable { onClick() }
             .clip(RoundedCornerShape(24.dp))
     ) {
@@ -329,7 +347,7 @@ fun ActionTile(text: String, subText: String, gradient: List<Color>, icon: Image
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = subText,
-                color = Color.White.copy(alpha = 0.8f),
+                color = Color.White,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
