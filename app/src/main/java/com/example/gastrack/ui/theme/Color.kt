@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 // Branding Colors
 val GasTrackBlue = Color(0xFF1E3A5F)
 val GasTrackRed = Color(0xFFC62828) // Darkened for better contrast
-val ButtonOrange = Color(0xFF8A3B00)
+val ButtonOrange = Color(0xFFA64A00)
 val TextDark = Color(0xFF111827)
 val TextGray = Color(0xFF6B7280)
 val BorderColor = Color(0xFFE5E7EB)
