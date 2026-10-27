@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -40,13 +42,13 @@ fun ARChooseScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(GasTrackBlue, StaffPortalBlue)
                         )
                     )
-                    .padding(top = 24.dp)
+                    .statusBarsPadding()
+                    .height(86.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -71,29 +73,35 @@ fun ARChooseScreen(
         },
         bottomBar = {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
                 shadowElevation = 16.dp,
                 color = Color.White
             ) {
-                Button(
-                    onClick = onContinue,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
-                        .height(60.dp)
-                        .shadow(12.dp, RoundedCornerShape(20.dp)),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue)
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Start AI Scan",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                    Button(
+                        onClick = onContinue,
+                        modifier = Modifier
+                            .widthIn(max = 320.dp)
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                            .height(60.dp)
+                            .shadow(12.dp, RoundedCornerShape(20.dp)),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Start AI Scan",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                        }
                     }
                 }
             }
@@ -224,7 +232,8 @@ fun ARTankOption(
             RadioButton(
                 selected = isSelected,
                 onClick = onClick,
-                colors = RadioButtonDefaults.colors(selectedColor = GasTrackBlue)
+                colors = RadioButtonDefaults.colors(selectedColor = GasTrackBlue),
+                modifier = Modifier.semantics { contentDescription = name }
             )
         }
     }
