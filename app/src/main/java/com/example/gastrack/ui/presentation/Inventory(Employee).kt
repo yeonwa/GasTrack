@@ -312,7 +312,7 @@ fun InventoryQuickAction(text: String, icon: ImageVector, modifier: Modifier = M
         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
-        modifier = modifier.height(42.dp)
+        modifier = modifier.heightIn(min = 48.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -406,7 +406,7 @@ fun InventoryCardMobile(
                         text = item.status, 
                         color = when(item.status) {
                             "Critical" -> StatusInactive
-                            "Low Stock" -> Color(0xFFFFA000)
+                            "Low Stock" -> Color(0xFFE65100)
                             else -> StatusActive
                         }, 
                         fontSize = 9.sp, fontWeight = FontWeight.Black,
@@ -436,11 +436,11 @@ fun InventoryCardMobile(
             Spacer(modifier = Modifier.height(8.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                IconButton(onClick = { onView(item) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Visibility, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(18.dp)) }
+                IconButton(onClick = { onView(item) }) { Icon(Icons.Default.Visibility, contentDescription = "View item", tint = StaffPortalButtonBlue, modifier = Modifier.size(18.dp)) }
                 Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = { onEdit(item) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(16.dp)) }
+                IconButton(onClick = { onEdit(item) }) { Icon(Icons.Default.Edit, contentDescription = "Edit item", tint = Color(0xFF2E7D32), modifier = Modifier.size(16.dp)) }
                 Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp)) }
+                IconButton(onClick = { onDelete(item) }) { Icon(Icons.Default.Delete, contentDescription = "Delete item", tint = GasTrackRed, modifier = Modifier.size(16.dp)) }
             }
         }
     }
@@ -457,7 +457,7 @@ fun InventoryDetailDialog(item: InventoryItemData, onDismiss: () -> Unit) {
             Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Inventory Details", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                    IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF111827))
                     }
                 }
@@ -485,7 +485,7 @@ fun InventoryDetailDialog(item: InventoryItemData, onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = onDismiss, 
-                    modifier = Modifier.fillMaxWidth().height(44.dp), 
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), 
                     shape = RoundedCornerShape(8.dp), 
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
                 ) {
@@ -510,7 +510,7 @@ fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: 
             Column(modifier = Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Edit Stock", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111827))
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                    IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF111827))
                     }
                 }
@@ -565,7 +565,7 @@ fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = onDismiss, 
-                        modifier = Modifier.weight(1f).height(44.dp), 
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp), 
                         shape = RoundedCornerShape(8.dp), 
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
                     ) { 
@@ -577,7 +577,7 @@ fun InventoryEditDialog(item: InventoryItemData, onDismiss: () -> Unit, onSave: 
                             // but is available for backend submission in a real app.
                             onSave(item.copy(stockOnHand = stock.toIntOrNull() ?: 0)) 
                         },
-                        modifier = Modifier.weight(1f).height(44.dp), 
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp), 
                         shape = RoundedCornerShape(8.dp), 
                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue, contentColor = Color.White)
                     ) { 
@@ -878,10 +878,9 @@ fun StockInDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                                 newList.removeAt(index)
                                                 items.clear()
                                                 items.addAll(newList)
-                                            },
-                                            modifier = Modifier.size(24.dp)
+                                            }
                                         ) {
-                                            Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Default.Delete, contentDescription = "Delete item", tint = GasTrackRed, modifier = Modifier.size(16.dp))
                                         }
                                     }
 
@@ -1197,10 +1196,9 @@ fun StockOutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                                 newList.removeAt(index)
                                                 items.clear()
                                                 items.addAll(newList)
-                                            },
-                                            modifier = Modifier.size(24.dp)
+                                            }
                                         ) {
-                                            Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Default.Delete, contentDescription = "Delete item", tint = GasTrackRed, modifier = Modifier.size(16.dp))
                                         }
                                     }
 
@@ -1503,10 +1501,9 @@ fun TransferDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                                                 newList.removeAt(index)
                                                 items.clear()
                                                 items.addAll(newList)
-                                            },
-                                            modifier = Modifier.size(24.dp)
+                                            }
                                         ) {
-                                            Icon(Icons.Default.Delete, contentDescription = null, tint = GasTrackRed, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Default.Delete, contentDescription = "Delete item", tint = GasTrackRed, modifier = Modifier.size(16.dp))
                                         }
                                     }
 
