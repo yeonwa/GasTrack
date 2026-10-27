@@ -205,7 +205,8 @@ fun ExportTab(
                     Text(
                         "Note: Inventory Data, Products Data, and Supplier Records export as full current snapshot; date range filters Sales and Restocking logs.",
                         fontSize = 11.sp,
-                        color = TextGray
+                        color = TextGray,
+                        modifier = Modifier.widthIn(max = 500.dp)
                     )
                 }
 
@@ -242,40 +243,46 @@ fun ExportTab(
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (!isAnnualReport) {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            Button(
+                                onClick = { onAction("Exporting $exportDataType to CSV...") },
+                                modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(46.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextDark),
+                                border = BorderStroke(1.dp, Color.LightGray)
+                            ) {
+                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Text("CSV", fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
+                            }
+                        }
+                    }
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         Button(
-                            onClick = { onAction("Exporting $exportDataType to CSV...") },
-                            modifier = Modifier.weight(1f).height(46.dp),
+                            onClick = { onAction("Exporting $exportDataType to Excel...") },
+                            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(46.dp),
                             shape = RoundedCornerShape(12.dp),
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextDark),
-                            border = BorderStroke(1.dp, Color.LightGray)
+                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(2.dp))
-                            Text("CSV", fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
+                            Text("Excel", fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
                         }
                     }
-                    Button(
-                        onClick = { onAction("Exporting $exportDataType to Excel...") },
-                        modifier = Modifier.weight(1f).height(46.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
-                    ) {
-                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text("Excel", fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
-                    }
-                    Button(
-                        onClick = { onAction("Exporting $exportDataType to PDF...") },
-                        modifier = Modifier.weight(1f).height(46.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = TextDark)
-                    ) {
-                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text("PDF", fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        Button(
+                            onClick = { onAction("Exporting $exportDataType to PDF...") },
+                            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(46.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = TextDark)
+                        ) {
+                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text("PDF", fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
+                        }
                     }
                 }
             }
