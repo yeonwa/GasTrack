@@ -12,7 +12,7 @@ val BorderColor = Color(0xFFE5E7EB)
 
 // Staff Portal Colors
 val StaffPortalBlue = Color(0xFF1E3A5F) // Header color
-val StaffPortalButtonBlue = Color(0xFF0082FB) // Primary button color
+val StaffPortalButtonBlue = Color(0xFF0066CC) // Primary button color
 val EmployeePortalBackground = Color(0xFFF3F5F8)
 val StatusActive = Color(0xFF25C960)
 val StatusInactive = Color(0xFFD90429)
