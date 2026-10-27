@@ -77,16 +77,15 @@ fun CartScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(GasTrackBlue, StaffPortalBlue)
                         )
                     )
-                    .padding(top = 24.dp)
+                    .statusBarsPadding()
             ) {
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                    modifier = Modifier.fillMaxWidth().height(86.dp).padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onBack) {
