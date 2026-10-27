@@ -81,15 +81,6 @@ fun AppNavigation() {
                 onBack = {
                     navController.popBackStack()
                 },
-            ) {
-                navController.navigate("register_account")
-            }
-        }
-        composable("register_account") {
-            RegisterAccountEmployeeScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
                 onRegisterComplete = {
                     navController.navigate("employee_menu") {
                         popUpTo("startup") { inclusive = true }
