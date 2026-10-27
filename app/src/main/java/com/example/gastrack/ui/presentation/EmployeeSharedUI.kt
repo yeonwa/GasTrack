@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,35 +51,34 @@ fun EmployeePortalHeader(
             .shadow(4.dp),
         color = backgroundColor
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (onBack != null) {
-                    IconButton(
-                        onClick = { onBack() },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, 
-                            contentDescription = "Back", 
-                            tint = if (backgroundColor == GasTrackBlue) Color.White else StaffPortalButtonBlue, 
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                        IconButton(onClick = { onBack() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack, 
+                                contentDescription = "Back", 
+                                tint = if (backgroundColor == GasTrackBlue) Color.White else StaffPortalButtonBlue
+                            )
+                        }
                     }
                 } else if (onMenu != null) {
-                    IconButton(
-                        onClick = { onMenu() },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Menu, 
-                            contentDescription = "Menu", 
-                            tint = if (backgroundColor == GasTrackBlue) Color.White else StaffPortalButtonBlue, 
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                        IconButton(onClick = { onMenu() }) {
+                            Icon(
+                                Icons.Default.Menu, 
+                                contentDescription = "Menu", 
+                                tint = if (backgroundColor == GasTrackBlue) Color.White else StaffPortalButtonBlue
+                            )
+                        }
                     }
                 }
 
@@ -103,7 +103,7 @@ fun EmployeePortalHeader(
                     Surface(
                         modifier = Modifier
                             .size(40.dp)
-                            .clickable { onProfile() },
+                            .clickable(onClickLabel = "Profile") { onProfile() },
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.15f),
                         border = BorderStroke(2.dp, Color.White.copy(alpha = 0.3f))
@@ -111,13 +111,13 @@ fun EmployeePortalHeader(
                         Icon(Icons.Default.AccountCircle, contentDescription = "Profile", tint = Color.White, modifier = Modifier.padding(2.dp).fillMaxSize())
                     }
                 } else {
-                    Box(modifier = Modifier.size(40.dp))
+                    Box(modifier = Modifier.size(48.dp))
                 }
             }
 
             if (subtitle.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(14.dp))
-                Text(text = subtitle, fontSize = 11.sp, color = GasTrackRed, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                Text(text = subtitle, fontSize = 11.sp, color = GasTrackRed, fontWeight = FontWeight.Black, letterSpacing = 1.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(modifier = Modifier.height(2.dp))
             } else {
                 Spacer(modifier = Modifier.height(14.dp))
@@ -127,7 +127,9 @@ fun EmployeePortalHeader(
                 text = title, 
                 fontSize = 22.sp, 
                 fontWeight = FontWeight.Black, 
-                color = if (backgroundColor == GasTrackBlue) Color.White else TextDark
+                color = if (backgroundColor == GasTrackBlue) Color.White else TextDark,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
