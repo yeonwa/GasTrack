@@ -55,7 +55,10 @@ fun ARLoadingScreen(
                 Image(
                     painter = painterResource(id = R.drawable.favicon),
                     contentDescription = "Loading",
-                    modifier = Modifier.size(100.dp)
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(Color.White, CircleShape)
+                        .padding(12.dp)
                 )
             }
             
