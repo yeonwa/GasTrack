@@ -19,8 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +55,7 @@ fun DashboardEmployeeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
+                    .navigationBarsPadding()
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +152,7 @@ fun SectionHeader(text: String) {
         text = text,
         fontSize = 11.sp,
         fontWeight = FontWeight.Black,
-        color = TextDark,
+        color = Color.Black,
         letterSpacing = 1.2.sp
     )
 }
@@ -182,14 +186,14 @@ fun StatCard(
                         color = Color(0xFFF1F3F4),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text(badgeText, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextDark, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                        Text(badgeText, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+            Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = label, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = TextDark, letterSpacing = 0.5.sp)
+            Text(text = label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Black, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -272,21 +276,24 @@ fun RestockSuggestionListCard() {
 
 @Composable
 fun RestockRow(name: String, stock: Int, reorderLevel: Int, status: String, onReorderClick: () -> Unit = {}) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDark)
-            Text("Stock: $stock | Reorder At: $reorderLevel", fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium)
+            Text(name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDark, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("Stock: $stock | Reorder At: $reorderLevel", fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                color = if (status == "Critical") StatusInactive else Color(0xFFF59E0B),
+                color = if (status == "Critical") Color(0xFF990000) else Color(0xFFF59E0B),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(status, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                Text(status, color = if (status == "Critical") Color.White else Color(0xFF451A03), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
             }
             Spacer(modifier = Modifier.width(8.dp))
-            IconButton(onClick = onReorderClick, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.ShoppingCart, contentDescription = "Reorder", tint = StaffPortalButtonBlue, modifier = Modifier.size(18.dp))
+            IconButton(
+                onClick = onReorderClick,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(Icons.Default.ShoppingCart, contentDescription = "Reorder $name", tint = StaffPortalButtonBlue, modifier = Modifier.size(24.dp))
             }
         }
     }
@@ -305,7 +312,7 @@ fun ActivityTimelineCard(onViewLogsClick: () -> Unit) {
                 Surface(
                     color = Color(0xFFF1F3F4),
                     shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.clickable { onViewLogsClick() }
+                    modifier = Modifier.clickable(onClickLabel = "View Activity Logs") { onViewLogsClick() }.semantics { contentDescription = "View Activity Logs" }
                 ) {
                     Text("View Logs", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextDark, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
@@ -322,7 +329,7 @@ fun ActivityTimelineCard(onViewLogsClick: () -> Unit) {
 
 @Composable
 fun ActivityRow(user: String, text: String, time: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Text(buildAnnotatedString {
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = TextDark)) { append("$user ") }
@@ -361,7 +368,7 @@ fun LowStockModalDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun ModalLowStockRow(name: String, stock: Int, limit: Int, status: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Text(name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Text("Stock: $stock / Reorder at: $limit", fontSize = 11.sp, color = TextGray)
@@ -370,7 +377,7 @@ fun ModalLowStockRow(name: String, stock: Int, limit: Int, status: String) {
             color = if (status == "Critical") StatusInactive else Color(0xFFF59E0B),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(status, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+            Text(status, color = if (status == "Critical") Color.White else Color(0xFF451A03), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
         }
     }
 }
@@ -400,7 +407,7 @@ fun TopProductsModalDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun TopProductRow(name: String, sold: String, rev: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Text(name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Text(sold, fontSize = 11.sp, color = TextGray)
