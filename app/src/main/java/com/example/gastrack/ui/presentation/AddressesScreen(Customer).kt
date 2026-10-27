@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,16 +57,15 @@ fun AddressesScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(GasTrackBlue, StaffPortalBlue)
                         )
                     )
-                    .padding(top = 24.dp)
+                    .statusBarsPadding()
             ) {
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                    modifier = Modifier.fillMaxWidth().height(86.dp).padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onBack) {
@@ -137,12 +138,15 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(24.dp))
-            .clickable { onSelect() },
+            .semantics(mergeDescendants = true) {
+                stateDescription = if (address.isPrimary) "Selected as primary address" else "Not selected"
+            }
+            .clickable(onClickLabel = "Select ${address.label} as primary address") { onSelect() },
         color = Color.White,
         shape = RoundedCornerShape(24.dp)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.fillMaxWidth().padding(20.dp).wrapContentHeight(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -159,17 +163,20 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = address.label,
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp,
-                        color = TextDark
+                        color = TextDark,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     if (address.isPrimary) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            color = StaffPortalButtonBlue,
+                            color = Color(0xFF005FCC),
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
@@ -186,7 +193,6 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
                     text = address.address,
                     fontSize = 13.sp,
                     color = TextGray,
-                    lineHeight = 18.sp,
                     fontWeight = FontWeight.Medium
                 )
                 if (!address.isPrimary) {
@@ -194,17 +200,16 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
                     Text(
                         text = "Set as Default",
                         fontSize = 12.sp,
-                        color = StaffPortalButtonBlue,
+                        color = Color(0xFF005FCC),
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .clickable { onSelect() }
-                            .padding(vertical = 2.dp)
+                        modifier = Modifier.padding(vertical = 2.dp)
                     )
                 }
             }
+            Spacer(modifier = Modifier.width(8.dp))
             RadioButton(
                 selected = address.isPrimary,
-                onClick = onSelect,
+                onClick = null,
                 colors = RadioButtonDefaults.colors(selectedColor = StaffPortalButtonBlue)
             )
         }
