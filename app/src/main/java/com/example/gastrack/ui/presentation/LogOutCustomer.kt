@@ -83,6 +83,7 @@ fun LogOutCustomerScreen(
         Button(
             onClick = onLogout,
             modifier = Modifier
+                .widthIn(max = 320.dp)
                 .fillMaxWidth()
                 .height(60.dp)
                 .shadow(12.dp, RoundedCornerShape(20.dp)),
@@ -103,7 +104,10 @@ fun LogOutCustomerScreen(
         // --- Cancel Button ---
         TextButton(
             onClick = onCancel,
-            modifier = Modifier.fillMaxWidth().height(56.dp)
+            modifier = Modifier
+                .widthIn(max = 320.dp)
+                .fillMaxWidth()
+                .height(56.dp)
         ) {
             Text(
                 text = "Stay Logged In",
