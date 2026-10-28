@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import com.example.gastrack.ui.theme.*
 
@@ -108,6 +110,7 @@ fun MenuEmployeeScreen(
                 item {
                     Surface(
                         modifier = Modifier
+                            .widthIn(max = 488.dp)
                             .fillMaxWidth()
                             .padding(bottom = 8.dp)
                             .shadow(4.dp, RoundedCornerShape(20.dp)),
@@ -117,7 +120,9 @@ fun MenuEmployeeScreen(
                         TextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(max = 488.dp)
+                                .fillMaxWidth(),
                             placeholder = { Text("Search for...", color = TextGray, fontSize = 14.sp) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = TextGray) },
                             colors = TextFieldDefaults.colors(
@@ -186,9 +191,16 @@ fun EmployeeMenuItem(
 ) {
     Surface(
         modifier = Modifier
+            .widthIn(max = 488.dp)
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(20.dp))
-            .clickable { onClick() },
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$title, $subtitle"
+            }
+            .clickable(
+                onClickLabel = "$title: $subtitle",
+                onClick = onClick
+            ),
         color = Color.White,
         shape = RoundedCornerShape(20.dp)
     ) {
