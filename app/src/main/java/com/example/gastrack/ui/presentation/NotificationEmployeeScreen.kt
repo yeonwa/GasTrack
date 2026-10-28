@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,71 +53,71 @@ fun NotificationEmployeeScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            if (!hasNotifications) {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(
-                            modifier = Modifier.size(72.dp),
-                            shape = CircleShape,
-                            color = Color(0xFFE8F5E9)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = Color(0xFF2E7D32),
-                                modifier = Modifier.padding(16.dp).fillMaxSize()
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "You're all caught up!", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = "No due or overdue reports right now.", fontSize = 13.sp, color = TextGray, textAlign = TextAlign.Center)
+        if (!hasNotifications) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(
+                        modifier = Modifier.size(72.dp),
+                        shape = CircleShape,
+                        color = Color(0xFFE8F5E9)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxSize()
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "You're all caught up!", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = "No due or overdue reports right now.", fontSize = 13.sp, color = TextGray, textAlign = TextAlign.Center)
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                if (overdue.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "OVERDUE",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black,
+                            color = GasTrackRed,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                    items(overdue) { item ->
+                        ComplianceNotificationCard(item, onNavigateToReport)
                     }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp)
-                ) {
-                    if (overdue.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "OVERDUE",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Black,
-                                color = GasTrackRed,
-                                letterSpacing = 1.sp
-                            )
-                        }
-                        items(overdue) { item ->
-                            ComplianceNotificationCard(item, onNavigateToReport)
-                        }
-                    }
 
-                    if (dueSoon.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "DUE SOON",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Black,
-                                color = Color(0xFFD97706),
-                                letterSpacing = 1.sp
-                            )
-                        }
-                        items(dueSoon) { item ->
-                            ComplianceNotificationCard(item, onNavigateToReport)
-                        }
+                if (dueSoon.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "DUE SOON",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF92400E),
+                            letterSpacing = 1.sp
+                        )
+                    }
+                    items(dueSoon) { item ->
+                        ComplianceNotificationCard(item, onNavigateToReport)
                     }
                 }
             }
@@ -129,20 +128,22 @@ fun NotificationEmployeeScreen(
 @Composable
 fun ComplianceNotificationCard(item: ComplianceNotificationItem, onClick: () -> Unit) {
     val isDanger = item.status == "Overdue"
-    val accentColor = if (isDanger) GasTrackRed else Color(0xFFD97706)
+    val accentColor = if (isDanger) GasTrackRed else Color(0xFF92400E)
     val icon = if (isDanger) Icons.Default.Warning else Icons.Default.Schedule
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(16.dp))
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
+        shadowElevation = 4.dp,
         border = BorderStroke(1.dp, accentColor.copy(alpha = 0.2f))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -162,7 +163,11 @@ fun ComplianceNotificationCard(item: ComplianceNotificationItem, onClick: () -> 
 
             Spacer(modifier = Modifier.width(14.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
                 Text(
                     text = item.title,
                     fontSize = 15.sp,
