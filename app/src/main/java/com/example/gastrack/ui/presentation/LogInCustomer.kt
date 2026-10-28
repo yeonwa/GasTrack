@@ -67,6 +67,7 @@ fun LogInCustomerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
                 .padding(horizontal = 32.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -78,8 +79,7 @@ fun LogInCustomerScreen(
                     .padding(top = 16.dp)
             ) {
                 IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.offset(x = (-12).dp)
+                    onClick = onBack
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -99,7 +99,7 @@ fun LogInCustomerScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.favicon),
-                    contentDescription = "Logo Icon",
+                    contentDescription = "GasTrack Logo",
                     modifier = Modifier.size(80.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -133,7 +133,7 @@ fun LogInCustomerScreen(
             Text(
                 text = "Log in to manage your LPG deliveries.",
                 fontSize = 16.sp,
-                color = TextGray,
+                color = TextDark,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
@@ -154,10 +154,11 @@ fun LogInCustomerScreen(
                     value = emailOrPhone,
                     onValueChange = { emailOrPhone = it },
                     modifier = Modifier
+                        .widthIn(max = 488.dp)
                         .fillMaxWidth()
                         .shadow(8.dp, RoundedCornerShape(16.dp))
                         .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
-                    placeholder = { Text("Email or Phone Number", color = Color.LightGray) },
+                    placeholder = { Text("Email or Phone Number", color = TextGray) },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = StaffPortalBlue)
                     },
@@ -190,18 +191,27 @@ fun LogInCustomerScreen(
                     value = password,
                     onValueChange = { password = it },
                     modifier = Modifier
+                        .widthIn(max = 488.dp)
                         .fillMaxWidth()
                         .shadow(4.dp, RoundedCornerShape(16.dp))
                         .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
-                    placeholder = { Text("Password", color = Color.LightGray) },
+                    placeholder = { Text("Password", color = TextGray) },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = StaffPortalBlue)
                     },
                     trailingIcon = {
                         val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = icon, contentDescription = null, tint = TextGray)
-                        }
+                        val desc = if (passwordVisible) "Hide password" else "Show password"
+                        Icon(
+                            imageVector = icon, 
+                            contentDescription = desc, 
+                            tint = TextDark,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable { passwordVisible = !passwordVisible }
+                                .padding(12.dp)
+                                .minimumInteractiveComponentSize()
+                        )
                     },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     shape = RoundedCornerShape(16.dp),
@@ -232,13 +242,15 @@ fun LogInCustomerScreen(
                 enabled = emailOrPhone.isNotEmpty() && password.isNotEmpty(),
                 onClick = onNavigateToHome,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                        .widthIn(max = 320.dp)
+                        .fillMaxWidth()
+                        .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonOrange,
                     contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFE0E0E0)
+                    disabledContainerColor = Color(0xFFE0E0E0),
+                    disabledContentColor = Color(0xFF595959)
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 6.dp,
@@ -274,7 +286,7 @@ fun LogInCustomerScreen(
                 Text(
                     text = "New to GasTrack? ",
                     fontSize = 15.sp,
-                    color = TextGray,
+                    color = TextDark,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
