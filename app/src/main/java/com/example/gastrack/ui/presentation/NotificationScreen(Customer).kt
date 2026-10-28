@@ -37,6 +37,7 @@ enum class NotificationType {
     DELIVERY, PROMO, SYSTEM, ALERT
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(
     onBack: () -> Unit
@@ -52,32 +53,33 @@ fun NotificationScreen(
     Scaffold(
         containerColor = Color(0xFFFBFBFE),
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(GasTrackBlue, StaffPortalBlue)
-                        )
-                    )
-                    .padding(top = 24.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
+            TopAppBar(
+                title = {
                     Text(
                         text = "Notifications",
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
                         color = Color.White
                     )
-                }
-            }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier.background(
+                    Brush.horizontalGradient(
+                        colors = listOf(GasTrackBlue, StaffPortalBlue)
+                    )
+                )
+            )
         }
     ) { paddingValues ->
         LazyColumn(
