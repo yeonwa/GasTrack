@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,7 +61,7 @@ fun MenuScreen(
                             colors = listOf(GasTrackBlue, StaffPortalBlue)
                         )
                     )
-                    .padding(horizontal = 24.dp, vertical = 32.dp)
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
@@ -93,9 +95,9 @@ fun MenuScreen(
 
             // --- Menu Items ---
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 item { MenuSectionLabel("Account") }
                 item { SimpleMenuItem(Icons.Default.PersonOutline, "Profile", onNavigateToProfile) }
@@ -113,15 +115,17 @@ fun MenuScreen(
                 item { Spacer(modifier = Modifier.height(24.dp)) }
 
                 item {
-                    TextButton(
-                        onClick = onNavigateToLogout,
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(12.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = GasTrackRed)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Logout", color = GasTrackRed, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        TextButton(
+                            onClick = onNavigateToLogout,
+                            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth(),
+                            contentPadding = PaddingValues(12.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = GasTrackRed)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Logout", color = GasTrackRed, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
                         }
                     }
                 }
@@ -134,7 +138,7 @@ fun MenuScreen(
 fun MenuSectionLabel(text: String) {
     Text(
         text = text,
-        color = Color.Gray,
+        color = Color.DarkGray,
         fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
@@ -146,11 +150,15 @@ fun SimpleMenuItem(icon: ImageVector, title: String, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        color = Color.Transparent
+            .defaultMinSize(minHeight = 48.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = title
+            }
+            .clickable(onClick = onClick),
+        color = Color.White
     ) {
         Row(
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -162,7 +170,7 @@ fun SimpleMenuItem(icon: ImageVector, title: String, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = title,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 modifier = Modifier.weight(1f)
@@ -170,7 +178,7 @@ fun SimpleMenuItem(icon: ImageVector, title: String, onClick: () -> Unit) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color.LightGray,
+                tint = Color.DarkGray,
                 modifier = Modifier.size(20.dp)
             )
         }
