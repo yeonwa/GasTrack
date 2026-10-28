@@ -116,7 +116,15 @@ fun EmployeePortalHeader(
 
             if (subtitle.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(14.dp))
-                Text(text = subtitle, fontSize = 11.sp, color = GasTrackRed, fontWeight = FontWeight.Black, letterSpacing = 1.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = subtitle, 
+                    fontSize = 11.sp, 
+                    color = if (backgroundColor == GasTrackBlue) Color(0xFFFF99A8) else GasTrackRed, 
+                    fontWeight = FontWeight.Black, 
+                    letterSpacing = 1.sp, 
+                    maxLines = 1, 
+                    overflow = TextOverflow.Ellipsis
+                )
                 Spacer(modifier = Modifier.height(2.dp))
             } else {
                 Spacer(modifier = Modifier.height(14.dp))
