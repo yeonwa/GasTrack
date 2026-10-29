@@ -13,17 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="ProductsEmployeeScreenPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-13T14:14:59.092624300Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="Wireless" identifier="serviceName=adb-RCDAYP45U4VG8LZ5-nFmDD5" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="CreateAccountCustomerScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-09-13T14:14:59.092624300Z">
@@ -58,6 +47,17 @@
         <DialogSelection />
       </SelectionState>
       <SelectionState runConfigName="AddressesScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-09-13T14:14:59.092624300Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-RCDAYP45U4VG8LZ5-nFmDD5" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="RestockingEmployeeScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-09-13T14:14:59.092624300Z">
           <Target type="DEFAULT_BOOT">
