@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -154,6 +155,7 @@ fun OrdersAndDeliveryEmployeeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(EmployeePortalBackground)
+            .systemBarsPadding()
     ) {
         EmployeePortalHeader(
             title = "Order and Delivery",
@@ -190,7 +192,7 @@ fun OrdersAndDeliveryEmployeeScreen(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 120.dp)
         ) {
             // ==========================================
             // TAB: PICKUP
@@ -204,7 +206,7 @@ fun OrdersAndDeliveryEmployeeScreen(
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark),
                                 border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
                                 shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.height(38.dp)
+                                modifier = Modifier.defaultMinSize(minHeight = 38.dp)
                             ) {
                                 Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp), tint = StaffPortalButtonBlue)
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -225,17 +227,18 @@ fun OrdersAndDeliveryEmployeeScreen(
                                 ) {
                                     Column(modifier = Modifier.padding(16.dp)) {
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                                            Column {
+                                            Column(modifier = Modifier.weight(1f)) {
                                                 Text(order.id, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, color = TextDark)
                                                 Spacer(modifier = Modifier.height(2.dp))
                                                 Text(order.customerName, fontSize = 14.sp, color = TextGray, fontWeight = FontWeight.Medium)
                                             }
+                                            Spacer(modifier = Modifier.width(8.dp))
                                             Text(String.format(Locale.US, "₱%,.2f", order.totalAmount), fontWeight = FontWeight.Black, fontSize = 18.sp, color = StaffPortalButtonBlue)
                                         }
 
                                         Spacer(modifier = Modifier.height(12.dp))
                                         
-                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                             ODStatusPill(if (order.pickupStatus == "Unclaimed") "Expired (Unclaimed)" else order.pickupStatus)
                                             ODStatusPill(order.paymentStatus)
                                         }
@@ -252,14 +255,14 @@ fun OrdersAndDeliveryEmployeeScreen(
                                         Spacer(modifier = Modifier.height(12.dp))
 
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                IconButton(onClick = { selectedOrder = order; viewOrderType = "Pickup"; showViewOrderModal = true }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Visibility, contentDescription = "View", tint = Color(0xFFD4A017), modifier = Modifier.size(20.dp)) }
-                                                IconButton(onClick = { showToast("Printing receipt for ${order.id}") }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Print, contentDescription = "Print", tint = Color(0xFF1F2937), modifier = Modifier.size(20.dp)) }
+                                            Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                                                IconButton(onClick = { selectedOrder = order; viewOrderType = "Pickup"; showViewOrderModal = true }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Visibility, contentDescription = "View Order ${order.id}", tint = Color(0xFFD4A017), modifier = Modifier.size(20.dp)) }
+                                                IconButton(onClick = { showToast("Printing receipt for ${order.id}") }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Print, contentDescription = "Print Receipt for Order ${order.id}", tint = Color(0xFF1F2937), modifier = Modifier.size(20.dp)) }
                                                 IconButton(
                                                     onClick = { selectedOrder = order; pickupModalKind = "cancel" }, 
-                                                    modifier = Modifier.size(32.dp),
+                                                    modifier = Modifier.size(48.dp),
                                                     enabled = order.pickupStatus in listOf("Preparing", "Ready for Pickup")
-                                                ) { Icon(Icons.Default.Block, contentDescription = "Cancel", tint = if (order.pickupStatus in listOf("Preparing", "Ready for Pickup")) GasTrackRed else Color.LightGray, modifier = Modifier.size(20.dp)) }
+                                                ) { Icon(Icons.Default.Block, contentDescription = "Cancel Order ${order.id}", tint = if (order.pickupStatus in listOf("Preparing", "Ready for Pickup")) GasTrackRed else Color.LightGray, modifier = Modifier.size(20.dp)) }
                                             }
 
                                             when {
@@ -272,23 +275,26 @@ fun OrdersAndDeliveryEmployeeScreen(
                                                         },
                                                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                                                         shape = RoundedCornerShape(10.dp),
-                                                        modifier = Modifier.height(36.dp)
-                                                    ) { Text("Mark Ready", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                                                        modifier = Modifier.defaultMinSize(minHeight = 36.dp),
+                                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                                    ) { Text("Mark Ready", fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                                                 }
                                                 order.pickupStatus == "Ready for Pickup" -> {
                                                     Button(
                                                         onClick = { selectedOrder = order; pickupModalKind = "complete" },
                                                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                                                         shape = RoundedCornerShape(10.dp),
-                                                        modifier = Modifier.height(36.dp)
-                                                    ) { Text("Complete Claim", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                                                        modifier = Modifier.defaultMinSize(minHeight = 36.dp),
+                                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                                    ) { Text("Complete Claim", fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                                                 }
                                                 order.canSettle -> {
                                                     OutlinedButton(
                                                         onClick = { selectedOrder = order; pickupModalKind = "settle" },
                                                         shape = RoundedCornerShape(10.dp),
-                                                        modifier = Modifier.height(36.dp)
-                                                    ) { Text("Restock & Settle", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) }
+                                                        modifier = Modifier.defaultMinSize(minHeight = 36.dp),
+                                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                                    ) { Text("Restock & Settle", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937), textAlign = TextAlign.Center) }
                                                 }
                                             }
                                         }
@@ -369,14 +375,14 @@ fun OrdersAndDeliveryEmployeeScreen(
 
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                             if (!isDriver) {
-                                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                    IconButton(onClick = { selectedOrder = order; viewOrderType = "Delivery"; showViewOrderModal = true }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Visibility, contentDescription = "View", tint = Color(0xFFD4A017), modifier = Modifier.size(20.dp)) }
-                                                    IconButton(onClick = { showToast("Printing receipt for ${order.id}") }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Print, contentDescription = "Print", tint = Color(0xFF1F2937), modifier = Modifier.size(20.dp)) }
+                                                Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                                                    IconButton(onClick = { selectedOrder = order; viewOrderType = "Delivery"; showViewOrderModal = true }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Visibility, contentDescription = "View Delivery Order ${order.id}", tint = Color(0xFFD4A017), modifier = Modifier.size(20.dp)) }
+                                                    IconButton(onClick = { showToast("Printing receipt for ${order.id}") }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Print, contentDescription = "Print Receipt for Delivery Order ${order.id}", tint = Color(0xFF1F2937), modifier = Modifier.size(20.dp)) }
                                                     IconButton(
                                                         onClick = { confirmDeleteOrder = order; deleteKind = "order"; showConfirmDelete = true }, 
-                                                        modifier = Modifier.size(32.dp),
+                                                        modifier = Modifier.size(48.dp),
                                                         enabled = order.deliveryStatus in listOf("Preparing", "Failed Attempt") && order.paymentStatus != "Paid"
-                                                    ) { Icon(Icons.Default.Delete, contentDescription = "Delete", tint = if (order.deliveryStatus in listOf("Preparing", "Failed Attempt") && order.paymentStatus != "Paid") GasTrackRed else Color.LightGray, modifier = Modifier.size(20.dp)) }
+                                                    ) { Icon(Icons.Default.Delete, contentDescription = "Delete Delivery Order ${order.id}", tint = if (order.deliveryStatus in listOf("Preparing", "Failed Attempt") && order.paymentStatus != "Paid") GasTrackRed else Color.LightGray, modifier = Modifier.size(20.dp)) }
                                                 }
                                             } else {
                                                 Spacer(modifier = Modifier.width(1.dp))
@@ -397,7 +403,7 @@ fun OrdersAndDeliveryEmployeeScreen(
                                                         },
                                                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                                                         shape = RoundedCornerShape(10.dp),
-                                                        modifier = Modifier.height(34.dp),
+                                                        modifier = Modifier.defaultMinSize(minHeight = 34.dp),
                                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
                                                     ) { Text("Dispatch", fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                                                     if (order.deliveryRiderId.isEmpty()) {
@@ -409,25 +415,25 @@ fun OrdersAndDeliveryEmployeeScreen(
                                                         onClick = { selectedOrder = order; pickupModalKind = "complete" },
                                                         colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                                                         shape = RoundedCornerShape(10.dp),
-                                                        modifier = Modifier.height(34.dp),
+                                                        modifier = Modifier.defaultMinSize(minHeight = 34.dp),
                                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
-                                                    ) { Text("Confirm Delivery", fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                                                    ) { Text("Confirm Delivery", fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                                                 }
                                                 if (order.deliveryStatus == "Out for Delivery") {
                                                     OutlinedButton(
                                                         onClick = { selectedOrder = order; showLogFailedModal = true },
                                                         shape = RoundedCornerShape(10.dp),
-                                                        modifier = Modifier.height(34.dp),
+                                                        modifier = Modifier.defaultMinSize(minHeight = 34.dp),
                                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
-                                                    ) { Text("Log Failed Attempt", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark) }
+                                                    ) { Text("Log Failed Attempt", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937), textAlign = TextAlign.Center) }
                                                 }
                                                 if (!isDriver && order.canSettle) {
                                                     OutlinedButton(
                                                         onClick = { selectedOrder = order; pickupModalKind = "settle" },
                                                         shape = RoundedCornerShape(10.dp),
-                                                        modifier = Modifier.height(34.dp),
+                                                        modifier = Modifier.defaultMinSize(minHeight = 34.dp),
                                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
-                                                    ) { Text("Restock & Settle", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark) }
+                                                    ) { Text("Restock & Settle", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937), textAlign = TextAlign.Center) }
                                                 }
                                             }
                                         }
@@ -458,7 +464,7 @@ fun OrdersAndDeliveryEmployeeScreen(
                                 onClick = { customerIsNew = true; selectedCustomer = null; showCustomerModal = true },
                                 colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
                                 shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(40.dp)
+                                modifier = Modifier.defaultMinSize(minHeight = 40.dp)
                             ) {
                                 Text("+ Add Customer", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
