@@ -134,8 +134,8 @@ fun OrderTabScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search Product", color = Color.LightGray) },
+                    modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth(),
+                    placeholder = { Text("Search Product", color = Color(0xFF5A5A5A)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalBlue) },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -163,7 +163,7 @@ fun OrderTabScreen(
                                 .clickable { selectedTab = "Refill" },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "Refill", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = if (isRefillSelected) TextDark else Color.Gray)
+                            Text(text = "Refill", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = if (isRefillSelected) TextDark else Color(0xFF5A5A5A))
                         }
 
                         val isNewTankSelected = selectedTab == "New Tank"
@@ -173,7 +173,7 @@ fun OrderTabScreen(
                                 .clickable { selectedTab = "New Tank" },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "New Tank", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = if (isNewTankSelected) TextDark else Color.Gray)
+                            Text(text = "New Tank", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = if (isNewTankSelected) TextDark else Color(0xFF5A5A5A))
                         }
                     }
                 }
@@ -196,13 +196,18 @@ fun OrderTabScreen(
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                        modifier = Modifier
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                            .widthIn(max = 488.dp)
+                            .fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = Color.White,
                             focusedContainerColor = Color.White,
-                            unfocusedBorderColor = Color(0xFFE9ECEF),
-                            focusedBorderColor = GasTrackBlue
+                            unfocusedBorderColor = Color(0xFF767676),
+                            focusedBorderColor = GasTrackBlue,
+                            unfocusedTextColor = TextDark,
+                            focusedTextColor = TextDark
                         )
                     )
                     ExposedDropdownMenu(
