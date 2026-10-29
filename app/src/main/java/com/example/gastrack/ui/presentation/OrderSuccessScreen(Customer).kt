@@ -95,7 +95,7 @@ fun OrderSuccessScreen(
 
         Button(
             onClick = onNavigateToOrders,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange)
         ) {
@@ -106,7 +106,7 @@ fun OrderSuccessScreen(
 
         OutlinedButton(
             onClick = onNavigateToHome,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(28.dp),
             border = BorderStroke(1.5.dp, GasTrackBlue)
         ) {
