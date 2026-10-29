@@ -27,6 +27,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -153,7 +155,7 @@ fun POSEmployeeScreen(
             .fillMaxSize()
             .background(EmployeePortalBackground) // Darker background to make white cards pop
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
             EmployeePortalHeader(
                 title = "Checkout Station",
                 onBack = onBack
@@ -487,7 +489,7 @@ fun POSProductsTab(
 
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(filteredProducts) { product ->
@@ -516,11 +518,11 @@ fun POSProductCard(product: POSProductData, quantity: Int, onUpdateQuantity: (In
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = product.name, fontWeight = FontWeight.Black, fontSize = 16.sp, color = TextDark)
+                Text(text = product.name, fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.Black)
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(text = "Stock: ${product.stock} • ${product.brand}", color = if (product.stock > 5) TextGray else GasTrackRed, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(text = String.format(Locale.US, "₱%,.2f", product.price), color = StaffPortalButtonBlue, fontWeight = FontWeight.Black, fontSize = 17.sp)
+                Text(text = String.format(Locale.US, "₱%,.2f", product.price), color = Color.Black, fontWeight = FontWeight.Black, fontSize = 17.sp)
             }
             if (product.stock > 0) {
                 if (quantity > 0) {
@@ -528,17 +530,23 @@ fun POSProductCard(product: POSProductData, quantity: Int, onUpdateQuantity: (In
                 } else {
                     Button(
                         onClick = { onUpdateQuantity(1) },
-                        modifier = Modifier.height(34.dp),
+                        modifier = Modifier
+                            .height(34.dp)
+                            .widthIn(max = 320.dp)
+                            .semantics { contentDescription = "Add ${product.name} to cart" },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = StaffPortalButtonBlue,
+                            contentColor = Color.White
+                        ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                     ) {
-                        Text("ADD", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                        Text("ADD", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.White)
                     }
                 }
             } else {
                 Surface(color = Color(0xFFF1F3F4), shape = RoundedCornerShape(8.dp)) {
-                    Text("OUT OF STOCK", modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp), fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                    Text("OUT OF STOCK", modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp), fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
                 }
             }
         }
@@ -775,23 +783,28 @@ fun POSBottomBar(totalAmount: Double, onCheckoutClick: () -> Unit, onHoldClick: 
                 Text(text = "Hold", fontSize = 15.sp, fontWeight = FontWeight.Black)
             }
 
-            Button(
-                onClick = onCheckoutClick,
-                modifier = Modifier.weight(1f).height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
-                contentPadding = PaddingValues(horizontal = 14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(), 
-                    horizontalArrangement = Arrangement.SpaceBetween, 
-                    verticalAlignment = Alignment.CenterVertically
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                Button(
+                    onClick = onCheckoutClick,
+                    modifier = Modifier.widthIn(max = 320.dp).height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = StaffPortalButtonBlue,
+                        contentColor = Color.White
+                    ),
+                    contentPadding = PaddingValues(horizontal = 14.dp)
                 ) {
-                    Text(text = "Checkout", fontSize = 15.sp, fontWeight = FontWeight.Black)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = String.format(Locale.US, "Pay ₱%,.2f", totalAmount), fontSize = 15.sp, fontWeight = FontWeight.Black)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(), 
+                        horizontalArrangement = Arrangement.SpaceBetween, 
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Checkout", fontSize = 15.sp, fontWeight = FontWeight.Black, color = Color.White)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = String.format(Locale.US, "Pay ₱%,.2f", totalAmount), fontSize = 15.sp, fontWeight = FontWeight.Black, color = Color.White)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        }
                     }
                 }
             }
