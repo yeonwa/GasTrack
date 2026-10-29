@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,21 +50,32 @@ fun OrderHistoryScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
+                    .wrapContentHeight()
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(GasTrackBlue, StaffPortalBlue)
                         )
                     )
-                    .padding(top = 24.dp)
+                    .statusBarsPadding()
+                    .padding(vertical = 8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Order History",
                         fontWeight = FontWeight.Black,
@@ -74,19 +86,15 @@ fun OrderHistoryScreen(
             }
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(orders) { order ->
-                    OrderHistoryCard(order)
-                }
+            items(orders) { order ->
+                OrderHistoryCard(order)
             }
         }
     }
@@ -97,11 +105,11 @@ fun OrderHistoryCard(order: OrderItem) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(24.dp)),
+            .shadow(4.dp, RoundedCornerShape(20.dp)),
         color = Color.White,
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -127,7 +135,7 @@ fun OrderHistoryCard(order: OrderItem) {
                 ) {
                     Text(
                         text = order.status.uppercase(),
-                        color = if (order.isDelivered) Color(0xFF2E7D32) else Color.Red,
+                        color = if (order.isDelivered) Color(0xFF1B5E20) else Color(0xFFB71C1C),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -135,25 +143,29 @@ fun OrderHistoryCard(order: OrderItem) {
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(color = Color(0xFFF1F3F4))
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        modifier = Modifier.size(40.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF8F9FA)
+                Row(
+                    modifier = Modifier.weight(1f, fill = false),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color(0xFFF8F9FA), RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.favicon),
                             contentDescription = null,
-                            modifier = Modifier.padding(8.dp).fillMaxSize()
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
@@ -161,9 +173,13 @@ fun OrderHistoryCard(order: OrderItem) {
                         text = "${order.itemCount} ${if (order.itemCount == 1) "Item" else "Items"}",
                         fontWeight = FontWeight.Bold,
                         color = TextDark,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+                
+                Spacer(modifier = Modifier.width(8.dp))
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -176,7 +192,7 @@ fun OrderHistoryCard(order: OrderItem) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = "Details",
-                        tint = Color.LightGray
+                        tint = TextGray
                     )
                 }
             }
