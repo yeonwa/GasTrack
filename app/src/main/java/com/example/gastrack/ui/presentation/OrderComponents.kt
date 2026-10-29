@@ -186,7 +186,9 @@ fun ProductCard(
             Button(
                 onClick = onBuyNow,
                 modifier = Modifier
+                    .widthIn(max = 320.dp)
                     .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
