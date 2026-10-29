@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -71,7 +72,10 @@ fun PaymentMethodsScreen(
                 modifier = Modifier.padding(bottom = 14.dp)
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 // Cash Option Row (Mirrored perfectly from Checkout Tab specifications)
                 CheckoutPaymentRow(
                     title = "Cash",
@@ -88,7 +92,7 @@ fun PaymentMethodsScreen(
                         Image(
                             painter = painterResource(id = R.drawable.gcash_logo), 
                             contentDescription = null, 
-                            modifier = Modifier.padding(6.dp).fillMaxSize()
+                            modifier = Modifier.size(26.dp)
                         ) 
                     },
                     onClick = { selectedPaymentMethod = "GCash" }
@@ -103,10 +107,14 @@ fun PaymentMethodsScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+
             // Primary operation button to lock in state configurations
             Button(
                 onClick = onBack,
                 modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .widthIn(max = 320.dp)
                     .fillMaxWidth()
                     .height(56.dp)
                     .shadow(4.dp, RoundedCornerShape(16.dp)),
