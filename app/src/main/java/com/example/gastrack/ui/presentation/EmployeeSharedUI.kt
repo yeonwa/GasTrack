@@ -412,9 +412,10 @@ fun EmployeeSearchBar(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier
+            .widthIn(max = 488.dp)
             .fillMaxWidth()
             .height(52.dp),
-        placeholder = { Text(placeholder, color = Color.LightGray, fontSize = 13.sp) },
+        placeholder = { Text(placeholder, color = Color.DarkGray, fontSize = 13.sp) },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp)) },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
@@ -456,14 +457,17 @@ fun FilterDropdown(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(48.dp)
                 .clickable { expanded = true },
             shape = RoundedCornerShape(8.dp),
             border = BorderStroke(1.dp, Color.DarkGray),
             color = Color.White
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
