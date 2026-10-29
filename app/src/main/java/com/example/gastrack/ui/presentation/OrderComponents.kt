@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -157,7 +159,7 @@ fun ProductCard(
                         text = "₱$formattedPrice",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Black,
-                        color = StaffPortalBlue,
+                        color = TextDark,
                     )
                 }
 
@@ -170,13 +172,14 @@ fun ProductCard(
                 } else {
                     Button(
                         onClick = { onQuantityChange(1) },
-                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalBlue, contentColor = Color.White),
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.semantics { contentDescription = "Add ${product.name} to cart" }
                     ) {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("ADD TO CART", fontWeight = FontWeight.Black, fontSize = 12.sp)
+                        Text("ADD TO CART", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color.White)
                     }
                 }
             }
@@ -189,12 +192,13 @@ fun ProductCard(
                     .widthIn(max = 320.dp)
                     .fillMaxWidth()
                     .align(Alignment.CenterHorizontally)
-                    .height(48.dp),
+                    .height(48.dp)
+                    .semantics { contentDescription = "Buy ${product.name} now" },
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
+                colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange, contentColor = Color.White),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
             ) {
-                Text("BUY NOW", fontWeight = FontWeight.Black, fontSize = 15.sp)
+                Text("BUY NOW", fontWeight = FontWeight.Black, fontSize = 15.sp, color = Color.White)
             }
         }
     }
