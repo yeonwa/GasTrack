@@ -487,7 +487,7 @@ fun CheckoutPaymentRow(
                 fontWeight = FontWeight.Bold, 
                 fontSize = 16.sp, 
                 color = TextDark, 
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).padding(end = 16.dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
