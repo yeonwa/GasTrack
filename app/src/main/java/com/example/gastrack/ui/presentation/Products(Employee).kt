@@ -87,6 +87,7 @@ fun ProductsEmployeeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF3F5F8)) // Matched web background #f3f5f8
+            .navigationBarsPadding()
     ) {
         EmployeePortalHeader(
             title = "Products",
@@ -149,11 +150,13 @@ fun ProductsEmployeeScreen(
             Button(
                 onClick = { showAddDialog = true },
                 modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .widthIn(max = 320.dp)
                     .fillMaxWidth()
                     .padding(vertical = 16.dp)
                     .height(56.dp)
                     .shadow(8.dp, RoundedCornerShape(8.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0082FB)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF005CBE)),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -238,7 +241,7 @@ fun ProductManagementCard(
                         text = product.name,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0082FB)
+                        color = Color(0xFF005CBE)
                     )
                     if (product.supplier.isNotEmpty()) {
                         Text(
@@ -255,7 +258,7 @@ fun ProductManagementCard(
                 ) {
                     Text(
                         text = product.status,
-                        color = if (product.status == "Active") StatusActive else StatusInactive,
+                        color = if (product.status == "Active") Color(0xFF137535) else Color(0xFFA3031E),
                         fontSize = 10.sp,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                         fontWeight = FontWeight.Bold
@@ -279,18 +282,18 @@ fun ProductManagementCard(
                         Text("PRICE", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
                         Text(String.format(Locale.US, "₱%,.2f", product.unitPrice), fontWeight = FontWeight.Black, fontSize = 14.sp, color = TextDark)
                     }
-                    Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color(0xFFE9ECEF)))
+                    VerticalDivider(modifier = Modifier.height(24.dp), color = Color(0xFFE9ECEF))
                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("STOCK", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
                         val isLowStock = product.currentStock <= product.reorderLevel
                         Text("${product.currentStock}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = if (isLowStock) GasTrackRed else TextDark)
                     }
-                    Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color(0xFFE9ECEF)))
+                    VerticalDivider(modifier = Modifier.height(24.dp), color = Color(0xFFE9ECEF))
                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("REORDER", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
                         Text(product.reorderLevel.toString(), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
                     }
-                    Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color(0xFFE9ECEF)))
+                    VerticalDivider(modifier = Modifier.height(24.dp), color = Color(0xFFE9ECEF))
                     Column(modifier = Modifier.weight(1.2f), horizontalAlignment = Alignment.End) {
                         Text("CATEGORY", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
                         Text(product.category.take(8), fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark, maxLines = 1)
@@ -305,16 +308,14 @@ fun ProductManagementCard(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onView, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Visibility, contentDescription = "View", tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp))
+                IconButton(onClick = onView) {
+                    Icon(Icons.Default.Visibility, contentDescription = "View ${product.name}", tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp))
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit ${product.name}", tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = GasTrackRed, modifier = Modifier.size(20.dp))
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete ${product.name}", tint = GasTrackRed, modifier = Modifier.size(20.dp))
                 }
             }
         }
