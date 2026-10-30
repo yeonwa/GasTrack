@@ -1,5 +1,6 @@
 package com.example.gastrack.ui.presentation
 
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -57,14 +62,7 @@ fun RegisterLPGCompanyScreen(
         containerColor = EmployeePortalBackground,
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Register LPG Company",
-                        fontWeight = FontWeight.Black,
-                        fontSize = 18.sp,
-                        color = Color.White
-                    )
-                },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = { if (currentStep == 2) currentStep = 1 else onBack() }) {
                         Icon(
@@ -79,7 +77,7 @@ fun RegisterLPGCompanyScreen(
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 ),
-                modifier = Modifier.shadow(4.dp)
+                modifier = Modifier.fillMaxWidth().shadow(4.dp)
             )
         }
     ) { paddingValues ->
@@ -89,7 +87,8 @@ fun RegisterLPGCompanyScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // --- Left Hero Guide Card (Dark Blue) ---
             Surface(
@@ -153,6 +152,7 @@ fun RegisterLPGCompanyScreen(
             // --- Form Card (White Surface) ---
             Surface(
                 modifier = Modifier
+                    .widthIn(max = 488.dp)
                     .fillMaxWidth()
                     .shadow(4.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
@@ -204,10 +204,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = companyName,
                             onValueChange = { companyName = it },
-                            placeholder = { Text("e.g. Acme Gas Corporation", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("e.g. Acme Gas Corporation", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Company name input" },
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = BorderColor,
                                 focusedBorderColor = StaffPortalButtonBlue
@@ -225,10 +228,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = primaryBranch,
                             onValueChange = { primaryBranch = it },
-                            placeholder = { Text("e.g. San Juan Branch", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("e.g. San Juan Branch", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Primary branch input" },
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = BorderColor,
                                 focusedBorderColor = StaffPortalButtonBlue
@@ -242,10 +248,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = address,
                             onValueChange = { address = it },
-                            placeholder = { Text("e.g. Building No., Street Name, Barangay, City", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("e.g. Building No., Street Name, Barangay, City", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Address input" },
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = BorderColor,
                                 focusedBorderColor = StaffPortalButtonBlue
@@ -259,18 +268,24 @@ fun RegisterLPGCompanyScreen(
                             enabled = companyName.isNotEmpty() && primaryBranch.isNotEmpty() && address.isNotEmpty(),
                             onClick = { currentStep = 2 },
                             modifier = Modifier
+                                .widthIn(min = 1.dp, max = 320.dp)
                                 .fillMaxWidth()
                                 .height(48.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = StaffPortalButtonBlue,
-                                contentColor = Color.White
+                                contentColor = Color.White,
+                                disabledContainerColor = Color.LightGray,
+                                disabledContentColor = Color.DarkGray
                             )
                         ) {
                             Text(
-                                text = "Next: Admin Account",
+                                text = "CONTINUE",
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.Black
+                                fontWeight = FontWeight.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center
                             )
                         }
                     } else {
@@ -283,10 +298,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = firstName,
                             onValueChange = { firstName = it },
-                            placeholder = { Text("First name", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("First name", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "First name input" },
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = BorderColor,
                                 focusedBorderColor = StaffPortalButtonBlue
@@ -300,10 +318,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = lastName,
                             onValueChange = { lastName = it },
-                            placeholder = { Text("Last name", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("Last name", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Last name input" },
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = BorderColor,
                                 focusedBorderColor = StaffPortalButtonBlue
@@ -317,10 +338,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
-                            placeholder = { Text("admin@company.com", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("admin@company.com", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Email input" },
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = BorderColor,
                                 focusedBorderColor = StaffPortalButtonBlue
@@ -335,10 +359,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
-                            placeholder = { Text("Min. 8 characters", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("Min. 8 characters", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Password input" },
                             trailingIcon = {
                                 val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -369,10 +396,13 @@ fun RegisterLPGCompanyScreen(
                         OutlinedTextField(
                             value = confirmPassword,
                             onValueChange = { confirmPassword = it },
-                            placeholder = { Text("Re-enter password", color = Color.LightGray, fontSize = 13.sp) },
+                            placeholder = { Text("Re-enter password", color = Color.DarkGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(min = 1.dp)
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "Confirm password input" },
                             trailingIcon = {
                                 val icon = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
@@ -431,7 +461,9 @@ fun RegisterLPGCompanyScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .widthIn(max = 488.dp)
+                                .fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             OutlinedButton(
@@ -459,7 +491,9 @@ fun RegisterLPGCompanyScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = StaffPortalButtonBlue,
-                                    contentColor = Color.White
+                                    contentColor = Color.White,
+                                    disabledContainerColor = Color.LightGray,
+                                    disabledContentColor = Color.DarkGray
                                 )
                             ) {
                                 Text(
@@ -533,7 +567,7 @@ fun RegistrationStepItem(stepNumber: String, title: String, desc: String, isActi
             Text(
                 text = desc,
                 fontSize = 11.sp,
-                color = if (isActive) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.4f),
+                color = if (isActive) Color.White.copy(alpha = 0.95f) else Color.White.copy(alpha = 0.7f),
                 lineHeight = 15.sp
             )
         }
