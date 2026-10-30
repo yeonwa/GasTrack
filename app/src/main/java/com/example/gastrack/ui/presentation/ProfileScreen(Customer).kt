@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,12 +27,10 @@ import com.example.gastrack.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    onBack: () -> Unit,
-    onLogout: () -> Unit = {}
+    onBack: () -> Unit
 ) {
     var isEditMode by remember { mutableStateOf(false) }
     
-    // Form States
     var firstName by remember { mutableStateOf("Juan") }
     var lastName by remember { mutableStateOf("Dela Cruz") }
     var email by remember { mutableStateOf("juan.delacruz@email.com") }
@@ -49,18 +47,11 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(GasTrackBlue, StaffPortalBlue)
-                        )
-                    )
-                    .padding(top = 24.dp)
+                    .background(Brush.horizontalGradient(colors = listOf(GasTrackBlue, StaffPortalBlue)))
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(vertical = 16.dp, horizontal = 8.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
@@ -79,12 +70,12 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "BASIC INFORMATION",
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Black,
                 color = TextGray,
@@ -92,25 +83,14 @@ fun ProfileScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // First Name & Last Name
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.weight(1f)) {
-                    ProfileField("FIRST NAME", firstName, isEditMode) { firstName = it }
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    ProfileField("LAST NAME", lastName, isEditMode) { lastName = it }
-                }
-            }
-
+            ProfileField("FIRST NAME", firstName, isEditMode) { firstName = it }
             Spacer(modifier = Modifier.height(20.dp))
-
+            ProfileField("LAST NAME", lastName, isEditMode) { lastName = it }
+            Spacer(modifier = Modifier.height(20.dp))
             ProfileField("EMAIL ADDRESS", email, isEditMode, keyboardType = KeyboardType.Email) { email = it }
-
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Customer Type Dropdown
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth()) {
                 Text(
                     text = "CUSTOMER TYPE",
                     fontSize = 11.sp,
@@ -127,6 +107,7 @@ fun ProfileScreen(
                         value = customerType,
                         onValueChange = {},
                         readOnly = true,
+                        singleLine = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
                         modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -157,62 +138,43 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
             ProfileField("CONTACT NO.", contactNo, isEditMode, keyboardType = KeyboardType.Phone) { contactNo = it }
-
             Spacer(modifier = Modifier.height(20.dp))
-
             ProfileField("COMPLETE ADDRESS", address, isEditMode, minLines = 2) { address = it }
-
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Action Buttons
             if (!isEditMode) {
                 Button(
                     onClick = { isEditMode = true },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().heightIn(min = 56.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = StaffPortalBlue)
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("Edit Profile", fontWeight = FontWeight.Black, fontSize = 16.sp)
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                TextButton(
-                    onClick = onLogout,
-                    modifier = Modifier.fillMaxWidth().height(56.dp)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = GasTrackRed)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Logout", color = GasTrackRed, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                    Text("Edit Profile", fontWeight = FontWeight.Black, fontSize = 16.sp, textAlign = TextAlign.Center)
                 }
             } else {
                 Button(
                     onClick = { isEditMode = false },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().heightIn(min = 56.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("Save Changes", fontWeight = FontWeight.Black, fontSize = 16.sp)
+                    Text("Save Changes", fontWeight = FontWeight.Black, fontSize = 16.sp, textAlign = TextAlign.Center)
                 }
-                
                 Spacer(modifier = Modifier.height(16.dp))
-                
                 OutlinedButton(
                     onClick = { isEditMode = false },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().heightIn(min = 56.dp),
                     shape = RoundedCornerShape(28.dp),
                     border = BorderStroke(1.dp, Color.Gray)
                 ) {
-                    Text("Cancel", color = Color.Gray, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Cancel", color = Color.Gray, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = TextAlign.Center)
                 }
             }
-            
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -227,7 +189,7 @@ fun ProfileField(
     minLines: Int = 1,
     onValueChange: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth()) {
         Text(
             text = label,
             fontSize = 11.sp,
