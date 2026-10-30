@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -83,39 +82,6 @@ fun ProfileScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Picture
-            Box(contentAlignment = Alignment.BottomEnd) {
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = CircleShape,
-                    color = Color(0xFFF1F3F4)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = StaffPortalBlue,
-                        modifier = Modifier.padding(20.dp).fillMaxSize()
-                    )
-                }
-                if (isEditMode) {
-                    Surface(
-                        modifier = Modifier.size(32.dp),
-                        shape = CircleShape,
-                        color = GasTrackRed,
-                        shadowElevation = 4.dp
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Edit Photo",
-                            tint = Color.White,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
             Text(
                 text = "BASIC INFORMATION",
                 modifier = Modifier.fillMaxWidth(),
