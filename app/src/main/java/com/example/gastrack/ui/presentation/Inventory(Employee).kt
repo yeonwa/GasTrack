@@ -63,6 +63,7 @@ fun InventoryEmployeeScreen(
     
     var showSuccessDialog by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf("") }
+    var showQuickActionMenu by remember { mutableStateOf(false) }
 
     var selectedItemForDetail by remember { mutableStateOf<InventoryItemData?>(null) }
     var selectedItemForEdit by remember { mutableStateOf<InventoryItemData?>(null) }
@@ -177,13 +178,39 @@ fun InventoryEmployeeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp, start = 16.dp, end = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        InventoryQuickAction("CSV", Icons.Default.FileDownload, modifier = Modifier.weight(1f)) { /* Download Template */ }
-                        InventoryQuickAction("Import", Icons.Default.FileUpload, modifier = Modifier.weight(1f)) { /* Handle Import */ }
                         InventoryQuickAction("Stock In", Icons.Default.Add, modifier = Modifier.weight(1f)) { showStockInForm = true }
                         InventoryQuickAction("Stock Out", Icons.Default.Remove, modifier = Modifier.weight(1f)) { showStockOutForm = true }
                         InventoryQuickAction("Transfer", Icons.Default.SwapHoriz, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
+                        
+                        Box {
+                            IconButton(onClick = { showQuickActionMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More actions", tint = TextDark)
+                            }
+                            DropdownMenu(
+                                expanded = showQuickActionMenu,
+                                onDismissRequest = { showQuickActionMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("CSV Export") },
+                                    onClick = {
+                                        showQuickActionMenu = false
+                                        // Download Template
+                                    },
+                                    leadingIcon = { Icon(Icons.Default.FileDownload, contentDescription = null) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Import") },
+                                    onClick = {
+                                        showQuickActionMenu = false
+                                        // Handle Import
+                                    },
+                                    leadingIcon = { Icon(Icons.Default.FileUpload, contentDescription = null) }
+                                )
+                            }
+                        }
                     }
                 }
                 
@@ -426,7 +453,7 @@ fun InventoryCardMobile(
                     Text(text = item.warehouseName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "Filled / Limit", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text(text = "Qty / Reorder Point", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
                     Text(text = "${item.stockOnHand} / ${item.reorderLimit}", fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
                 }
             }
