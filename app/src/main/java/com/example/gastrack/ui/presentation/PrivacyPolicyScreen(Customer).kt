@@ -28,13 +28,13 @@ fun PrivacyPolicyScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(GasTrackBlue, StaffPortalBlue)
                         )
                     )
-                    .padding(top = 24.dp)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .height(86.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
@@ -53,14 +53,20 @@ fun PrivacyPolicyScreen(
             }
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+                .padding(paddingValues),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Text(
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp)
+            ) {
+                Text(
                 text = "Last Updated: October 08, 2026",
                 fontSize = 12.sp,
                 color = TextGray,
@@ -114,6 +120,7 @@ fun PrivacyPolicyScreen(
             )
             
             Spacer(modifier = Modifier.height(32.dp))
+        }
         }
     }
 }
