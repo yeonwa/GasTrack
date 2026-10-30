@@ -175,7 +175,7 @@ fun RegisterLPGCompanyScreen(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = "STEP $currentStep OF 2",
+                                text = "STEP $currentStep OF 3",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Black,
                                 color = StaffPortalButtonBlue,
@@ -183,14 +183,6 @@ fun RegisterLPGCompanyScreen(
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Text(
-                        text = if (currentStep == 1) "Fill in your registered business information." else "Create the primary administrator login credentials.",
-                        fontSize = 12.sp,
-                        color = TextGray
-                    )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -527,8 +519,8 @@ fun RegistrationSectionHeader(title: String) {
     Text(
         text = title,
         fontSize = 11.sp,
-        fontWeight = FontWeight.Black,
-        color = GasTrackRed,
+        fontWeight = FontWeight.Bold,
+        color = TextDark,
         letterSpacing = 1.sp
     )
 }
