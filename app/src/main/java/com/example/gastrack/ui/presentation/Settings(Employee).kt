@@ -2,7 +2,7 @@
 
 package com.example.gastrack.ui.presentation
 
-import androidx.compose.animation.Crossfade
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,14 +56,12 @@ fun SettingsEmployeeScreen(onBack: () -> Unit = {}) {
             )
         }
 
-        Box(modifier = Modifier.weight(1f)) {
-            Crossfade(targetState = selectedTab, label = "SettingsTabs") { tab ->
-                when (tab) {
-                    "Profile" -> SettingsProfileTab { showSuccessDialog = true }
-                    "Operations" -> SettingsOperationsTab { showSuccessDialog = true }
-                    "Financial" -> SettingsFinancialTab { showSuccessDialog = true }
-                    "System & POS" -> SettingsSystemTab { showSuccessDialog = true }
-                }
+        Box(modifier = Modifier.weight(1f).fillMaxSize()) {
+            when (selectedTab) {
+                "Profile" -> SettingsProfileTab { showSuccessDialog = true }
+                "Operations" -> SettingsOperationsTab { showSuccessDialog = true }
+                "Financial" -> SettingsFinancialTab { showSuccessDialog = true }
+                "System & POS" -> SettingsSystemTab { showSuccessDialog = true }
             }
         }
     }
@@ -91,7 +90,7 @@ fun SettingsProfileTab(onSave: () -> Unit) {
             Text("Upload Logo", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
             Spacer(modifier = Modifier.height(6.dp))
             Surface(
-                modifier = Modifier.fillMaxWidth().height(100.dp),
+                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 100.dp),
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, BorderColor),
                 color = Color(0xFFFBFBFE)
@@ -154,13 +153,9 @@ fun SettingsOperationsTab(onSave: () -> Unit) {
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(modifier = Modifier.weight(1f)) {
-                    SettingsTextField("Opening Time", openingTime, { openingTime = it })
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    SettingsTextField("Closing Time", closingTime, { closingTime = it })
-                }
+            Column(modifier = Modifier.fillMaxWidth()) {
+                SettingsTextField("Opening Time", openingTime, { openingTime = it })
+                SettingsTextField("Closing Time", closingTime, { closingTime = it })
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -259,7 +254,7 @@ fun SettingsSystemTab(onSave: () -> Unit) {
             OutlinedTextField(
                 value = receiptHeader,
                 onValueChange = { receiptHeader = it },
-                modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth().height(100.dp),
+                modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth().defaultMinSize(minHeight = 100.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.DarkGray, focusedBorderColor = StaffPortalButtonBlue)
             )
@@ -306,7 +301,7 @@ fun SettingsCard(title: String, icon: ImageVector, content: @Composable () -> Un
                     Icon(icon, contentDescription = null, tint = StaffPortalButtonBlue, modifier = Modifier.padding(8.dp).size(20.dp))
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(title, fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                Text(title, fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark, modifier = Modifier.weight(1f))
             }
             Spacer(modifier = Modifier.height(20.dp))
             HorizontalDivider(color = Color(0xFFF1F3F4))
@@ -331,7 +326,6 @@ fun SettingsTextField(
             onValueChange = onValueChange,
             modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.DarkGray,
@@ -371,13 +365,13 @@ fun SettingsDropdownField(
         Box {
             OutlinedButton(
                 onClick = { expanded = true },
-                modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth().height(56.dp),
+                modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth().defaultMinSize(minHeight = 56.dp),
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, Color.DarkGray),
-                contentPadding = PaddingValues(horizontal = 16.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(selectedOption, color = TextDark, fontSize = 14.sp)
+                    Text(selectedOption, color = TextDark, fontSize = 14.sp, modifier = Modifier.weight(1f))
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray)
                 }
             }
@@ -396,11 +390,19 @@ fun SaveActionRow(onSave: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Button(
             onClick = onSave,
-            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(52.dp).shadow(4.dp, RoundedCornerShape(14.dp)),
+            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().defaultMinSize(minHeight = 52.dp).shadow(4.dp, RoundedCornerShape(14.dp)),
             shape = RoundedCornerShape(14.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0056A6))
         ) {
-            Text("Save Changes", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(
+                text = "Save Changes", 
+                fontSize = 15.sp, 
+                fontWeight = FontWeight.Bold, 
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(4.dp)
+            )
         }
     }
     Spacer(modifier = Modifier.height(32.dp))
