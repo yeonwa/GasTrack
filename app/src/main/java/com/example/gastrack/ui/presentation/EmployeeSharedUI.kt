@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -45,13 +46,13 @@ fun EmployeePortalHeader(
     rightContent: @Composable (() -> Unit)? = null
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp),
-        color = backgroundColor
+        modifier = Modifier.fillMaxWidth(),
+        color = backgroundColor,
+        shadowElevation = 4.dp
     ) {
         Column(modifier = Modifier
-            .statusBarsPadding()
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
             .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Row(
@@ -59,8 +60,8 @@ fun EmployeePortalHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (onBack != null) {
-                    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (onBack != null) {
                         IconButton(onClick = { onBack() }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack, 
@@ -68,9 +69,7 @@ fun EmployeePortalHeader(
                                 tint = if (backgroundColor == GasTrackBlue) Color.White else StaffPortalButtonBlue
                             )
                         }
-                    }
-                } else if (onMenu != null) {
-                    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                    } else if (onMenu != null) {
                         IconButton(onClick = { onMenu() }) {
                             Icon(
                                 Icons.Default.Menu, 
@@ -78,11 +77,13 @@ fun EmployeePortalHeader(
                                 tint = if (backgroundColor == GasTrackBlue) Color.White else StaffPortalButtonBlue
                             )
                         }
+                    } else {
+                        Spacer(modifier = Modifier.size(48.dp))
                     }
                 }
 
                 if (showLogo) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(modifier = Modifier.weight(1f, fill = false), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                         Image(painter = painterResource(id = R.drawable.favicon), contentDescription = null, modifier = Modifier.size(28.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -91,31 +92,35 @@ fun EmployeePortalHeader(
                                 withStyle(style = SpanStyle(color = Color(0xFFFF99A8), fontWeight = FontWeight.Black)) { append("Track") }
                             },
                             fontSize = 18.sp,
-                            letterSpacing = (-0.5).sp
+                            letterSpacing = (-0.5).sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
 
-                if (rightContent != null) {
-                    rightContent()
-                } else if (showProfile) {
-                    Surface(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clickable(onClickLabel = "Profile") { onProfile() },
-                        shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.15f),
-                        border = BorderStroke(2.dp, Color.White.copy(alpha = 0.3f))
-                    ) {
-                        Icon(Icons.Default.AccountCircle, contentDescription = "Profile", tint = Color.White, modifier = Modifier.padding(2.dp).fillMaxSize())
+                Box(contentAlignment = Alignment.CenterEnd) {
+                    if (rightContent != null) {
+                        rightContent()
+                    } else if (showProfile) {
+                        Surface(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable(onClickLabel = "Profile") { onProfile() },
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.15f),
+                            border = BorderStroke(2.dp, Color.White.copy(alpha = 0.3f))
+                        ) {
+                            Icon(Icons.Default.AccountCircle, contentDescription = "Profile", tint = Color.White, modifier = Modifier.padding(2.dp).fillMaxSize())
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(48.dp))
                     }
-                } else {
-                    Box(modifier = Modifier.size(48.dp))
                 }
             }
 
             if (subtitle.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = subtitle, 
                     fontSize = 11.sp, 
@@ -123,11 +128,12 @@ fun EmployeePortalHeader(
                     fontWeight = FontWeight.Black, 
                     letterSpacing = 1.sp, 
                     maxLines = 1, 
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(2.dp))
             } else {
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             Text(
@@ -136,7 +142,8 @@ fun EmployeePortalHeader(
                 fontWeight = FontWeight.Black, 
                 color = if (backgroundColor == GasTrackBlue) Color.White else TextDark,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -458,7 +465,8 @@ fun FilterDropdown(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
-                .clickable { expanded = true },
+                .semantics(mergeDescendants = true) {}
+                .clickable(onClickLabel = "Select option") { expanded = true },
             shape = RoundedCornerShape(8.dp),
             border = BorderStroke(1.dp, Color.DarkGray),
             color = Color.White
@@ -472,7 +480,7 @@ fun FilterDropdown(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = selectedOption, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium, maxLines = 1)
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextGray, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.ArrowDropDown, contentDescription = "Expand $selectedOption dropdown", tint = TextGray, modifier = Modifier.size(16.dp))
             }
         }
         
