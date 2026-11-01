@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,12 +61,19 @@ data class PurchaseOrderData(
     val items: List<PurchaseOrderItemData> = emptyList()
 )
 
+@Immutable
 data class WarehouseData(
     val id: String,
     val name: String,
     val location: String,
     val status: String
 )
+
+@Immutable
+data class WarehouseList(val items: List<WarehouseData>)
+
+@Immutable
+data class SupplierList(val items: List<String>)
 
 @Immutable
 data class PurchaseOrderItemData(
@@ -286,18 +295,6 @@ fun RestockingEmployeeScreen(
         }
     }
 
-    val saveDraftAndSubmit = { updatedDraft: PurchaseOrderData ->
-        isSavingDraft = true
-        val poTotalSub = updatedDraft.items.sumOf { it.subtotal }
-        val poTotalQty = updatedDraft.items.sumOf { it.quantity }
-        val newPo = updatedDraft.copy(status = "Submitted", totalAmount = poTotalSub, totalQty = poTotalQty)
-        purchaseOrderHistory.add(newPo)
-        savedPoId = newPo.purchaseOrderId
-        selectedRows.clear()
-        isSavingDraft = false
-        poDraft = null
-    }
-
     val saveDraft = {
         val draft = poDraft
         if (draft != null) {
@@ -327,7 +324,7 @@ fun RestockingEmployeeScreen(
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f).fillMaxWidth().navigationBarsPadding().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
@@ -376,7 +373,7 @@ fun RestockingEmployeeScreen(
                         InventoryStatCard(
                             label = "Open Recommendations",
                             value = recommendations.size.toString(),
-                            color = Color(0xFFFFA000),
+                            color = Color(0xFF8C5800),
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.Assessment,
                             sub = "Active"
@@ -480,10 +477,9 @@ fun RestockingEmployeeScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Recommendations List Card View
-                        Surface(
-                            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
-                            color = Color.White,
-                            shape = RoundedCornerShape(12.dp)
+                        Box(
+                            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp))
+                                .background(Color.White, RoundedCornerShape(12.dp))
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Row(
@@ -491,14 +487,15 @@ fun RestockingEmployeeScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                                         Checkbox(
                                             checked = selectedRows.size == filteredData.size && filteredData.isNotEmpty(),
-                                            onCheckedChange = { toggleSelectAll() }
+                                            onCheckedChange = { toggleSelectAll() },
+                                            modifier = Modifier.semantics { contentDescription = "Select All" }
                                         )
-                                        Text("Select All (${filteredData.size})", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                        Text("Select All (${filteredData.size})", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                     }
-                                    Text("Restock Items", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue)
+                                    Text("Restock Items", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = StaffPortalButtonBlue, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
                                 }
 
                                 if (filteredData.isEmpty()) {
@@ -529,7 +526,7 @@ fun RestockingEmployeeScreen(
             // TAB 2: PURCHASE ORDER HISTORY
             if (activeTab == "purchaseOrderHistory") {
                 item {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(24.dp)) {
                         Surface(
                             modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(12.dp)),
                             color = Color.White,
@@ -713,16 +710,16 @@ fun RestockingEmployeeScreen(
     if (isCreatePoModalOpen && poDraft != null) {
         CreatePurchaseOrderModal(
             draft = poDraft,
-            warehouses = warehouses,
-            suppliers = suppliers,
+            warehouses = WarehouseList(warehouses),
+            suppliers = SupplierList(suppliers),
             onDismiss = {
                 isCreatePoModalOpen = false
                 poDraft = null
             },
             onSend = { updatedDraft ->
+                poDraft = updatedDraft
                 isCreatePoModalOpen = false
-                saveDraftAndSubmit(updatedDraft)
-                activeTab = "purchaseOrderHistory"
+                isConfirmModalOpen = true
             },
             onDraftChange = { newDraft ->
                 poDraft = newDraft
@@ -735,7 +732,14 @@ fun RestockingEmployeeScreen(
         CustomizeRestockModal(
             onClose = { isCustomizeOpen = false },
             restockList = RestockItemList(recommendations.filter { selectedRows.contains(it.restockId) }),
-            onApplied = {
+            onApplied = { updatedRows ->
+                updatedRows.forEach { row ->
+                    val index = recommendations.indexOfFirst { it.restockId == row.restockId }
+                    if (index != -1) {
+                        val newQty = row.preferredQtyText.toIntOrNull() ?: row.suggestedQty
+                        recommendations[index] = recommendations[index].copy(suggestedQty = newQty)
+                    }
+                }
                 isCustomizeOpen = false
             }
         )
@@ -916,46 +920,66 @@ fun RestockRecommendationCardItem(
     onPackage: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = if (isSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, if (isSelected) StaffPortalButtonBlue else EmployeePortalBackground)
+    Box(
+        modifier = Modifier.fillMaxWidth()
+            .background(if (isSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC), RoundedCornerShape(8.dp))
+            .border(1.dp, if (isSelected) StaffPortalButtonBlue else EmployeePortalBackground, RoundedCornerShape(8.dp))
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    Checkbox(checked = isSelected, onCheckedChange = { onSelectToggle() })
-                    Column {
-                        Text(item.productName, fontSize = 14.sp, fontWeight = FontWeight.Black, color = TextDark)
-                        Text("${item.restockId} · ${item.supplierName}", fontSize = 11.sp, color = TextGray)
+                    Checkbox(
+                        checked = isSelected, 
+                        onCheckedChange = { onSelectToggle() },
+                        modifier = Modifier.semantics { contentDescription = "Select ${item.productName}" }
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
+                        Text(
+                            text = item.productName, 
+                            fontSize = 13.sp, 
+                            fontWeight = FontWeight.Black, 
+                            color = TextDark, 
+                            maxLines = 2, 
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            text = "${item.restockId} · ${item.supplierName}", 
+                            fontSize = 11.sp, 
+                            color = TextGray, 
+                            maxLines = 2, 
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
+                Spacer(modifier = Modifier.width(6.dp))
                 Surface(
-                    color = if (item.priority == "Critical") GasTrackRed else Color(0xFF22C55E),
+                    color = if (item.priority == "Critical") GasTrackRed else Color(0xFF166534),
                     shape = RoundedCornerShape(999.dp)
                 ) {
                     Text(
                         text = item.priority,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                DataPoint("Stock", item.currentStock.toString())
-                DataPoint("Reorder", item.reorderLevel.toString())
-                DataPoint("Suggested", item.suggestedQty.toString())
-                DataPoint("Confidence", "${item.confidence.toInt()}%")
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                DataPoint("Stock", item.currentStock.toString(), modifier = Modifier.weight(1f))
+                DataPoint("Reorder", item.reorderLevel.toString(), modifier = Modifier.weight(1f))
+                DataPoint("Suggested", item.suggestedQty.toString(), modifier = Modifier.weight(1f))
+                DataPoint("Confidence", "${item.confidence.toInt()}%", modifier = Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -967,14 +991,16 @@ fun RestockRecommendationCardItem(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onCustomize, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Tune, contentDescription = "Customize", tint = Color(0xFF22C55E), modifier = Modifier.size(16.dp))
-                }
-                IconButton(onClick = onPackage, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Inventory, contentDescription = "Build PO", tint = StaffPortalButtonBlue, modifier = Modifier.size(16.dp))
-                }
-                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = GasTrackRed, modifier = Modifier.size(16.dp))
+                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    IconButton(onClick = onCustomize) {
+                        Icon(Icons.Default.Tune, contentDescription = "Customize ${item.productName}", tint = Color(0xFF166534), modifier = Modifier.size(24.dp))
+                    }
+                    IconButton(onClick = onPackage) {
+                        Icon(Icons.Default.Inventory, contentDescription = "Build PO for ${item.productName}", tint = StaffPortalButtonBlue, modifier = Modifier.size(24.dp))
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete ${item.productName}", tint = GasTrackRed, modifier = Modifier.size(24.dp))
+                    }
                 }
             }
         }
@@ -982,10 +1008,28 @@ fun RestockRecommendationCardItem(
 }
 
 @Composable
-fun DataPoint(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, fontSize = 10.sp, color = TextDark, fontWeight = FontWeight.Bold)
-        Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Black, color = TextDark)
+fun DataPoint(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = label, 
+            fontSize = 12.sp, 
+            color = TextDark, 
+            fontWeight = FontWeight.Bold, 
+            maxLines = 1, 
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Text(
+            text = value, 
+            fontSize = 14.sp, 
+            fontWeight = FontWeight.Black, 
+            color = TextDark, 
+            maxLines = 1, 
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -1005,7 +1049,7 @@ data class RestockItemList(
 )
 
 @Composable
-fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onApplied: () -> Unit) {
+fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onApplied: (List<CustomizeRowState>) -> Unit) {
     val items = restockList.items
     val rows = remember(items) {
         mutableStateListOf<CustomizeRowState>().apply {
@@ -1127,7 +1171,7 @@ fun CustomizeRestockModal(onClose: () -> Unit, restockList: RestockItemList, onA
                     Button(
                         onClick = {
                             isSubmitting = true
-                            onApplied()
+                            onApplied(rows.toList())
                             isSubmitting = false
                             onClose()
                         },
@@ -1255,8 +1299,8 @@ fun CustomizeSingleItemModal(onClose: () -> Unit, selectedItem: RestockRecommend
 @Composable
 fun CreatePurchaseOrderModal(
     draft: PurchaseOrderData?,
-    warehouses: List<WarehouseData>,
-    suppliers: List<String>,
+    warehouses: WarehouseList,
+    suppliers: SupplierList,
     onDismiss: () -> Unit,
     onSend: (PurchaseOrderData) -> Unit,
     onDraftChange: (PurchaseOrderData) -> Unit
@@ -1275,7 +1319,7 @@ fun CreatePurchaseOrderModal(
     var warehouseExpanded by remember { mutableStateOf(false) }
     var paymentExpanded by remember { mutableStateOf(false) }
     
-    val actualSuppliers = suppliers.filter { it != "All Supplier" }
+    val actualSuppliers = suppliers.items.filter { it != "All Supplier" }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -1419,14 +1463,14 @@ fun CreatePurchaseOrderModal(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Box {
                                         OutlinedTextField(
-                                            value = warehouses.find { it.id == destinationWarehouse }?.name ?: "Select warehouse", onValueChange = {}, readOnly = true,
+                                            value = warehouses.items.find { it.id == destinationWarehouse }?.name ?: "Select warehouse", onValueChange = {}, readOnly = true,
                                             modifier = Modifier.fillMaxWidth().height(48.dp),
                                             textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                                             trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }
                                         )
                                         Box(modifier = Modifier.matchParentSize().clickable { warehouseExpanded = true })
                                         DropdownMenu(expanded = warehouseExpanded, onDismissRequest = { warehouseExpanded = false }) {
-                                            warehouses.forEach { wh ->
+                                            warehouses.items.forEach { wh ->
                                                 DropdownMenuItem(text = { Text(wh.name) }, onClick = {
                                                     destinationWarehouse = wh.id
                                                     warehouseExpanded = false
@@ -1588,7 +1632,7 @@ fun CreatePurchaseOrderModal(
                             OutlinedButton(
                                 onClick = { /* View PO */ },
                                 shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(36.dp),
+                                modifier = Modifier.height(36.dp).fillMaxWidth(),
                                 contentPadding = PaddingValues(horizontal = 12.dp)
                             ) {
                                 Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -1601,7 +1645,7 @@ fun CreatePurchaseOrderModal(
                             OutlinedButton(
                                 onClick = onDismiss,
                                 shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(40.dp)
+                                modifier = Modifier.height(40.dp).weight(1f)
                             ) {
                                 Text("Cancel", color = TextDark, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             }
@@ -1609,7 +1653,7 @@ fun CreatePurchaseOrderModal(
                             Button(
                                 onClick = { onSend(draft.copy(remarks = referenceNo)) },
                                 shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(40.dp),
+                                modifier = Modifier.height(40.dp).weight(1f),
                                 colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
                             ) {
                                 Text("Create & Send", fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -1622,7 +1666,7 @@ fun CreatePurchaseOrderModal(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 1200)
 @Composable
 fun RestockingEmployeeScreenPreview() {
     RestockingEmployeeScreen()
