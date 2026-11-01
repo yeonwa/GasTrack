@@ -104,7 +104,7 @@ fun SalesEmployeeScreen(
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             // STATS GRID SECTION
@@ -115,10 +115,10 @@ fun SalesEmployeeScreen(
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         SalesStatCard("TODAY'S SALE", "₱ 15,240.50", Icons.AutoMirrored.Filled.TrendingUp, Color(0xFF3F51B5), modifier = Modifier.weight(1f))
-                        SalesStatCard("TOTAL TRANSACTIONS", "50", Icons.AutoMirrored.Filled.ReceiptLong, Color(0xFF4CAF50), modifier = Modifier.weight(1f))
+                        SalesStatCard("TOTAL TRANSACTIONS", "50", Icons.AutoMirrored.Filled.ReceiptLong, Color(0xFF1B5E20), modifier = Modifier.weight(1f))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SalesStatCard("AVERAGE ORDER VALUE", "₱ 500.00", Icons.Default.ShoppingCart, Color(0xFFFF9800), modifier = Modifier.weight(1f))
+                        SalesStatCard("AVERAGE ORDER VALUE", "₱ 500.00", Icons.Default.ShoppingCart, Color(0xFFBF360C), modifier = Modifier.weight(1f))
                         SalesStatCard("TODAY'S TRANSACTIONS", "12", Icons.Default.DateRange, Color(0xFF9C27B0), modifier = Modifier.weight(1f))
                     }
                 }
@@ -152,26 +152,28 @@ fun SalesEmployeeScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
                     
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = { showSuccessMessage = "CSV Template Downloaded" },
-                            modifier = Modifier.weight(1f).height(42.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("CSV Template", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Button(
-                            onClick = { showSuccessMessage = "Sales Data Imported Successfully" },
-                            modifier = Modifier.weight(1f).height(42.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Import Sales", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        Row(modifier = Modifier.widthIn(max = 648.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { showSuccessMessage = "CSV Template Downloaded" },
+                                modifier = Modifier.weight(1f).height(42.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("CSV Template", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = { showSuccessMessage = "Sales Data Imported Successfully" },
+                                modifier = Modifier.weight(1f).height(42.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Import Sales", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                     
@@ -276,8 +278,9 @@ fun SalesStatCard(label: String, value: String, icon: ImageVector, accentColor: 
                     fontWeight = FontWeight.Bold, 
                     color = TextDark, 
                     letterSpacing = 0.5.sp, 
-                    maxLines = 1, 
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 2, 
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 12.sp
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -307,14 +310,15 @@ fun SalesRecordCard(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(text = sale.saleNo, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextDark)
-                    Text(text = sale.saleDate, fontSize = 10.sp, color = TextGray)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = sale.saleNo, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextDark, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = sale.saleDate, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextDark, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(text = String.format(Locale.US, "₱%,.2f", sale.totalAmount), fontWeight = FontWeight.Black, fontSize = 17.sp, color = StaffPortalButtonBlue)
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
+                    Text(text = String.format(Locale.US, "₱%,.2f", sale.totalAmount), fontWeight = FontWeight.Black, fontSize = 17.sp, color = StaffPortalButtonBlue, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Surface(color = Color(0xFFF1F3F4), shape = RoundedCornerShape(4.dp)) {
-                        Text(text = paymentMethod.uppercase(), color = TextGray, fontSize = 8.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        Text(text = paymentMethod.uppercase(), color = TextDark, fontSize = 8.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -328,15 +332,27 @@ fun SalesRecordCard(
                 border = BorderStroke(1.dp, Color(0xFFF1F3F4)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("PROCESSED BY", fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black)
-                        Text(sale.processedBy, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("PROCESSED BY", fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                        Text(sale.processedBy, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark, textAlign = TextAlign.Center)
                     }
-                    Box(modifier = Modifier.width(1.dp).height(16.dp).background(Color(0xFFE9ECEF)))
-                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("ORDER ID", fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black)
-                        Text(sale.orderId, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark)
+                    VerticalDivider(modifier = Modifier.height(16.dp), color = Color(0xFFE9ECEF))
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("ORDER ID", fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                        Text(sale.orderId, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark, textAlign = TextAlign.Center)
                     }
                 }
             }
@@ -345,16 +361,14 @@ fun SalesRecordCard(
 
             // Actions
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onViewClick, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Visibility, contentDescription = "View", tint = StaffPortalButtonBlue, modifier = Modifier.size(18.dp))
+                IconButton(onClick = onViewClick) {
+                    Icon(Icons.Default.Visibility, contentDescription = "View sale ${sale.saleNo}", tint = StaffPortalButtonBlue)
                 }
-                Spacer(modifier = Modifier.width(10.dp))
-                IconButton(onClick = { /* Print Logic */ }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Print, contentDescription = "Print", tint = TextDark, modifier = Modifier.size(18.dp))
+                IconButton(onClick = { /* Print Logic */ }) {
+                    Icon(Icons.Default.Print, contentDescription = "Print sale ${sale.saleNo}", tint = TextDark)
                 }
-                Spacer(modifier = Modifier.width(10.dp))
-                IconButton(onClick = onDeleteClick, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = GasTrackRed, modifier = Modifier.size(18.dp))
+                IconButton(onClick = onDeleteClick) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete sale ${sale.saleNo}", tint = GasTrackRed)
                 }
             }
         }
