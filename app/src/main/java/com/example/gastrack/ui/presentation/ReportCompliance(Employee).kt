@@ -1,5 +1,10 @@
 package com.example.gastrack.ui.presentation
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -100,7 +105,8 @@ fun ReportComplianceScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .weight(1f),
+                .weight(1f)
+                .navigationBarsPadding(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -215,11 +221,11 @@ fun ReportComplianceScreen(
                                             viewMonth -= 1
                                         }
                                     },
-                                    modifier = Modifier.size(32.dp),
+                                    modifier = Modifier.size(48.dp),
                                     contentPadding = PaddingValues(0.dp),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Prev", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Prev Month", modifier = Modifier.size(24.dp))
                                 }
                                 OutlinedButton(
                                     onClick = {
@@ -230,11 +236,11 @@ fun ReportComplianceScreen(
                                             viewMonth += 1
                                         }
                                     },
-                                    modifier = Modifier.size(32.dp),
+                                    modifier = Modifier.size(48.dp),
                                     contentPadding = PaddingValues(0.dp),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Month", modifier = Modifier.size(24.dp))
                                 }
                                 OutlinedButton(
                                     onClick = {
@@ -244,7 +250,7 @@ fun ReportComplianceScreen(
                                     },
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                                     shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.height(32.dp)
+                                    modifier = Modifier.height(48.dp)
                                 ) {
                                     Text("Today", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
@@ -262,7 +268,7 @@ fun ReportComplianceScreen(
                                     textAlign = TextAlign.Center,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextDark
+                                    color = Color(0xFF1F2937)
                                 )
                             }
                         }
@@ -307,7 +313,7 @@ fun ReportComplianceScreen(
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
-                                                .aspectRatio(1f)
+                                                .defaultMinSize(minHeight = 48.dp)
                                                 .padding(2.dp)
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .background(
@@ -317,15 +323,24 @@ fun ReportComplianceScreen(
                                                         else -> Color.Transparent
                                                     }
                                                 )
-                                                .clickable(enabled = cellDateStr.isNotEmpty()) {
+                                                .clickable(
+                                                    enabled = cellDateStr.isNotEmpty(),
+                                                    onClickLabel = if (cellDateStr.isNotEmpty()) "Select date" else null
+                                                ) {
                                                     if (cellDateStr.isNotEmpty()) selectedDateStr = cellDateStr
+                                                }
+                                                .semantics(mergeDescendants = true) {
+                                                    if (cellDateStr.isNotEmpty()) {
+                                                        contentDescription = "Date $cellDateStr"
+                                                    }
                                                 },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             if (cellDateStr.isNotEmpty()) {
                                                 Column(
                                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                                    verticalArrangement = Arrangement.Center
+                                                    verticalArrangement = Arrangement.Center,
+                                                    modifier = Modifier.padding(vertical = 4.dp).clearAndSetSemantics { }
                                                 ) {
                                                     Text(
                                                         text = dayNumber.toString(),
@@ -333,9 +348,10 @@ fun ReportComplianceScreen(
                                                         fontWeight = if (isSelected || hasReports) FontWeight.Black else FontWeight.Normal,
                                                         color = when {
                                                             isSelected -> Color.White
-                                                            !isCurrentMonthDay -> Color.LightGray
-                                                            else -> TextDark
-                                                        }
+                                                            else -> Color(0xFF111827)
+                                                        },
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Clip
                                                     )
                                                     if (hasReports) {
                                                         Spacer(modifier = Modifier.height(2.dp))
@@ -345,9 +361,9 @@ fun ReportComplianceScreen(
                                                                 .clip(CircleShape)
                                                                 .background(
                                                                     when (primaryStatus) {
-                                                                        "Overdue" -> StatusInactive
-                                                                        "Due Soon" -> Color(0xFFF59E0B)
-                                                                        "Submitted" -> StatusActive
+                                                                        "Overdue" -> Color(0xFFB91C1C)
+                                                                        "Due Soon" -> Color(0xFF92400E)
+                                                                        "Submitted" -> Color(0xFF0F652E)
                                                                         else -> StaffPortalButtonBlue
                                                                     }
                                                                 )
@@ -400,21 +416,21 @@ fun ReportComplianceScreen(
 
                         // Legend
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(bottom = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(StatusInactive))
-                                Text(text = "Due Soon / Overdue", fontSize = 11.sp, color = TextDark)
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFB91C1C)))
+                                Text(text = "Due Soon/Overdue", fontSize = 11.sp, color = Color(0xFF111827))
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFF59E0B)))
-                                Text(text = "Upcoming", fontSize = 11.sp, color = TextDark)
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF92400E)))
+                                Text(text = "Upcoming", fontSize = 11.sp, color = Color(0xFF111827))
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(StatusActive))
-                                Text(text = "Submitted", fontSize = 11.sp, color = TextDark)
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF0F652E)))
+                                Text(text = "Submitted", fontSize = 11.sp, color = Color(0xFF111827))
                             }
                         }
                     }
@@ -518,10 +534,10 @@ enum class StatTone { PURPLE, RED, GREEN, BLUE }
 @Composable
 fun StatCard(label: String, value: String, sub: String, tone: StatTone, icon: ImageVector) {
     val (bgColor, contentColor) = when (tone) {
-        StatTone.PURPLE -> Color(0xFFEDE9FE) to Color(0xFF7C3AED)
-        StatTone.RED -> Color(0xFFFEE2E2) to Color(0xFFDC2626)
-        StatTone.GREEN -> Color(0xFFDCFCE7) to Color(0xFF16A34A)
-        StatTone.BLUE -> Color(0xFFDBEAFE) to Color(0xFF2563EB)
+        StatTone.PURPLE -> Color(0xFFEDE9FE) to Color(0xFF5B21B6)
+        StatTone.RED -> Color(0xFFFEE2E2) to Color(0xFFB91C1C)
+        StatTone.GREEN -> Color(0xFFDCFCE7) to Color(0xFF0F652E)
+        StatTone.BLUE -> Color(0xFFDBEAFE) to Color(0xFF1D4ED8)
     }
 
     Surface(
@@ -547,7 +563,7 @@ fun StatCard(label: String, value: String, sub: String, tone: StatTone, icon: Im
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = label, fontSize = 10.sp, color = TextDark, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = value, fontSize = 15.sp, fontWeight = FontWeight.Black, color = contentColor, maxLines = 1)
-                Text(text = sub, fontSize = 9.sp, color = TextDark, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = sub, fontSize = 9.sp, color = Color(0xFF1F2937), fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -563,16 +579,16 @@ fun ReportItemRow(
     var menuExpanded by remember { mutableStateOf(false) }
 
     val statusColor = when (report.status) {
-        "Overdue" -> StatusInactive
-        "Due Soon" -> Color(0xFFD97706)
-        "Submitted" -> StatusActive
-        else -> StaffPortalButtonBlue
+        "Overdue" -> Color(0xFFB91C1C)
+        "Due Soon" -> Color(0xFF92400E)
+        "Submitted" -> Color(0xFF0F652E)
+        else -> Color(0xFF1D4ED8)
     }
 
     val statusBg = when (report.status) {
-        "Overdue" -> StatusInactive.copy(alpha = 0.15f)
+        "Overdue" -> Color(0xFFFEE2E2)
         "Due Soon" -> Color(0xFFFEF3C7)
-        "Submitted" -> StatusActive.copy(alpha = 0.15f)
+        "Submitted" -> Color(0xFFDCFCE7)
         else -> Color(0xFFDBEAFE)
     }
 
@@ -618,7 +634,7 @@ fun ReportItemRow(
 
                 Box {
                     IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = TextGray, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.MoreVert, contentDescription = "Options for ${report.name}", tint = TextGray, modifier = Modifier.size(16.dp))
                     }
                     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                         DropdownMenuItem(
