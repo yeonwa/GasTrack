@@ -95,8 +95,6 @@ fun MenuScreen(
 
                 item { MenuSectionLabel("Support") }
                 item { SimpleMenuItem(Icons.Default.Info, "About GasTrack", onNavigateToAbout) }
-                item { SimpleMenuItem(Icons.Default.Policy, "Privacy Policy", onNavigateToPrivacyPolicy) }
-                item { SimpleMenuItem(Icons.Default.Description, "Terms of Service", onNavigateToTermsOfService) }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
 
