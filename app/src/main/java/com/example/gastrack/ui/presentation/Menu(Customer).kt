@@ -32,9 +32,7 @@ fun MenuScreen(
     onNavigateToHistory: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToPaymentMethods: () -> Unit = {},
-    onNavigateToAbout: () -> Unit = {},
-    onNavigateToPrivacyPolicy: () -> Unit = {},
-    onNavigateToTermsOfService: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = Color.White,
