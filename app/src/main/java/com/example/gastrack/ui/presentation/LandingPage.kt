@@ -6,11 +6,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartUpScreen(
     onNavigateToCustomer: () -> Unit,
@@ -41,6 +44,7 @@ fun StartUpScreen(
     onNavigateToAR: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf("Home") }
+    var activeModal by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -66,13 +70,31 @@ fun StartUpScreen(
                         onNavigateToEmployee = onNavigateToEmployee,
                         onNavigateToRegisterCompany = onNavigateToRegisterCompany,
                         onNavigateToAR = onNavigateToAR,
-                        onNavigateToPrivacy = { selectedTab = "Privacy" },
-                        onNavigateToTerms = { selectedTab = "Terms" }
+                        onNavigateToPrivacy = { activeModal = "Privacy" },
+                        onNavigateToTerms = { activeModal = "Terms" }
                     )
                     "About" -> StartUpAboutContent()
                     "Contact" -> StartUpContactContent()
-                    "Privacy" -> StartUpPrivacyContent(onBack = { selectedTab = "Home" })
-                    "Terms" -> StartUpTermsContent(onBack = { selectedTab = "Home" })
+                }
+            }
+        }
+    }
+
+    if (activeModal != null) {
+        ModalBottomSheet(
+            onDismissRequest = { activeModal = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight(0.85f)
+                    .fillMaxWidth()
+            ) {
+                when (activeModal) {
+                    "Privacy" -> StartUpPrivacyContent(onBack = { activeModal = null })
+                    "Terms" -> StartUpTermsContent(onBack = { activeModal = null })
                 }
             }
         }
@@ -92,38 +114,37 @@ fun StartUpTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.Center,
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(28.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Navigation Tabs
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(28.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                listOf("Home", "About", "Contact").forEach { tab ->
-                    val isSelected = selectedTab == tab
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
+            listOf("Home", "About", "Contact").forEach { tab ->
+                val isSelected = selectedTab == tab
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 48.dp, minWidth = 48.dp)
+                        .clickable { onTabSelected(tab) }
+                        .padding(vertical = 4.dp, horizontal = 12.dp)
+                ) {
+                    Text(
+                        text = tab,
+                        color = if (isSelected) Color.White else Color.White.copy(alpha = 0.75f),
+                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
                         modifier = Modifier
-                            .clickable { onTabSelected(tab) }
-                            .padding(vertical = 4.dp, horizontal = 8.dp)
-                    ) {
-                        Text(
-                            text = tab,
-                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.75f),
-                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Box(
-                            modifier = Modifier
-                                .width(24.dp)
-                                .height(2.5.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(if (isSelected) Color.White else Color.Transparent)
-                        )
-                    }
+                            .width(24.dp)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(if (isSelected) Color.White else Color.Transparent)
+                    )
                 }
             }
         }
@@ -172,7 +193,7 @@ fun StartUpHomeContent(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Please select your portal below or try out our new AR tank scanner!",
+                    text = "Choose your portal below, or check out our new AR tank scanner!",
                     fontSize = 13.sp,
                     color = TextGray,
                     lineHeight = 18.sp,
@@ -188,7 +209,7 @@ fun StartUpHomeContent(
                 overlineText = "I'm a",
                 titleText = "Customer",
                 subtitleText = "Order refills, track deliveries & check status",
-                accentColor = GasTrackRed,
+                accentColor = Color(0xFFE5383B),
                 onClick = onNavigateToCustomer
             )
 
@@ -205,8 +226,6 @@ fun StartUpHomeContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
-
             // Register LPG Company Card at the bottom
             Surface(
                 modifier = Modifier
@@ -214,7 +233,7 @@ fun StartUpHomeContent(
                     .shadow(4.dp, RoundedCornerShape(14.dp))
                     .clickable { onNavigateToRegisterCompany() },
                 shape = RoundedCornerShape(14.dp),
-                color = GasTrackRed
+                color = Color(0xFFE5383B)
             ) {
                 Row(
                     modifier = Modifier
@@ -241,7 +260,7 @@ fun StartUpHomeContent(
                         Text(
                             text = "NEW LPG BUSINESS?",
                             fontSize = 10.sp,
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = Color.White,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.8.sp
                         )
@@ -255,7 +274,7 @@ fun StartUpHomeContent(
                         Text(
                             text = "Set up your business, branches & get started",
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.9f)
+                            color = Color.White
                         )
                     }
 
@@ -268,46 +287,38 @@ fun StartUpHomeContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             ARFloatingButton(onClick = onNavigateToAR)
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "By continuing, you agree to our",
-                    fontSize = 11.sp,
-                    color = TextGray,
-                    fontWeight = FontWeight.Medium
+                    text = "Terms of Service",
+                    fontSize = 12.sp,
+                    color = GasTrackBlue,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.clickable { onNavigateToTerms() }
                 )
-                Row(horizontalArrangement = Arrangement.Center) {
-                    Text(
-                        text = "Privacy Policy",
-                        fontSize = 11.sp,
-                        color = GasTrackBlue,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .clickable { onNavigateToPrivacy() }
-                    )
-                    Text(
-                        text = " and ",
-                        fontSize = 11.sp,
-                        color = TextGray,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                    Text(
-                        text = "Terms of Service",
-                        fontSize = 11.sp,
-                        color = GasTrackBlue,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .clickable { onNavigateToTerms() }
-                    )
-                }
+                Text(
+                    text = " • ",
+                    fontSize = 12.sp,
+                    color = TextGray,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Privacy Policy",
+                    fontSize = 12.sp,
+                    color = GasTrackBlue,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.clickable { onNavigateToPrivacy() }
+                )
             }
         }
 
@@ -316,7 +327,7 @@ fun StartUpHomeContent(
         Text(
             text = "v1.0.4 • Powered by GasTrack",
             fontSize = 11.sp,
-            color = BorderColor,
+            color = TextGray,
             fontWeight = FontWeight.Bold
         )
 
@@ -347,7 +358,7 @@ fun StartUpAboutContent() {
                     text = "ABOUT GASTRACK",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
-                    color = GasTrackRed,
+                    color = Color(0xFFFF4D4D),
                     letterSpacing = 1.2.sp
                 )
 
@@ -356,7 +367,7 @@ fun StartUpAboutContent() {
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(color = Color.White)) { append("Managing LPG inventory ") }
-                        withStyle(style = SpanStyle(color = GasTrackRed)) { append("smarter, ") }
+                        withStyle(style = SpanStyle(color = Color(0xFFFF4D4D))) { append("smarter, ") }
                         withStyle(style = SpanStyle(color = Color.White)) { append("not harder.") }
                     },
                     fontSize = 22.sp,
@@ -399,7 +410,7 @@ fun StartUpAboutContent() {
         Text(
             text = "v1.0.4 • Powered by GasTrack",
             fontSize = 11.sp,
-            color = BorderColor,
+            color = TextGray,
             fontWeight = FontWeight.Bold
         )
 
@@ -422,7 +433,7 @@ fun AboutStatBox(value: String, label: String, modifier: Modifier = Modifier) {
                 text = value,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Black,
-                color = GasTrackRed
+                color = Color(0xFFFF4D4D)
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -534,12 +545,12 @@ fun StartUpContactContent() {
                 OutlinedTextField(
                     value = firstName,
                     onValueChange = { firstName = it },
-                    placeholder = { Text("Juan", color = Color.LightGray, fontSize = 13.sp) },
+                    placeholder = { Text("Juan", color = Color(0xFF6B7280), fontSize = 13.sp) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color(0xFFE9ECEF),
+                        unfocusedBorderColor = Color(0xFF9CA3AF),
                         focusedBorderColor = GasTrackBlue
                     ),
                     textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -551,12 +562,12 @@ fun StartUpContactContent() {
                 OutlinedTextField(
                     value = lastName,
                     onValueChange = { lastName = it },
-                    placeholder = { Text("Dela Cruz", color = Color.LightGray, fontSize = 13.sp) },
+                    placeholder = { Text("Dela Cruz", color = Color(0xFF6B7280), fontSize = 13.sp) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color(0xFFE9ECEF),
+                        unfocusedBorderColor = Color(0xFF9CA3AF),
                         focusedBorderColor = GasTrackBlue
                     ),
                     textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -568,12 +579,12 @@ fun StartUpContactContent() {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("juandelacruz@gmail.com", color = Color.LightGray, fontSize = 13.sp) },
+                    placeholder = { Text("juandelacruz@gmail.com", color = Color(0xFF6B7280), fontSize = 13.sp) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color(0xFFE9ECEF),
+                        unfocusedBorderColor = Color(0xFF9CA3AF),
                         focusedBorderColor = GasTrackBlue
                     ),
                     textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -587,7 +598,7 @@ fun StartUpContactContent() {
                         onClick = { subjectExpanded = true },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE9ECEF))
+                        border = BorderStroke(1.dp, Color(0xFF9CA3AF))
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -596,7 +607,7 @@ fun StartUpContactContent() {
                         ) {
                             Text(
                                 text = subject,
-                                color = if (subject == "Select a topic") TextGray else TextDark,
+                                color = if (subject == "Select a topic") Color(0xFF6B7280) else TextDark,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -622,13 +633,13 @@ fun StartUpContactContent() {
                 OutlinedTextField(
                     value = message,
                     onValueChange = { message = it },
-                    placeholder = { Text("Describe your inquiry or concern...", color = Color.LightGray, fontSize = 13.sp) },
+                    placeholder = { Text("Describe your inquiry or concern...", color = Color(0xFF6B7280), fontSize = 13.sp) },
                     minLines = 3,
                     maxLines = 5,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color(0xFFE9ECEF),
+                        unfocusedBorderColor = Color(0xFF9CA3AF),
                         focusedBorderColor = GasTrackBlue
                     ),
                     textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -691,12 +702,12 @@ fun ContactInfoItem(icon: ImageVector, title: String, value: String) {
             Surface(
                 modifier = Modifier.size(32.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = GasTrackRed.copy(alpha = 0.2f)
+                color = Color(0xFFFF4D4D).copy(alpha = 0.2f)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = GasTrackRed,
+                    tint = Color(0xFFFF4D4D),
                     modifier = Modifier.padding(6.dp)
                 )
             }
@@ -727,41 +738,26 @@ fun LogoSection() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        Surface(
-            modifier = Modifier.size(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = Color.White,
-            shadowElevation = 3.dp
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.favicon),
-                contentDescription = "Logo Icon",
-                modifier = Modifier.padding(8.dp).fillMaxSize()
-            )
-        }
-        Spacer(modifier = Modifier.width(10.dp))
+        Image(
+            painter = painterResource(id = R.drawable.favicon),
+            contentDescription = "GasTrack Logo",
+            modifier = Modifier.size(52.dp)
+        )
 
-        Column {
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = GasTrackBlue, fontWeight = FontWeight.Black)) {
-                        append("Gas")
-                    }
-                    withStyle(style = SpanStyle(color = GasTrackRed, fontWeight = FontWeight.Black)) {
-                        append("Track")
-                    }
-                },
-                fontSize = 24.sp,
-                letterSpacing = (-0.5).sp
-            )
-            Text(
-                text = "Optimize Your LPG, Effortlessly.",
-                fontSize = 10.sp,
-                color = GasTrackBlue,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
-            )
-        }
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = buildAnnotatedString {
+                withStyle(style = SpanStyle(color = GasTrackBlue, fontWeight = FontWeight.Black)) {
+                    append("Gas")
+                }
+                withStyle(style = SpanStyle(color = Color(0xFFE5383B), fontWeight = FontWeight.Black)) {
+                    append("Track")
+                }
+            },
+            fontSize = 32.sp,
+            letterSpacing = (-0.5).sp
+        )
     }
 }
 
@@ -852,16 +848,20 @@ fun StartUpPrivacyContent(onBack: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack, modifier = Modifier.padding(end = 12.dp).size(24.dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
                 text = "PRIVACY POLICY",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Black,
                 color = GasTrackBlue
             )
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = TextDark)
+            }
         }
         Text(
             text = "Last Updated: October 08, 2026",
@@ -927,16 +927,20 @@ fun StartUpTermsContent(onBack: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack, modifier = Modifier.padding(end = 12.dp).size(24.dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GasTrackBlue)
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
                 text = "TERMS OF SERVICE",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Black,
                 color = GasTrackBlue
             )
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = TextDark)
+            }
         }
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -977,31 +981,29 @@ fun ARFloatingButton(onClick: () -> Unit) {
     ) {
         Box(
             modifier = Modifier
-                .size(88.dp)
-                .shadow(12.dp, RoundedCornerShape(32.dp))
-                .background(Color.White, RoundedCornerShape(32.dp))
+                .size(84.dp)
+                .shadow(
+                    elevation = 10.dp,
+                    shape = CircleShape,
+                    spotColor = GasTrackBlue.copy(alpha = 0.35f),
+                    ambientColor = GasTrackBlue.copy(alpha = 0.25f)
+                )
+                .background(GasTrackBlue, CircleShape)
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(GasTrackBlue.copy(alpha = 0.05f), RoundedCornerShape(24.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ViewInAr,
-                    contentDescription = "AR",
-                    modifier = Modifier.size(40.dp),
-                    tint = GasTrackBlue
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.ViewInAr,
+                contentDescription = "AR LPG Safety Placement Scanner",
+                modifier = Modifier.size(48.dp),
+                tint = Color.White
+            )
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = " AR LPG Safety Placement",
+            text = "AR LPG Safety Placement",
             fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
             color = TextDark
         )
     }
