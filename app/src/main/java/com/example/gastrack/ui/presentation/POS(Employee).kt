@@ -155,7 +155,7 @@ fun POSEmployeeScreen(
             .fillMaxSize()
             .background(EmployeePortalBackground) // Darker background to make white cards pop
     ) {
-        Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
+        Column(modifier = Modifier.fillMaxSize().navigationBarsPadding()) {
             EmployeePortalHeader(
                 title = "Checkout Station",
                 onBack = onBack
@@ -163,7 +163,7 @@ fun POSEmployeeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 EmployeeTabSelector(
                     tabs = listOf("Products", "Cart (${cart.values.sum()})"),
                     selectedTab = if (selectedTab.startsWith("Cart")) "Cart (${cart.values.sum()})" else selectedTab
