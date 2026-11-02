@@ -162,7 +162,7 @@ fun InventoryEmployeeScreen(
             }
 
             item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     EmployeeTabSelector(
                         tabs = listOf("Inventory", "Inventory Transactions"),
                         selectedTab = selectedTab,
