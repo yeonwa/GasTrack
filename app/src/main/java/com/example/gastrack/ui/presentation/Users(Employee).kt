@@ -3,7 +3,6 @@ package com.example.gastrack.ui.presentation
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -205,9 +205,6 @@ fun UsersListTab(
     var selectedRoleFilter by remember { mutableStateOf("All Roles") }
     var selectedStatusFilter by remember { mutableStateOf("All Status") }
     var selectedBranchFilter by remember { mutableStateOf("All Branch/Warehouse") }
-    
-    var currentPage by remember { mutableIntStateOf(1) }
-    val pageSize = 10
 
     val predefinedRoles = listOf("Administrator", "Operations Supervisor", "Assistant Operations Supervisor", "Store Supervisor", "Assistant Store Supervisor", "Stockman", "Head Maintenance", "Drivers", "Helpers", "Customer")
     val roles = remember(users) {
@@ -231,90 +228,76 @@ fun UsersListTab(
             matchesSearch && matchesRole && matchesStatus && matchesBranch
         }
     }
-
-    val totalPages = maxOf(1, (filteredUsers.size + pageSize - 1) / pageSize)
-    val safeCurrentPage = minOf(maxOf(1, currentPage), totalPages)
     
-    LaunchedEffect(searchQuery, selectedRoleFilter, selectedStatusFilter, selectedBranchFilter) {
-        currentPage = 1
-    }
-
-    val paginatedUsers = filteredUsers.drop((safeCurrentPage - 1) * pageSize).take(pageSize)
-
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Spacer(modifier = Modifier.height(16.dp))
-        EmployeeSearchBar(
-            query = searchQuery,
-            onQueryChange = { searchQuery = it },
-            placeholder = "Search by Full Name or Email..."
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        // Filters Row
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterDropdown(
-                options = roles,
-                selectedOption = if (selectedRoleFilter == "All Roles") "Role" else selectedRoleFilter,
-                onOptionSelected = { selectedRoleFilter = it },
-                modifier = Modifier.weight(1f)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+            Spacer(modifier = Modifier.height(16.dp))
+            EmployeeSearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Search by Full Name or Email..."
             )
-            FilterDropdown(
-                options = statuses,
-                selectedOption = if (selectedStatusFilter == "All Status") "Status" else selectedStatusFilter,
-                onOptionSelected = { selectedStatusFilter = it },
-                modifier = Modifier.weight(1f)
-            )
-            FilterDropdown(
-                options = branches,
-                selectedOption = if (selectedBranchFilter == "All Branch/Warehouse") "Branch" else selectedBranchFilter,
-                onOptionSelected = { selectedBranchFilter = it },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (paginatedUsers.isEmpty()) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("No users match your filters.", color = Color.Gray, fontWeight = FontWeight.Medium)
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Filters Row
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterDropdown(
+                    options = roles,
+                    selectedOption = if (selectedRoleFilter == "All Roles") "Role" else selectedRoleFilter,
+                    onOptionSelected = { selectedRoleFilter = it },
+                    modifier = Modifier.weight(1f)
+                )
+                FilterDropdown(
+                    options = statuses,
+                    selectedOption = if (selectedStatusFilter == "All Status") "Status" else selectedStatusFilter,
+                    onOptionSelected = { selectedStatusFilter = it },
+                    modifier = Modifier.weight(1f)
+                )
+                FilterDropdown(
+                    options = branches,
+                    selectedOption = if (selectedBranchFilter == "All Branch/Warehouse") "Branch" else selectedBranchFilter,
+                    onOptionSelected = { selectedBranchFilter = it },
+                    modifier = Modifier.weight(1f)
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 8.dp)
-            ) {
-                items(paginatedUsers) { user ->
-                    UserCard(
-                        user = user, 
-                        onView = { onViewClick(user) },
-                        onEdit = { onEditClick(user) },
-                        onDelete = { onDeleteClick(user) }
-                    )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (filteredUsers.isEmpty()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text("No users match your filters.", color = Color.Gray, fontWeight = FontWeight.Medium)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 88.dp)
+                ) {
+                    items(filteredUsers) { user ->
+                        UserCard(
+                            user = user, 
+                            onView = { onViewClick(user) },
+                            onEdit = { onEditClick(user) },
+                            onDelete = { onDeleteClick(user) }
+                        )
+                    }
                 }
             }
         }
 
-        PaginationControls(
-            currentPage = safeCurrentPage,
-            totalPages = totalPages,
-            onPageChange = { currentPage = it }
-        )
-
-        Button(
+        // Floating Action Button anchored cleanly in bottom right corner
+        ExtendedFloatingActionButton(
             onClick = onAddClick,
             modifier = Modifier
-                .height(44.dp)
-                .shadow(2.dp, RoundedCornerShape(8.dp)),
-            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue),
-            shape = RoundedCornerShape(8.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp)
-        ) {
-            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Add User", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        }
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 20.dp, end = 20.dp),
+            containerColor = StaffPortalButtonBlue,
+            contentColor = Color.White,
+            shape = RoundedCornerShape(16.dp),
+            icon = { Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(20.dp)) },
+            text = { Text("Add User", fontWeight = FontWeight.Bold, fontSize = 13.sp) }
+        )
     }
 }
 
@@ -326,68 +309,121 @@ fun UserCard(
     onDelete: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(20.dp)),
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(text = user.id, fontWeight = FontWeight.Black, fontSize = 18.sp, color = TextDark)
-                    Text(text = user.roleId, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "${user.firstName} ${user.lastName}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = user.id,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextGray
+                    )
                 }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "ID: ${user.companyId}", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark)
-                    Surface(
-                        color = if (user.status == "Active") Color(0xFFDCFCE7) else Color(0xFFFEE2E2),
-                        shape = RoundedCornerShape(6.dp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Surface(
+                    color = if (user.status == "Active") StatusActive.copy(alpha = 0.15f) else StatusInactive.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = user.status.uppercase(),
+                        color = if (user.status == "Active") StatusActive else StatusInactive,
+                        fontSize = 9.sp,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Surface(
+                color = Color(0xFFFBFBFE),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Color(0xFFF1F3F4)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("ROLE", fontSize = 9.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = user.roleId,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 13.sp,
+                                color = TextDark
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("COMPANY ID", fontSize = 9.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = user.companyId,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 13.sp,
+                                color = TextDark
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = Color(0xFFE9ECEF))
+
+                    Column {
+                        Text("EMAIL", fontSize = 9.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp)
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = user.status.uppercase(), 
-                            color = if (user.status == "Active") Color(0xFF16A34A) else Color(0xFFDC2626), 
-                            fontSize = 9.sp, 
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontWeight = FontWeight.Black
+                            text = user.email,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 13.sp,
+                            color = StaffPortalButtonBlue
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Surface(
-                color = Color(0xFFFBFBFE),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, Color(0xFFF1F3F4)),
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("NAME", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black)
-                        Text("${user.firstName} ${user.lastName}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextDark)
-                    }
-                    Box(modifier = Modifier.width(1.dp).height(20.dp).background(Color(0xFFE9ECEF)))
-                    Column(modifier = Modifier.weight(1.5f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("EMAIL", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Black)
-                        Text(user.email, fontWeight = FontWeight.Bold, fontSize = 11.sp, color = StaffPortalButtonBlue)
-                    }
+                IconButton(onClick = onView, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Default.Visibility, contentDescription = "View user", tint = StaffPortalButtonBlue, modifier = Modifier.size(20.dp))
                 }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onView, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Visibility, contentDescription = "View", tint = StaffPortalButtonBlue, modifier = Modifier.size(18.dp))
+                IconButton(onClick = onEdit, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit user", tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = onEdit, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF2E7D32), modifier = Modifier.size(18.dp))
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = GasTrackRed, modifier = Modifier.size(18.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete user", tint = GasTrackRed, modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -401,9 +437,6 @@ fun ActivityLogTab(
     var searchQuery by remember { mutableStateOf("") }
     var selectedModuleFilter by remember { mutableStateOf("") }
     var selectedActionFilter by remember { mutableStateOf("All Actions") }
-    
-    var currentPage by remember { mutableIntStateOf(1) }
-    val pageSize = 7
 
     val logs = remember { listOf(
         ActivityLogEntry("LOG-001", "U-001", "Juan Dela Cruz", "Update", "Users", "U-002", "Updated user status for U-002", "01/01/2026 10:30 AM"),
@@ -434,75 +467,42 @@ fun ActivityLogTab(
         }
     }
 
-    val totalPages = maxOf(1, (filteredLogs.size + pageSize - 1) / pageSize)
-    val safeCurrentPage = minOf(maxOf(1, currentPage), totalPages)
-    
-    LaunchedEffect(searchQuery, selectedModuleFilter, selectedActionFilter) {
-        currentPage = 1
-    }
-
-    val paginatedLogs = filteredLogs.drop((safeCurrentPage - 1) * pageSize).take(pageSize)
-
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
         
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.weight(1f)) {
-                EmployeeSearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    placeholder = "Search user, module, target..."
-                )
-            }
-            
-            OutlinedTextField(
-                value = selectedModuleFilter,
-                onValueChange = { selectedModuleFilter = it },
-                placeholder = { Text("Exact module", fontSize = 12.sp) },
-                modifier = Modifier.width(120.dp).height(48.dp),
-                shape = RoundedCornerShape(8.dp),
-                singleLine = true,
-                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    unfocusedBorderColor = Color(0xFFE9ECEF),
-                    focusedBorderColor = StaffPortalButtonBlue
-                )
+            EmployeeSearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Search logs...",
+                modifier = Modifier.weight(1.6f)
             )
 
             FilterDropdown(
                 options = actionOptions,
                 selectedOption = selectedActionFilter,
                 onOptionSelected = { selectedActionFilter = it },
-                modifier = Modifier.width(130.dp)
+                modifier = Modifier.weight(1f)
             )
         }
         
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (paginatedLogs.isEmpty()) {
+        if (filteredLogs.isEmpty()) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text("No activity matches your filters.", color = Color.Gray, fontWeight = FontWeight.Medium)
             }
         } else {
             LazyColumn(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 8.dp)
+                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                items(paginatedLogs) { log ->
+                items(filteredLogs) { log ->
                     ActivityLogCard(log, onViewDetails = { onViewDetails(log) })
                 }
             }
         }
-        
-        PaginationControls(
-            currentPage = safeCurrentPage,
-            totalPages = totalPages,
-            onPageChange = { currentPage = it }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -516,10 +516,24 @@ fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(text = log.activityId, fontWeight = FontWeight.Black, fontSize = 16.sp, color = TextDark)
-                    Text(text = "${log.userName} (${log.userId})", fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = log.userName,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        color = TextDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = log.activityId,
+                        fontSize = 12.sp,
+                        color = TextGray,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
+                Spacer(modifier = Modifier.width(12.dp))
                 Surface(
                     color = when(log.activityType) {
                         "Create" -> Color(0xFFF0FDF4)
@@ -531,9 +545,9 @@ fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
                     Text(
                         text = log.activityType.uppercase(), 
                         color = when(log.activityType) {
-                            "Create" -> Color(0xFF16A34A)
-                            "Delete" -> Color(0xFFDC2626)
-                            else -> StaffPortalButtonBlue
+                            "Create" -> Color(0xFF15803D)
+                            "Delete" -> Color(0xFF991B1B)
+                            else -> Color(0xFF1E3A8A)
                         }, 
                         fontSize = 9.sp, 
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -542,7 +556,7 @@ fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(text = log.description, fontSize = 13.sp, color = TextDark, maxLines = 1, fontWeight = FontWeight.Medium)
             
@@ -552,12 +566,12 @@ fun ActivityLogCard(log: ActivityLogEntry, onViewDetails: () -> Unit) {
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.LightGray)
+                    Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(14.dp), tint = TextGray)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = log.activityDate, 
-                        fontSize = 10.sp, 
-                        color = Color.LightGray,
+                        fontSize = 11.sp, 
+                        color = TextGray,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -627,6 +641,7 @@ fun ActivityLogDetailDialog(log: ActivityLogEntry, onDismiss: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserEditDialog(
     user: UserItemData? = null,
@@ -679,76 +694,72 @@ fun UserEditDialog(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text("BASIC INFORMATION", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Column(modifier = Modifier.weight(1f)) {
-                            OutlinedTextField(
+                            Text("First Name", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            FormInputField(
                                 value = firstName,
                                 onValueChange = { firstName = it },
-                                label = { Text("First Name", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
+                                placeholder = "First Name"
                             )
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            OutlinedTextField(
+                            Text("Last Name", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            FormInputField(
                                 value = lastName,
                                 onValueChange = { lastName = it },
-                                label = { Text("Last Name", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
+                                placeholder = "Last Name"
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email Address", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        singleLine = true,
-                        enabled = user == null,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFE9ECEF), 
-                            focusedBorderColor = StaffPortalButtonBlue
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text("Email Address", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        FormInputField(
+                            value = email,
+                            onValueChange = { email = it },
+                            placeholder = "user@domain.com",
+                            enabled = user == null,
+                            containerColor = if (user != null) Color(0xFFF1F5F9) else Color.White,
+                            borderColor = if (user != null) Color.Transparent else Color(0xFFE9ECEF),
+                            textStyle = LocalTextStyle.current.copy(
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (user != null) Color(0xFF64748B) else TextDark
+                            )
                         )
-                    )
+                    }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text(if (user != null) "New Password (optional)" else "Password", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        label = { Text(if (user != null) "Confirm New Password" else "Confirm Password", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color(0xFFE9ECEF), focusedBorderColor = StaffPortalButtonBlue)
-                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(if (user != null) "New Password (optional)" else "Password", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        FormInputField(
+                            value = password,
+                            onValueChange = { password = it },
+                            placeholder = "••••••••"
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(if (user != null) "Confirm New Password" else "Confirm Password", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        FormInputField(
+                            value = confirmPassword,
+                            onValueChange = { confirmPassword = it },
+                            placeholder = "••••••••"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text("ROLE & ASSIGNMENT", fontSize = 10.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
                     
                     var expandedRole by remember { mutableStateOf(false) }
                     val rolesList = listOf("Administrator", "Operations Supervisor", "Assistant Operations Supervisor", "Store Supervisor", "Assistant Store Supervisor", "Stockman", "Head Maintenance", "Drivers", "Helpers", "Customer")
@@ -759,24 +770,25 @@ fun UserEditDialog(
                     var expandedStatus by remember { mutableStateOf(false) }
                     val statusList = listOf("Active", "Inactive")
 
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         // Role Dropdown
                         Column {
-                            Text("Role", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box {
-                                OutlinedButton(
-                                    onClick = { expandedRole = true },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-                                    contentPadding = PaddingValues(horizontal = 12.dp)
-                                ) {
-                                    Text(role.ifEmpty { "Select role" }, color = if (role.isEmpty()) Color.Gray else TextDark, fontSize = 13.sp)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.Gray)
-                                }
-                                DropdownMenu(expanded = expandedRole, onDismissRequest = { expandedRole = false }, modifier = Modifier.fillMaxWidth(0.85f)) {
+                            Text("Role", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            ExposedDropdownMenuBox(expanded = expandedRole, onExpandedChange = { expandedRole = !expandedRole }) {
+                                FormInputField(
+                                    value = role.ifEmpty { "Select role" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRole) },
+                                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                                    textStyle = LocalTextStyle.current.copy(
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (role.isEmpty()) Color(0xFF6B7280) else TextDark
+                                    )
+                                )
+                                ExposedDropdownMenu(expanded = expandedRole, onDismissRequest = { expandedRole = false }, modifier = Modifier.background(Color.White)) {
                                     rolesList.forEach { r ->
                                         DropdownMenuItem(text = { Text(r) }, onClick = { role = r; expandedRole = false })
                                     }
@@ -786,21 +798,22 @@ fun UserEditDialog(
 
                         // Branch Dropdown
                         Column {
-                            Text("Branch / Warehouse", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box {
-                                OutlinedButton(
-                                    onClick = { expandedBranch = true },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-                                    contentPadding = PaddingValues(horizontal = 12.dp)
-                                ) {
-                                    Text(branch.ifEmpty { "Select Branch / Warehouse" }, color = if (branch.isEmpty()) Color.Gray else TextDark, fontSize = 13.sp)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.Gray)
-                                }
-                                DropdownMenu(expanded = expandedBranch, onDismissRequest = { expandedBranch = false }, modifier = Modifier.fillMaxWidth(0.85f)) {
+                            Text("Branch / Warehouse", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            ExposedDropdownMenuBox(expanded = expandedBranch, onExpandedChange = { expandedBranch = !expandedBranch }) {
+                                FormInputField(
+                                    value = branch.ifEmpty { "Select Branch / Warehouse" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedBranch) },
+                                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                                    textStyle = LocalTextStyle.current.copy(
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (branch.isEmpty()) Color(0xFF6B7280) else TextDark
+                                    )
+                                )
+                                ExposedDropdownMenu(expanded = expandedBranch, onDismissRequest = { expandedBranch = false }, modifier = Modifier.background(Color.White)) {
                                     branchList.forEach { b ->
                                         DropdownMenuItem(text = { Text(b) }, onClick = { branch = b; expandedBranch = false })
                                     }
@@ -810,21 +823,17 @@ fun UserEditDialog(
 
                         // Status Dropdown
                         Column {
-                            Text("Status", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box {
-                                OutlinedButton(
-                                    onClick = { expandedStatus = true },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, Color(0xFFE9ECEF)),
-                                    contentPadding = PaddingValues(horizontal = 12.dp)
-                                ) {
-                                    Text(status, color = TextDark, fontSize = 13.sp)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.Gray)
-                                }
-                                DropdownMenu(expanded = expandedStatus, onDismissRequest = { expandedStatus = false }, modifier = Modifier.fillMaxWidth(0.85f)) {
+                            Text("Status", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextGray)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            ExposedDropdownMenuBox(expanded = expandedStatus, onExpandedChange = { expandedStatus = !expandedStatus }) {
+                                FormInputField(
+                                    value = status,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedStatus) },
+                                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                                )
+                                ExposedDropdownMenu(expanded = expandedStatus, onDismissRequest = { expandedStatus = false }, modifier = Modifier.background(Color.White)) {
                                     statusList.forEach { s ->
                                         DropdownMenuItem(text = { Text(s) }, onClick = { status = s; expandedStatus = false })
                                     }
@@ -842,6 +851,8 @@ fun UserEditDialog(
                     
                     @Composable
                     fun ModuleSection(title: String, modules: List<String>) {
+                        val allEnabled = modules.all { selectedModules.contains(it) }
+                        
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -849,7 +860,24 @@ fun UserEditDialog(
                             border = BorderStroke(1.dp, Color(0xFFE9ECEF))
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text(title, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(title, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                    Switch(
+                                        checked = allEnabled,
+                                        onCheckedChange = null,
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = StaffPortalButtonBlue,
+                                            disabledCheckedThumbColor = Color.White,
+                                            disabledCheckedTrackColor = StaffPortalButtonBlue.copy(alpha = 0.5f)
+                                        ),
+                                        enabled = false
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(12.dp))
                                 modules.forEach { module ->
                                     val enabled = selectedModules.contains(module)
@@ -974,81 +1002,6 @@ fun ViewUserDialog(user: UserItemData, onDismiss: () -> Unit) {
     }
 }
 
-@Composable
-fun PaginationControls(
-    currentPage: Int,
-    totalPages: Int,
-    onPageChange: (Int) -> Unit
-) {
-    if (totalPages <= 1) return
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            modifier = Modifier
-                .size(32.dp)
-                .clickable(enabled = currentPage > 1) { onPageChange(currentPage - 1) },
-            shape = RoundedCornerShape(8.dp),
-            color = Color.White,
-            border = BorderStroke(1.dp, Color(0xFFD1D5DB))
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous", modifier = Modifier.size(16.dp), tint = if (currentPage > 1) Color(0xFF374151) else Color.LightGray)
-            }
-        }
-        
-        Spacer(modifier = Modifier.width(6.dp))
-
-        val maxVisible = 6
-        var start = maxOf(1, currentPage - maxVisible / 2)
-        var end = start + maxVisible - 1
-        if (end > totalPages) {
-            end = totalPages
-            start = maxOf(1, end - maxVisible + 1)
-        }
-
-        for (p in start..end) {
-            val isActive = p == currentPage
-            Surface(
-                modifier = Modifier
-                    .height(32.dp)
-                    .widthIn(min = 32.dp)
-                    .clickable { onPageChange(p) },
-                shape = RoundedCornerShape(8.dp),
-                color = if (isActive) StaffPortalButtonBlue else Color.White,
-                border = BorderStroke(1.dp, if (isActive) StaffPortalButtonBlue else Color(0xFFD1D5DB))
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 8.dp)) {
-                    Text(
-                        text = p.toString(),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isActive) Color.White else Color(0xFF1F2937)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(6.dp))
-        }
-
-        Surface(
-            modifier = Modifier
-                .size(32.dp)
-                .clickable(enabled = currentPage < totalPages) { onPageChange(currentPage + 1) },
-            shape = RoundedCornerShape(8.dp),
-            color = Color.White,
-            border = BorderStroke(1.dp, Color(0xFFD1D5DB))
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.ChevronRight, contentDescription = "Next", modifier = Modifier.size(16.dp), tint = if (currentPage < totalPages) Color(0xFF374151) else Color.LightGray)
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
