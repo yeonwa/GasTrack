@@ -43,17 +43,18 @@ fun EmployeePortalHeader(
     showLogo: Boolean = true,
     showProfile: Boolean = false,
     backgroundColor: Color = GasTrackBlue,
-    rightContent: @Composable (() -> Unit)? = null
+    rightContent: @Composable (() -> Unit)? = null,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = backgroundColor,
         shadowElevation = 4.dp
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -168,36 +169,36 @@ fun EmployeeTabSelector(
     selectedTab: String,
     onTabSelected: (String) -> Unit
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .shadow(4.dp, RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFF1F3F4)
+    SecondaryScrollableTabRow(
+        selectedTabIndex = tabs.items.indexOf(selectedTab).coerceAtLeast(0),
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = Color.Transparent,
+        contentColor = GasTrackBlue,
+        edgePadding = 8.dp,
+        divider = {
+            HorizontalDivider(color = Color.LightGray)
+        },
+        indicator = {
+            TabRowDefaults.SecondaryIndicator(
+                modifier = Modifier.tabIndicatorOffset(tabs.items.indexOf(selectedTab).coerceAtLeast(0)),
+                color = GasTrackBlue
+            )
+        }
     ) {
-        Row(modifier = Modifier.fillMaxSize().padding(3.dp), verticalAlignment = Alignment.CenterVertically) {
-            tabs.items.forEach { tab ->
-                val isSelected = selectedTab == tab
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable { onTabSelected(tab) },
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (isSelected) Color.White else Color.Transparent,
-                    shadowElevation = if (isSelected) 4.dp else 0.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = tab,
-                            color = if (isSelected) TextDark else Color.DarkGray,
-                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    }
+        tabs.items.forEach { tab ->
+            val isSelected = selectedTab == tab
+            Tab(
+                selected = isSelected,
+                onClick = { onTabSelected(tab) },
+                text = {
+                    Text(
+                        text = tab,
+                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = if (isSelected) GasTrackBlue else TextGray
+                    )
                 }
-            }
+            )
         }
     }
 }
@@ -245,30 +246,7 @@ fun EmployeeInputField(
     }
 }
 
-@Composable
-fun EmployeeActionItem(
-    icon: ImageVector, 
-    text: String, 
-    color: Color, 
-    modifier: Modifier = Modifier, 
-    onClick: () -> Unit = {}
-) {
-    Surface(
-        modifier = modifier.height(36.dp).clickable { onClick() },
-        color = color.copy(alpha = 0.05f),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.1f))
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text = text, fontWeight = FontWeight.Bold, fontSize = 11.sp, color = color)
-        }
-    }
-}
+
 
 @Composable
 fun DetailValueRow(label: String, value: String, isBold: Boolean = false, color: Color = TextDark) {
@@ -393,9 +371,9 @@ fun InventoryStatCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (sub != null) {
+                sub?.let {
                     Text(
-                        text = sub,
+                        text = it,
                         fontSize = 9.sp,
                         color = TextDark,
                         fontWeight = FontWeight.Medium,
@@ -458,7 +436,7 @@ fun FilterDropdown(
     onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(value = false) }
 
     Box(modifier = modifier) {
         Surface(
