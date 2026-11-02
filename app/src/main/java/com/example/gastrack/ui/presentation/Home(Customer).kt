@@ -44,8 +44,7 @@ fun CustomerHomeScreen(
     onNavigateToMenu: () -> Unit,
     onNavigateToCart: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
-    onNavigateToNotifications: () -> Unit = {},
-    onNavigateToAR: () -> Unit = {}
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = HomeBackground,
@@ -78,12 +77,7 @@ fun CustomerHomeScreen(
             // --- Smart Refill Card ---
             SmartRefillCard(onReorderClick = onNavigateToCart)
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // --- AR Safety Placement Banner ---
-            ARScannerBanner(onClick = onNavigateToAR)
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "What do you need?",
@@ -436,69 +430,7 @@ fun NavigationBarItem(isSelected: Boolean, icon: ImageVector, label: String, onC
     }
 }
 
-@Composable
-fun ARScannerBanner(onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(20.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        color = Color.White
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                color = GasTrackBlue.copy(alpha = 0.1f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ViewInAr,
-                    contentDescription = "AR Scanner",
-                    tint = GasTrackBlue,
-                    modifier = Modifier.padding(10.dp)
-                )
-            }
 
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "3D AR PLACEMENT",
-                    fontSize = 10.sp,
-                    color = TextGray,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.8.sp
-                )
-                Text(
-                    text = "AR LPG Safety Placement",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Black,
-                    color = TextDark
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Visualize cylinder safety & clearance in AR",
-                    fontSize = 12.sp,
-                    color = TextGray,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Open AR",
-                tint = BorderColor,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
