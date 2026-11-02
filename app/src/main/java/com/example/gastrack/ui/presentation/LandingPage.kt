@@ -841,6 +841,26 @@ fun StartUpScreenPreview() {
 }
 
 @Composable
+fun PolicySection(title: String, content: String) {
+    Column(modifier = Modifier.padding(bottom = 20.dp)) {
+        Text(
+            text = title,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextDark,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = content,
+            fontSize = 13.sp,
+            color = TextGray,
+            lineHeight = 20.sp,
+            fontWeight = FontWeight.Normal
+        )
+    }
+}
+
+@Composable
 fun StartUpPrivacyContent(onBack: () -> Unit) {
     Column(
         modifier = Modifier
