@@ -404,7 +404,7 @@ fun EmployeeSearchBar(
         modifier = modifier
             .widthIn(max = 488.dp)
             .fillMaxWidth()
-            .height(52.dp),
+            .height(48.dp),
         textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextDark),
         singleLine = true,
         interactionSource = interactionSource,
@@ -430,7 +430,7 @@ fun EmployeeSearchBar(
                             unfocusedBorderColor = Color.DarkGray,
                             focusedBorderColor = StaffPortalButtonBlue
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(8.dp)
                     )
                 }
             )
@@ -470,7 +470,10 @@ fun FilterDropdown(
                 .semantics(mergeDescendants = true) {}
                 .clickable(onClickLabel = "Select option") { expanded = true },
             shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color.DarkGray),
+            border = BorderStroke(
+                width = if (expanded) 2.dp else 1.dp,
+                color = if (expanded) StaffPortalButtonBlue else Color.DarkGray
+            ),
             color = Color.White
         ) {
             Row(
