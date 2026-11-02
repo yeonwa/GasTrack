@@ -185,7 +185,7 @@ fun StartUpHomeContent(
                     text = "Welcome to GasTrack",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
-                    color = GasTrackBlue,
+                    color = TextDark,
                     lineHeight = 26.sp,
                     textAlign = TextAlign.Center
                 )
@@ -195,9 +195,9 @@ fun StartUpHomeContent(
                 Text(
                     text = "Choose your portal below, or check out our new AR tank scanner!",
                     fontSize = 13.sp,
-                    color = TextGray,
+                    color = Color(0xFF4B5563),
                     lineHeight = 18.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center
                 )
             }
