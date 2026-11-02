@@ -14,5 +14,5 @@ val BorderColor = Color(0xFFE5E7EB)
 val StaffPortalBlue = Color(0xFF1E3A5F) // Header color
 val StaffPortalButtonBlue = Color(0xFF0055B8) // Primary button color
 val EmployeePortalBackground = Color(0xFFF3F5F8)
-val StatusActive = Color(0xFF25C960)
-val StatusInactive = Color(0xFFD90429)
+val StatusActive = Color(0xFF15803D) // Deep forest green for WCAG contrast
+val StatusInactive = Color(0xFF991B1B) // Dark red for WCAG contrast
