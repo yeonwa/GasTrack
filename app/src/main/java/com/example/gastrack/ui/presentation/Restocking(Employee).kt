@@ -384,7 +384,7 @@ fun RestockingEmployeeScreen(
 
             item {
                 // Navigation Tabs & Actions Bar
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     EmployeeTabSelector(
                         tabs = listOf("Restocking", "Purchase Order ($activePoCount)"),
                         selectedTab = if (activeTab == "restocking") "Restocking" else "Purchase Order ($activePoCount)",
