@@ -285,6 +285,9 @@ fun AppNavigation() {
                 },
                 onNavigateToNotifications = {
                     navController.navigate("notifications")
+                },
+                onNavigateToAR = {
+                    navController.navigate("ar_loading")
                 }
             )
         }
