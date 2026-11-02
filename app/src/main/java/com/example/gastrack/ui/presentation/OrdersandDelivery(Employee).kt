@@ -155,7 +155,7 @@ fun OrdersAndDeliveryEmployeeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(EmployeePortalBackground)
-            .systemBarsPadding()
+            .navigationBarsPadding()
     ) {
         EmployeePortalHeader(
             title = "Order and Delivery",
@@ -165,7 +165,7 @@ fun OrdersAndDeliveryEmployeeScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Tabs
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             val tabs = mutableListOf<String>()
             if (!isDriver) tabs.add("Pickup (${pickups.size})")
             tabs.add("Delivery (${deliveries.size})")
