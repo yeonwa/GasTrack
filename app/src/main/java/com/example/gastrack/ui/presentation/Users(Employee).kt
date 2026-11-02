@@ -97,7 +97,7 @@ fun UsersEmployeeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             EmployeeTabSelector(
                 tabs = listOf("Users", "Activity Log"),
                 selectedTab = selectedTab,
