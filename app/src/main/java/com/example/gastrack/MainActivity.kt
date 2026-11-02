@@ -151,16 +151,6 @@ fun AppNavigation() {
                 }
             )
         }
-        composable("employee_user_modify") {
-            UserModifyEmployeeScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
-                onModifyComplete = {
-                    navController.popBackStack()
-                }
-            )
-        }
         composable("employee_restocking") {
             RestockingEmployeeScreen(
                 onBack = {
