@@ -54,7 +54,7 @@ fun DataModuleEmployeeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             EmployeeTabSelector(
                 tabs = listOf("Export", "Export Logs", "Import", "Import Logs"),
                 selectedTab = selectedTab,
