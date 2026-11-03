@@ -834,10 +834,12 @@ fun AccountTypeCard(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun StartUpScreenPreview() {
-    StartUpScreen(onNavigateToCustomer = {}, onNavigateToEmployee = {})
+    GasTrackTheme {
+        StartUpScreen(onNavigateToCustomer = {}, onNavigateToEmployee = {})
+    }
 }
 
 @Composable
