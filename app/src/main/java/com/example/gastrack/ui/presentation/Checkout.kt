@@ -152,7 +152,7 @@ fun CheckoutScreen(
                             }
                             Text(
                                 text = "Change",
-                                color = Color(0xFFC62828),
+                                color = GasTrackBlue,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 13.sp,
                                 modifier = Modifier
@@ -176,7 +176,7 @@ fun CheckoutScreen(
                             }
                             Text(
                                 text = "Change",
-                                color = Color(0xFFC62828),
+                                color = GasTrackBlue,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 13.sp,
                                 modifier = Modifier
@@ -206,7 +206,7 @@ fun CheckoutScreen(
                             if (orderType == "Delivery") {
                                 Text(
                                     text = "Change",
-                                    color = Color(0xFFC62828),
+                                    color = GasTrackBlue,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 13.sp,
                                     modifier = Modifier
@@ -340,9 +340,9 @@ fun CheckoutScreen(
 
                         CheckoutSummaryRow("Subtotal", String.format(Locale.US, "₱%,d", subtotal))
                         CheckoutSummaryRow("Delivery Charge", String.format(Locale.US, "₱%,d", deliveryCharge))
-                        
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -377,10 +377,10 @@ fun CheckoutScreen(
                     CheckoutPaymentRow(
                         title = "GCash",
                         isSelected = paymentMethod == "GCash",
-                        icon = { 
+                        icon = {
                             Image(
-                                painter = painterResource(id = R.drawable.gcash_logo), 
-                                contentDescription = null, 
+                                painter = painterResource(id = R.drawable.gcash_logo),
+                                contentDescription = null,
                                 modifier = Modifier.size(24.dp),
                                 contentScale = ContentScale.Fit
                             )
@@ -399,37 +399,20 @@ fun CheckoutScreen(
                 Spacer(modifier = Modifier.height(36.dp))
 
                 // ================= OPERATION BUTTONS ACTION ZONE =================
-                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
-                        onClick = {
-                            onPlaceOrder()
-                            onNavigateToSuccess()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue)
-                    ) {
-                        Text("Place Order", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Color.White)
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            onCancel()
-                            onBack()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.5.dp, Color(0xFFC62828)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828))
-                    ) {
-                        Text("Cancel", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
+                Button(
+                    onClick = {
+                        onPlaceOrder()
+                        onNavigateToSuccess()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue)
+                ) {
+                    Text("Place Order", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Color.White)
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
@@ -460,7 +443,7 @@ fun CheckoutPaymentRow(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
+        color = if (isSelected) GasTrackBlue.copy(alpha = 0.08f) else Color.White,
         border = BorderStroke(1.5.dp, if (isSelected) GasTrackBlue else Color.Transparent)
     ) {
         Row(
@@ -477,7 +460,7 @@ fun CheckoutPaymentRow(
             Surface(
                 modifier = Modifier.size(38.dp),
                 shape = RoundedCornerShape(10.dp),
-                color = Color(0xFFF7F8FA)
+                color = if (isSelected) GasTrackBlue.copy(alpha = 0.12f) else Color(0xFFF7F8FA)
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { icon() }
             }
