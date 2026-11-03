@@ -1,13 +1,14 @@
 package com.example.gastrack.ui.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -84,30 +85,32 @@ fun MenuScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 item { MenuSectionLabel("Account") }
-                item { SimpleMenuItem(Icons.Default.PersonOutline, "Profile", onNavigateToProfile) }
-                item { SimpleMenuItem(Icons.Default.History, "Order History", onNavigateToHistory) }
-                item { SimpleMenuItem(Icons.Default.Payment, "Payment Methods", onNavigateToPaymentMethods) }
-                item { SimpleMenuItem(Icons.Default.LocationOn, "Saved Addresses", onNavigateToAddresses) }
+                item { SimpleMenuItem(Icons.Outlined.Person, "Profile", onNavigateToProfile) }
+                item { SimpleMenuItem(Icons.Outlined.History, "Order History", onNavigateToHistory) }
+                item { SimpleMenuItem(Icons.Outlined.Payment, "Payment Methods", onNavigateToPaymentMethods) }
+                item { SimpleMenuItem(Icons.Outlined.LocationOn, "Saved Addresses", onNavigateToAddresses) }
 
                 item { Spacer(modifier = Modifier.height(16.dp)) }
 
                 item { MenuSectionLabel("Support") }
-                item { SimpleMenuItem(Icons.Default.Info, "About GasTrack", onNavigateToAbout) }
+                item { SimpleMenuItem(Icons.Outlined.Info, "About GasTrack", onNavigateToAbout) }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
 
                 item {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        TextButton(
-                            onClick = onNavigateToLogout,
-                            modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth(),
-                            contentPadding = PaddingValues(12.dp)
+                    OutlinedButton(
+                        onClick = onNavigateToLogout,
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(16.dp),
+                        border = BorderStroke(1.dp, GasTrackRed)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = GasTrackRed)
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text("Logout", color = GasTrackRed, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            }
+                            Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null, tint = GasTrackRed)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Logout", color = GasTrackRed, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                     }
                 }
@@ -119,11 +122,12 @@ fun MenuScreen(
 @Composable
 fun MenuSectionLabel(text: String) {
     Text(
-        text = text,
-        color = Color.DarkGray,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+        text = text.uppercase(),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(start = 8.dp, top = 8.dp, bottom = 4.dp)
     )
 }
 
@@ -158,7 +162,7 @@ fun SimpleMenuItem(icon: ImageVector, title: String, onClick: () -> Unit) {
                 modifier = Modifier.weight(1f)
             )
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                 contentDescription = null,
                 tint = Color.DarkGray,
                 modifier = Modifier.size(20.dp)
