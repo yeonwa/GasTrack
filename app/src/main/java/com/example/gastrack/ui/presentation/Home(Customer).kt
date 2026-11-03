@@ -401,8 +401,10 @@ fun NavigationBarItem(isSelected: Boolean, icon: ImageVector, label: String, onC
 
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CustomerHomeScreenPreview() {
-    CustomerHomeScreen(onNavigateToOrder = {}, onNavigateToMenu = {})
+    GasTrackTheme {
+        CustomerHomeScreen(onNavigateToOrder = {}, onNavigateToMenu = {})
+    }
 }
