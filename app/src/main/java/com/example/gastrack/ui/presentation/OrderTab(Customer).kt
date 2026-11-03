@@ -90,7 +90,7 @@ fun OrderTabScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Header: Logo on left, "Order LPG" small on right ---
+                // --- Header: Brand on Left, Cart Icon on Right ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -101,28 +101,25 @@ fun OrderTabScreen(
                         Text(text = "GasTrack", fontSize = 16.sp, fontWeight = FontWeight.Black, color = GasTrackBlue)
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(text = "Order LPG", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextGray)
-                        IconButton(
-                            onClick = { onNavigateToCheckout() },
-                        ) {
-                            Box {
-                                Icon(
-                                    imageVector = Icons.Outlined.ShoppingCart,
-                                    contentDescription = "Cart",
-                                    tint = TextDark,
-                                    modifier = Modifier.size(26.dp)
-                                )
-                                if (totalItems > 0) {
-                                    Surface(
-                                        color = GasTrackRed,
-                                        shape = CircleShape,
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .align(Alignment.TopEnd)
-                                            .offset(x = 2.dp, y = (-2).dp)
-                                    ) {}
-                                }
+                    IconButton(
+                        onClick = { onNavigateToCheckout() },
+                    ) {
+                        Box {
+                            Icon(
+                                imageVector = Icons.Outlined.ShoppingCart,
+                                contentDescription = "Cart",
+                                tint = TextDark,
+                                modifier = Modifier.size(26.dp)
+                            )
+                            if (totalItems > 0) {
+                                Surface(
+                                    color = GasTrackRed,
+                                    shape = CircleShape,
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 2.dp, y = (-2).dp)
+                                ) {}
                             }
                         }
                     }
@@ -153,27 +150,45 @@ fun OrderTabScreen(
                 Text(text = "FILTER BY CATEGORY", fontSize = 11.sp, fontWeight = FontWeight.Black, color = TextGray, letterSpacing = 1.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(50.dp).background(Color(0xFFEFEFEF), RoundedCornerShape(25.dp)).padding(4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .background(Color(0xFFEFEFEF), RoundedCornerShape(24.dp))
+                        .padding(4.dp)
                 ) {
                     Row(modifier = Modifier.fillMaxSize()) {
                         val isRefillSelected = selectedTab == "Refill"
                         Box(
-                            modifier = Modifier.weight(1f).fillMaxHeight().shadow(if (isRefillSelected) 4.dp else 0.dp, RoundedCornerShape(22.dp))
-                                .background(if (isRefillSelected) Color.White else Color.Transparent, RoundedCornerShape(22.dp))
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .background(if (isRefillSelected) GasTrackBlue else Color.Transparent, RoundedCornerShape(20.dp))
                                 .clickable { selectedTab = "Refill" },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "Refill", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = if (isRefillSelected) TextDark else Color(0xFF5A5A5A))
+                            Text(
+                                text = "Refill",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isRefillSelected) Color.White else Color(0xFF5A5A5A)
+                            )
                         }
 
                         val isNewTankSelected = selectedTab == "New Tank"
                         Box(
-                            modifier = Modifier.weight(1f).fillMaxHeight().shadow(if (isNewTankSelected) 4.dp else 0.dp, RoundedCornerShape(22.dp))
-                                .background(if (isNewTankSelected) Color.White else Color.Transparent, RoundedCornerShape(22.dp))
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .background(if (isNewTankSelected) GasTrackBlue else Color.Transparent, RoundedCornerShape(20.dp))
                                 .clickable { selectedTab = "New Tank" },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "New Tank", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = if (isNewTankSelected) TextDark else Color(0xFF5A5A5A))
+                            Text(
+                                text = "New Tank",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isNewTankSelected) Color.White else Color(0xFF5A5A5A)
+                            )
                         }
                     }
                 }
@@ -240,10 +255,6 @@ fun OrderTabScreen(
                             quantity = cart[product.id] ?: 0,
                             onQuantityChange = { qty ->
                                 if (qty <= 0) cart.remove(product.id) else cart[product.id] = qty
-                            },
-                            onBuyNow = {
-                                cart[product.id] = 1
-                                onNavigateToCheckout()
                             }
                         )
                     }
@@ -257,7 +268,7 @@ fun OrderTabScreen(
                         onClick = onNavigateToCheckout,
                         modifier = Modifier.fillMaxWidth().height(56.dp).shadow(8.dp, RoundedCornerShape(18.dp)),
                         shape = RoundedCornerShape(18.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange)
+                        colors = ButtonDefaults.buttonColors(containerColor = GasTrackRed)
                     ) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Row(verticalAlignment = Alignment.CenterVertically) {

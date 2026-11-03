@@ -442,6 +442,12 @@ fun AppNavigation() {
             OrderHistoryScreen(
                 onBack = {
                     navController.popBackStack()
+                },
+                onOrderClick = { _ ->
+                    navController.navigate("order_tab/New Tank")
+                },
+                onReorder = { _ ->
+                    navController.navigate("order_tab/New Tank")
                 }
             )
         }

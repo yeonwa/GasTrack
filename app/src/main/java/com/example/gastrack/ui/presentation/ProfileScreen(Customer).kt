@@ -35,7 +35,7 @@ fun ProfileScreen(
     var lastName by remember { mutableStateOf("Dela Cruz") }
     var email by remember { mutableStateOf("juan.delacruz@email.com") }
     var customerType by remember { mutableStateOf("Residential") }
-    var contactNo by remember { mutableStateOf("0917-123-4567") }
+    var contactNo by remember { mutableStateOf("+63 917 123 4567") }
     var address by remember { mutableStateOf("45 Mabini St, Brgy. Concepcion, Malabon City") }
     
     var expandedType by remember { mutableStateOf(false) }
@@ -63,6 +63,60 @@ fun ProfileScreen(
                     )
                 }
             }
+        },
+        bottomBar = {
+            Surface(
+                color = Color.White,
+                tonalElevation = 3.dp,
+                shadowElevation = 8.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (!isEditMode) {
+                            Button(
+                                onClick = { isEditMode = true },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                                shape = RoundedCornerShape(28.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = StaffPortalBlue)
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Edit Profile", fontWeight = FontWeight.Black, fontSize = 16.sp, textAlign = TextAlign.Center)
+                            }
+                        } else {
+                            Button(
+                                onClick = { isEditMode = false },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                                shape = RoundedCornerShape(28.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Save Changes", fontWeight = FontWeight.Black, fontSize = 16.sp, textAlign = TextAlign.Center)
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedButton(
+                                onClick = { isEditMode = false },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                                shape = RoundedCornerShape(28.dp),
+                                border = BorderStroke(1.dp, Color.Gray)
+                            ) {
+                                Text("Cancel", color = Color.Gray, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = TextAlign.Center)
+                            }
+                        }
+                    }
+                }
+            }
         }
     ) { paddingValues ->
         Column(
@@ -84,11 +138,11 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ProfileField("FIRST NAME", firstName, isEditMode) { firstName = it }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             ProfileField("LAST NAME", lastName, isEditMode) { lastName = it }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             ProfileField("EMAIL ADDRESS", email, isEditMode, keyboardType = KeyboardType.Email) { email = it }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Column(modifier = Modifier.widthIn(max = 488.dp).fillMaxWidth()) {
                 Text(
@@ -98,83 +152,58 @@ fun ProfileScreen(
                     color = TextGray,
                     letterSpacing = 1.sp
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                ExposedDropdownMenuBox(
-                    expanded = expandedType && isEditMode,
-                    onExpandedChange = { if (isEditMode) expandedType = !expandedType }
-                ) {
-                    OutlinedTextField(
-                        value = customerType,
-                        onValueChange = {},
-                        readOnly = true,
-                        singleLine = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
-                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        enabled = isEditMode,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFE9ECEF),
-                            focusedBorderColor = GasTrackBlue,
-                            disabledBorderColor = Color(0xFFF1F3F4),
-                            disabledTextColor = TextDark,
-                            disabledLabelColor = TextGray
-                        )
-                    )
-                    ExposedDropdownMenu(
+                if (isEditMode) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    ExposedDropdownMenuBox(
                         expanded = expandedType,
-                        onDismissRequest = { expandedType = false }
+                        onExpandedChange = { expandedType = !expandedType }
                     ) {
-                        customerTypes.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(type) },
-                                onClick = {
-                                    customerType = type
-                                    expandedType = false
-                                }
+                        OutlinedTextField(
+                            value = customerType,
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
+                            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color(0xFFE9ECEF),
+                                focusedBorderColor = GasTrackBlue,
+                                unfocusedContainerColor = Color.White,
+                                focusedContainerColor = Color.White
                             )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedType,
+                            onDismissRequest = { expandedType = false }
+                        ) {
+                            customerTypes.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type) },
+                                    onClick = {
+                                        customerType = type
+                                        expandedType = false
+                                    }
+                                )
+                            }
                         }
                     }
+                } else {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = customerType,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextDark,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             ProfileField("CONTACT NO.", contactNo, isEditMode, keyboardType = KeyboardType.Phone) { contactNo = it }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             ProfileField("COMPLETE ADDRESS", address, isEditMode, minLines = 2) { address = it }
-            Spacer(modifier = Modifier.height(40.dp))
-
-            if (!isEditMode) {
-                Button(
-                    onClick = { isEditMode = true },
-                    modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalBlue)
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Edit Profile", fontWeight = FontWeight.Black, fontSize = 16.sp, textAlign = TextAlign.Center)
-                }
-            } else {
-                Button(
-                    onClick = { isEditMode = false },
-                    modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = null)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Save Changes", fontWeight = FontWeight.Black, fontSize = 16.sp, textAlign = TextAlign.Center)
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = { isEditMode = false },
-                    modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    border = BorderStroke(1.dp, Color.Gray)
-                ) {
-                    Text("Cancel", color = Color.Gray, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = TextAlign.Center)
-                }
-            }
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -184,7 +213,7 @@ fun ProfileScreen(
 fun ProfileField(
     label: String, 
     value: String, 
-    enabled: Boolean,
+    isEditMode: Boolean,
     keyboardType: KeyboardType = KeyboardType.Text,
     minLines: Int = 1,
     onValueChange: (String) -> Unit
@@ -197,25 +226,32 @@ fun ProfileField(
             color = TextGray,
             letterSpacing = 1.sp
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            shape = RoundedCornerShape(16.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            minLines = minLines,
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color(0xFFE9ECEF),
-                focusedBorderColor = GasTrackBlue,
-                disabledBorderColor = Color(0xFFF1F3F4),
-                disabledTextColor = TextDark,
-                disabledContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                focusedContainerColor = Color.Transparent
+        if (isEditMode) {
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                minLines = minLines,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color(0xFFE9ECEF),
+                    focusedBorderColor = GasTrackBlue,
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White
+                )
             )
-        )
+        } else {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value.ifEmpty { "—" },
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextDark,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            )
+        }
     }
 }
 

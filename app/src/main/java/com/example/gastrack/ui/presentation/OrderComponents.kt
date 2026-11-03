@@ -1,5 +1,6 @@
 package com.example.gastrack.ui.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -18,9 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,136 +70,113 @@ fun ProductCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(24.dp)),
-        shape = RoundedCornerShape(24.dp),
+            .shadow(4.dp, RoundedCornerShape(20.dp)),
+        shape = RoundedCornerShape(20.dp),
         color = Color.White,
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Box(
+                modifier = Modifier
+                    .size(84.dp)
+                    .background(Color(0xFFF8F9FA), RoundedCornerShape(16.dp))
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .background(Color(0xFFF8F9FA), RoundedCornerShape(20.dp))
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        painter = painterResource(id = product.imageRes),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
+                Image(
+                    painter = painterResource(id = product.imageRes),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
 
-                Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = StaffPortalBlue.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(6.dp),
+                    ) {
+                        Text(
+                            text = product.brand.uppercase(Locale.US),
+                            color = StaffPortalBlue,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            letterSpacing = 0.5.sp,
+                        )
+                    }
+                    if (product.isPopular) {
+                        Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            color = StaffPortalBlue.copy(alpha = 0.1f),
+                            color = GasTrackRed.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(6.dp),
                         ) {
                             Text(
-                                text = product.brand.uppercase(Locale.US),
-                                color = StaffPortalBlue,
+                                text = "POPULAR",
+                                color = GasTrackRed,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Black,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                 letterSpacing = 0.5.sp,
                             )
                         }
-                        if (product.isPopular) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                color = GasTrackRed.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(6.dp),
-                            ) {
-                                Text(
-                                    text = "POPULAR",
-                                    color = GasTrackRed,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Black,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    letterSpacing = 0.5.sp,
-                                )
-                            }
-                        }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
+                Text(
+                    text = product.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Black,
+                    color = TextDark,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val formattedPrice = String.format(Locale.US, "%,d", product.price)
                     Text(
-                        text = product.name,
+                        text = "₱$formattedPrice",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         color = TextDark,
                     )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val formattedPrice = String.format(Locale.US, "%,d", product.price)
-                Column {
-                    Text(
-                        text = "PRICE",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextGray,
-                        letterSpacing = 1.sp,
-                    )
-                    Text(
-                        text = "₱$formattedPrice",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Black,
-                        color = TextDark,
-                    )
-                }
-
-                if (quantity > 0) {
-                    QuantitySelector(
-                        quantity = quantity,
-                        onIncrement = { onQuantityChange(quantity + 1) },
-                        onDecrement = { onQuantityChange(quantity - 1) },
-                    )
-                } else {
-                    Button(
-                        onClick = { onQuantityChange(1) },
-                        colors = ButtonDefaults.buttonColors(containerColor = StaffPortalBlue, contentColor = Color.White),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        modifier = Modifier.semantics { contentDescription = "Add ${product.name} to cart" }
-                    ) {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("ADD TO CART", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color.White)
+                    if (quantity > 0) {
+                        QuantitySelector(
+                            quantity = quantity,
+                            onIncrement = { onQuantityChange(quantity + 1) },
+                            onDecrement = { onQuantityChange(quantity - 1) },
+                        )
+                    } else {
+                        OutlinedIconButton(
+                            onClick = { onQuantityChange(1) },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .semantics { contentDescription = "Add ${product.name} to cart" },
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.5.dp, StaffPortalBlue),
+                            colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = StaffPortalBlue)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ShoppingCart,
+                                contentDescription = "Add to cart",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = onBuyNow,
-                modifier = Modifier
-                    .widthIn(max = 320.dp)
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .height(48.dp)
-                    .semantics { contentDescription = "Buy ${product.name} now" },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange, contentColor = Color.White),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-            ) {
-                Text("BUY NOW", fontWeight = FontWeight.Black, fontSize = 15.sp, color = Color.White)
             }
         }
     }
@@ -224,8 +202,8 @@ fun QuantitySelector(
         }
         Text(
             text = quantity.toString(),
-            modifier = Modifier.padding(horizontal = 12.dp),
-            fontSize = 16.sp,
+            modifier = Modifier.padding(horizontal = 8.dp),
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = TextDark,
             textAlign = TextAlign.Center,
