@@ -370,8 +370,8 @@ fun BottomNavigationBar(
             )
             NavigationBarItem(
                 isSelected = currentRoute == "menu",
-                icon = Icons.Default.Menu,
-                label = "Menu",
+                icon = Icons.Default.Person,
+                label = "Profile",
                 onClick = onMenuClick
             )
         }
