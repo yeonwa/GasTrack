@@ -63,7 +63,7 @@ fun ARChooseScreen(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "AI Visual Scan",
+                        text = "AR Placement",
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
                         color = Color.White
@@ -74,11 +74,11 @@ fun ARChooseScreen(
         bottomBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
-                shadowElevation = 16.dp,
+                shadowElevation = 24.dp,
                 color = Color.White
             ) {
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
                     Button(
@@ -94,7 +94,7 @@ fun ARChooseScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Start AI Scan",
+                                text = "Start AR Scan",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Black,
                                 color = Color.White
@@ -122,7 +122,7 @@ fun ARChooseScreen(
                 color = GasTrackBlue.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(24.dp)
             ) {
-                Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 20.dp, end = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Info, contentDescription = null, tint = GasTrackBlue)
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
@@ -200,7 +200,9 @@ fun ARTankOption(
         color = Color.White
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .background(if (isSelected) GasTrackBlue.copy(alpha = 0.05f) else Color.Transparent)
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -208,11 +210,25 @@ fun ARTankOption(
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFFF8F9FA)
             ) {
-                Image(
-                    painter = painterResource(id = imageRes),
-                    contentDescription = null,
-                    modifier = Modifier.padding(12.dp).fillMaxSize()
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = imageRes),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                vertical = when {
+                                    name.contains("2.7kg") -> 6.dp
+                                    name.contains("50kg") -> 14.dp
+                                    else -> 10.dp
+                                }, 
+                                horizontal = 12.dp
+                            )
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
