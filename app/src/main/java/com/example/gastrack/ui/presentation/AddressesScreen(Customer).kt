@@ -50,6 +50,7 @@ fun AddressesScreen(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var addressToEdit by remember { mutableStateOf<AddressItem?>(null) }
+    var addressToDelete by remember { mutableStateOf<AddressItem?>(null) }
     val addresses = remember { mutableStateListOf(
         AddressItem(1, "Home", "45 Mabini St, Brgy. Concepcion, Malabon City", Icons.Default.Home, true),
         AddressItem(2, "Work", "GasTrack HQ, Bonifacio Global City, Taguig", Icons.Default.Work),
@@ -86,7 +87,7 @@ fun AddressesScreen(
             }
         },
         floatingActionButton = {
-            if (!showAddDialog && addressToEdit == null) {
+            if (!showAddDialog && addressToEdit == null && addressToDelete == null) {
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
                     containerColor = GasTrackBlue,
@@ -121,11 +122,40 @@ fun AddressesScreen(
                         addressToEdit = address
                     },
                     onDelete = {
-                        addresses.remove(address)
+                        addressToDelete = address
                     }
                 )
             }
         }
+    }
+
+    if (addressToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { addressToDelete = null },
+            title = { Text("Delete Address", fontWeight = FontWeight.Bold) },
+            text = { Text("Are you sure you want to delete '${addressToDelete?.label}'? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        addresses.remove(addressToDelete)
+                        addressToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                ) {
+                    Text("Delete", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { addressToDelete = null },
+                    colors = ButtonDefaults.textButtonColors(contentColor = TextDark)
+                ) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 
     if (showAddDialog || addressToEdit != null) {
