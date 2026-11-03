@@ -9,10 +9,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,8 +31,8 @@ import com.example.gastrack.ui.theme.*
 // Modern Home Colors
 val HomeBackground = Color(0xFFFBFBFE)
 val CardDark = Color(0xFF161D27)
-val RefillGradientStart = Color(0xFF9E4B00)
-val RefillGradientEnd = Color(0xFF803D00)
+val RefillGradientStart = Color(0xFFC62828)
+val RefillGradientEnd = Color(0xFF9B0000)
 val BuyTankGradientStart = Color(0xFF4A559E)
 val BuyTankGradientEnd = Color(0xFF333B70)
 
@@ -68,8 +66,7 @@ fun CustomerHomeScreen(
             // --- Modern Header ---
             HomeHeader(
                 onAddressClick = onNavigateToAddresses,
-                onNotificationClick = onNavigateToNotifications,
-                onCartClick = onNavigateToCart
+                onNotificationClick = onNavigateToNotifications
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -123,11 +120,8 @@ fun CustomerHomeScreen(
 @Composable
 fun HomeHeader(
     onAddressClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {},
-    onCartClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {}
 ) {
-    // Reference shared state for the badge count
-    val totalItems = SharedCartState.cart.values.sum()
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -185,35 +179,6 @@ fun HomeHeader(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Cart Icon Button
-            Box(
-                modifier = Modifier
-                    .minimumInteractiveComponentSize()
-                    .clip(CircleShape)
-                    .clickable(onClick = onCartClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(modifier = Modifier.padding(12.dp)) {
-                    Icon(
-                        imageVector = Icons.Outlined.ShoppingCart,
-                        contentDescription = "Cart",
-                        tint = TextDark
-                    )
-                    if (totalItems > 0) {
-                        Surface(
-                            color = GasTrackRed,
-                            shape = CircleShape,
-                            modifier = Modifier
-                                .size(8.dp)
-                                .align(Alignment.TopEnd)
-                                .offset(x = 2.dp, y = (-2).dp)
-                        ) {}
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
             // Notifications Icon Button
             Box(
                 modifier = Modifier
@@ -269,8 +234,8 @@ fun SmartRefillCard(onReorderClick: () -> Unit = {}) {
         Column(
             modifier = Modifier
                 .padding(24.dp)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center
         ) {
             Surface(
                 color = Color.White.copy(alpha = 0.15f),
@@ -284,6 +249,8 @@ fun SmartRefillCard(onReorderClick: () -> Unit = {}) {
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Column {
                 Text(
@@ -301,9 +268,11 @@ fun SmartRefillCard(onReorderClick: () -> Unit = {}) {
                 )
             }
 
+            Spacer(modifier = Modifier.height(20.dp))
+
             Button(
                 onClick = onReorderClick,
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
+                colors = ButtonDefaults.buttonColors(containerColor = GasTrackRed),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .widthIn(max = 320.dp)
@@ -354,15 +323,15 @@ fun ActionTile(text: String, subText: String, gradientStart: Color, gradientEnd:
             )
         }
         
-        // Small decorative icon at bottom right
+        // Large watermark icon at bottom right
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color.White.copy(alpha = 0.2f),
+            tint = Color.White.copy(alpha = 0.20f),
             modifier = Modifier
-                .size(48.dp)
+                .size(100.dp)
                 .align(Alignment.BottomEnd)
-                .offset(x = (-8).dp, y = (-8).dp)
+                .offset(x = 16.dp, y = 24.dp)
         )
     }
 }
