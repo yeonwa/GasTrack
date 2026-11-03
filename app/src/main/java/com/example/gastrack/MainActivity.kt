@@ -381,7 +381,9 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onNavigateToCheckout = {
-                    navController.navigate("checkout")
+                    if (SharedCartState.cart.isNotEmpty()) {
+                        navController.navigate("checkout")
+                    }
                 },
                 onContinueShopping = {
                     navController.popBackStack()
