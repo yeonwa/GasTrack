@@ -1,31 +1,35 @@
 package com.example.gastrack.ui.presentation
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 
 data class ComplianceNotificationItem(
     val id: String,
     val title: String,
     val period: String,
-    val dueDate: String,
+    val days: Int,
     val status: String, // "Overdue" or "Due Soon"
 )
 
@@ -34,91 +38,173 @@ fun NotificationEmployeeScreen(
     onBack: () -> Unit,
     onNavigateToReport: () -> Unit,
 ) {
-    // Mock compliance notifications matching React web app logic
-    val overdue = listOf(
-        ComplianceNotificationItem("1", "Monthly Stock Audit & Reconciliation", "January 2026", "2026-02-05", "Overdue"),
-    )
-    val dueSoon = listOf(
-        ComplianceNotificationItem("2", "DOE Quarterly Inventory Report", "Q1 2026", "2026-04-15", "Due Soon"),
-    )
-
-    val hasNotifications = overdue.isNotEmpty() || dueSoon.isNotEmpty()
-
-    Scaffold(
-        containerColor = EmployeePortalBackground,
-        topBar = {
-            EmployeePortalHeader(
-                title = "Notifications",
-                onBack = onBack,
+    val overdueList = remember {
+        listOf(
+            ComplianceNotificationItem(
+                id = "1",
+                title = "Inventory Audit",
+                period = "September 2026",
+                days = 46,
+                status = "Overdue"
+            ),
+            ComplianceNotificationItem(
+                id = "2",
+                title = "Monthly Sales Summary",
+                period = "October 2026",
+                days = 16,
+                status = "Overdue"
             )
-        }
-    ) { paddingValues ->
-        if (!hasNotifications) {
-            Box(
+        )
+    }
+
+    val dueSoonList = remember {
+        listOf(
+            ComplianceNotificationItem(
+                id = "3",
+                title = "DEMO-JOSE-2026 Restocking Logs",
+                period = "September 2026",
+                days = 2,
+                status = "Due Soon"
+            )
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.54f))
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onBack
+            )
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {} // Prevents clicking inside card from closing modal
+                ),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(20.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Surface(
-                        modifier = Modifier.size(72.dp),
-                        shape = CircleShape,
-                        color = Color(0xFFE8F5E9)
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = Color(0xFF2E7D32),
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxSize()
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Notifications Icon",
+                            tint = TextDark,
+                            modifier = Modifier.size(26.dp)
                         )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "You're all caught up!", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(text = "No due or overdue reports right now.", fontSize = 13.sp, color = TextGray, textAlign = TextAlign.Center)
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                if (overdue.isNotEmpty()) {
-                    item {
                         Text(
-                            text = "OVERDUE",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = GasTrackRed,
-                            letterSpacing = 1.sp
+                            text = "Report & Compliance Notifications",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
                         )
                     }
-                    items(overdue) { item ->
-                        ComplianceNotificationCard(item, onNavigateToReport)
+
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color(0xFF64748B)
+                        )
                     }
                 }
 
-                if (dueSoon.isNotEmpty()) {
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "DUE SOON",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0xFF92400E),
-                            letterSpacing = 1.sp
-                        )
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Content list
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // OVERDUE SECTION
+                    if (overdueList.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "OVERDUE",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = GasTrackRed,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        items(overdueList) { item ->
+                            NotificationRowItem(
+                                item = item,
+                                onClick = onNavigateToReport
+                            )
+                        }
                     }
-                    items(dueSoon) { item ->
-                        ComplianceNotificationCard(item, onNavigateToReport)
+
+                    // DUE SOON SECTION
+                    if (dueSoonList.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "DUE SOON",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFD97706),
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                        items(dueSoonList) { item ->
+                            NotificationRowItem(
+                                item = item,
+                                onClick = onNavigateToReport
+                            )
+                        }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Bottom Button
+                Button(
+                    onClick = onNavigateToReport,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = GasTrackBlue
+                    )
+                ) {
+                    Text(
+                        text = "View All Reports",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -126,68 +212,50 @@ fun NotificationEmployeeScreen(
 }
 
 @Composable
-fun ComplianceNotificationCard(item: ComplianceNotificationItem, onClick: () -> Unit) {
-    val isDanger = item.status == "Overdue"
-    val accentColor = if (isDanger) GasTrackRed else Color(0xFF92400E)
-    val icon = if (isDanger) Icons.Default.Warning else Icons.Default.Schedule
+private fun NotificationRowItem(
+    item: ComplianceNotificationItem,
+    onClick: () -> Unit
+) {
+    val isOverdue = item.status == "Overdue"
+    val icon = if (isOverdue) Icons.Outlined.Warning else Icons.Outlined.CalendarToday
+    val iconTint = if (isOverdue) GasTrackRed else Color(0xFFD97706)
 
-    Surface(
+    val daysText = if (isOverdue) {
+        pluralStringResource(R.plurals.days_overdue, item.days, item.days)
+    } else {
+        pluralStringResource(R.plurals.days_due, item.days, item.days)
+    }
+
+    val subtitleText = "${item.period} \u00B7 $daysText"
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        shadowElevation = 4.dp,
-        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.2f))
+            .clickable { onClick() }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(42.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = accentColor.copy(alpha = 0.12f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(22.dp)
+        )
 
-            Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
-            ) {
-                Text(
-                    text = item.title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "${item.period} · Due: ${item.dueDate}",
-                    fontSize = 12.sp,
-                    color = TextGray,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = TextGray,
-                modifier = Modifier.size(20.dp)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitleText,
+                fontSize = 13.sp,
+                color = Color(0xFF6B7280)
             )
         }
     }
