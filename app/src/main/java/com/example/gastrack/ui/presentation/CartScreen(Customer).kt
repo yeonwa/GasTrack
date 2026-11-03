@@ -1,5 +1,6 @@
 package com.example.gastrack.ui.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -95,8 +96,14 @@ fun CartScreen(
                         text = "Cart Summary",
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
-                        color = Color.White
+                        color = Color.White,
+                        modifier = Modifier.weight(1f)
                     )
+                    if (currentCartItems.isNotEmpty()) {
+                        IconButton(onClick = { cart.clear() }) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = "Clear Cart", tint = Color.White)
+                        }
+                    }
                 }
             }
         },
@@ -112,13 +119,28 @@ fun CartScreen(
                             .fillMaxWidth()
                             .padding(24.dp)
                     ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "Grand Total", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                            Text(
+                                text = "₱${String.format(Locale.US, "%,d", totalAmount)}",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Black,
+                                color = GasTrackBlue
+                            )
+                        }
                         Button(
                             onClick = onNavigateToCheckout,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(60.dp),
                             shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange),
+                            colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                         ) {
                             Text(
@@ -219,7 +241,7 @@ fun CartScreen(
                                 }
                                 
                                 Spacer(modifier = Modifier.height(16.dp))
-                                HorizontalDivider(color = Color(0xFFF1F3F4))
+                                HorizontalDivider(color = Color(0xFFE0E0E0))
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
                                 Row(
@@ -232,25 +254,36 @@ fun CartScreen(
                                         text = "₱${String.format(Locale.US, "%,d", totalAmount)}",
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Black,
-                                        color = ButtonOrange
+                                        color = GasTrackBlue
                                     )
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+                                HorizontalDivider(color = Color(0xFFE0E0E0))
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedButton(
+                                        onClick = onContinueShopping,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(1.dp, GasTrackBlue)
+                                    ) {
+                                        Text("Continue Shopping", color = GasTrackBlue, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    TextButton(onClick = { cart.clear() }) {
+                                        Text("Clear Cart", color = TextGray, fontSize = 12.sp, fontWeight = FontWeight.Normal)
+                                    }
                                 }
                             }
                         }
                     }
 
                     item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            TextButton(onClick = onContinueShopping) {
-                                Text("Continue Shopping", color = GasTrackBlue, fontWeight = FontWeight.Bold)
-                            }
-                            TextButton(onClick = { cart.clear() }) {
-                                Text("Clear Cart", color = GasTrackRed, fontWeight = FontWeight.Bold)
-                            }
-                        }
+                        Spacer(modifier = Modifier.height(100.dp))
                     }
                 }
             }
@@ -271,51 +304,72 @@ fun CartItemCard(
         color = Color.White,
         shape = RoundedCornerShape(24.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(80.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFFF8F9FA)
-                ) {
-                    Image(
-                        painter = painterResource(id = item.imageRes),
-                        contentDescription = null,
-                        modifier = Modifier.padding(12.dp).fillMaxSize()
-                    )
-                }
-                
-                Spacer(modifier = Modifier.width(16.dp))
-                
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = item.name, fontWeight = FontWeight.Black, fontSize = 16.sp, color = TextDark)
-                    Text(text = "Unit Price: ₱${item.price}", fontSize = 13.sp, color = TextGray, fontWeight = FontWeight.Medium)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Subtotal: ₱${String.format(Locale.US, "%,d", item.price * item.quantity)}",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = ButtonOrange
-                    )
-                }
-                
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.DeleteOutline, contentDescription = "Remove", tint = GasTrackRed)
-                }
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(80.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFF8F9FA)
+            ) {
+                Image(
+                    painter = painterResource(id = item.imageRes),
+                    contentDescription = null,
+                    modifier = Modifier.padding(12.dp).fillMaxSize()
+                )
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                QuantitySelector(
-                    quantity = item.quantity,
-                    onIncrement = { onQuantityChange(item.quantity + 1) },
-                    onDecrement = { onQuantityChange(item.quantity - 1) }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.name,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 16.sp,
+                        color = TextDark,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            Icons.Default.DeleteOutline,
+                            contentDescription = "Remove",
+                            tint = GasTrackRed
+                        )
+                    }
+                }
+                
+                Text(
+                    text = "Unit Price: ₱${String.format(Locale.US, "%,d", item.price)}",
+                    fontSize = 12.sp,
+                    color = TextGray,
+                    fontWeight = FontWeight.Medium
                 )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "₱${String.format(Locale.US, "%,d", item.price * item.quantity)}",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 16.sp,
+                        color = TextDark
+                    )
+                    QuantitySelector(
+                        quantity = item.quantity,
+                        onIncrement = { onQuantityChange(item.quantity + 1) },
+                        onDecrement = { onQuantityChange(item.quantity - 1) }
+                    )
+                }
             }
         }
     }
