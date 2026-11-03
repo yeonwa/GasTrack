@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +24,8 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun ARLoadingScreen(
-    onLoadingComplete: () -> Unit
+    onLoadingComplete: () -> Unit,
+    onCancel: () -> Unit = {}
 ) {
     LaunchedEffect(Unit) {
         delay(3.seconds)
@@ -37,20 +40,31 @@ fun ARLoadingScreen(
                     colors = listOf(GasTrackBlue, StaffPortalBlue)
                 )
             ),
-        contentAlignment = Alignment.Center
     ) {
+        // Close Button in Top Right
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(16.dp),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            IconButton(onClick = onCancel) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cancel",
+                    tint = Color.White
+                )
+            }
+        }
+
+        // Center Content
         Column(
+            modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Box(contentAlignment = Alignment.Center) {
-                // Outer Glow
-                Surface(
-                    modifier = Modifier.size(140.dp),
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.1f)
-                ) {}
-                
                 // Static Logo
                 Image(
                     painter = painterResource(id = R.drawable.favicon),
@@ -77,10 +91,10 @@ fun ARLoadingScreen(
                 fontWeight = FontWeight.Medium
             )
             
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             
             CircularProgressIndicator(
-                color = ButtonOrange,
+                color = Color.White,
                 strokeWidth = 4.dp,
                 modifier = Modifier.size(32.dp)
             )
