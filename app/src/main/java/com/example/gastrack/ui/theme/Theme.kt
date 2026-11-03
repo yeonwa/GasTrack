@@ -2,7 +2,7 @@ package com.example.gastrack.ui.theme
 
 import android.app.Activity
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 import androidx.compose.ui.graphics.Color
+
+import androidx.compose.ui.graphics.luminance
 
 private val DarkColorScheme = darkColorScheme(
     primary = GasTrackBlue,
@@ -34,7 +36,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun GasTrackTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, // Force light theme as the app backgrounds are currently hardcoded to light
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
@@ -52,9 +54,8 @@ fun GasTrackTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // We let enableEdgeToEdge handle the color (usually transparent)
-            // but we ensure the icons are visible by setting the appearance.
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            val isBackgroundLight = colorScheme.background.luminance() > 0.5f
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = isBackgroundLight
         }
     }
 
