@@ -112,10 +112,9 @@ fun MenuEmployeeScreen(
                         modifier = Modifier
                             .widthIn(max = 488.dp)
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                            .shadow(4.dp, RoundedCornerShape(20.dp)),
-                        color = Color.White,
-                        shape = RoundedCornerShape(20.dp)
+                            .padding(bottom = 8.dp),
+                        color = Color(0xFFE2E8F0),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         TextField(
                             value = searchQuery,
@@ -156,22 +155,22 @@ fun MenuEmployeeScreen(
                 item { Spacer(modifier = Modifier.height(24.dp)) }
 
                 item {
-                    Button(
+                    OutlinedButton(
                         onClick = onNavigateToLogout,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = GasTrackRed.copy(alpha = 0.08f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
                             contentColor = GasTrackRed
                         ),
-                        border = BorderStroke(1.5.dp, GasTrackRed.copy(alpha = 0.3f))
+                        border = BorderStroke(1.5.dp, GasTrackRed)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = GasTrackRed)
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text("Logout from Portal", color = GasTrackRed, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                            Text("Logout", color = GasTrackRed, fontWeight = FontWeight.Black, fontSize = 16.sp)
                         }
                     }
                 }
