@@ -202,7 +202,7 @@ fun NotificationCard(
 
     val (icon, color) = when (notification.type) {
         NotificationType.DELIVERY -> Icons.Default.LocalShipping to Color(0xFF2E7D32)
-        NotificationType.PROMO -> Icons.Default.Notifications to ButtonOrange
+        NotificationType.PROMO -> Icons.Default.Notifications to GasTrackRed
         NotificationType.SYSTEM -> Icons.Default.Info to StaffPortalBlue
         NotificationType.ALERT -> Icons.Default.Notifications to GasTrackRed
     }

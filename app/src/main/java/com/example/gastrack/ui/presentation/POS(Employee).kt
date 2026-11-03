@@ -776,8 +776,8 @@ fun POSBottomBar(totalAmount: Double, onCheckoutClick: () -> Unit, onHoldClick: 
                 onClick = onHoldClick,
                 modifier = Modifier.height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, ButtonOrange),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = ButtonOrange),
+                border = BorderStroke(1.dp, StaffPortalButtonBlue),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = StaffPortalButtonBlue),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 Text(text = "Hold", fontSize = 15.sp, fontWeight = FontWeight.Black)

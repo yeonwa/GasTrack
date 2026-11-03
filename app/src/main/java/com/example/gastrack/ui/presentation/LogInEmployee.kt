@@ -11,22 +11,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -48,13 +44,13 @@ import com.example.gastrack.ui.theme.*
 @Composable
 fun LogInEmployeeScreen(
     onBack: () -> Unit,
-    onNavigateToSignUp: () -> Unit,
+    onNavigateToSignUp: () -> Unit = {},
     onNavigateToHome: () -> Unit,
 ) {
-    var loginIdentifier by remember { mutableStateOf(value = "") }
-    var password by remember { mutableStateOf(value = "") }
-    var passwordVisible by remember { mutableStateOf(value = false) }
-    var showForgotPasswordDialog by remember { mutableStateOf(value = false) }
+    var loginIdentifier by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color(0xFFE2E8F0),
@@ -93,13 +89,6 @@ fun LogInEmployeeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color(0xFFE2E8F0))
-                .drawBehind {
-                    drawCircle(
-                        color = StaffPortalButtonBlue.copy(alpha = 0.05f),
-                        radius = 120.dp.toPx(),
-                        center = Offset(size.width - 20.dp.toPx(), -20.dp.toPx())
-                    )
-                },
         ) {
             Column(
                 modifier = Modifier
@@ -108,7 +97,7 @@ fun LogInEmployeeScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
                 // --- Logo Section ---
                 Row(
@@ -148,20 +137,9 @@ fun LogInEmployeeScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-                // --- Subtitle ---
-                Text(
-                    text = "Staff Portal",
-                    fontSize = 16.sp,
-                    color = TextGray,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // --- Email or Employee ID Input ---
+                // --- Email Input ---
                 Column(
                     modifier = Modifier
                         .widthIn(max = 488.dp)
@@ -194,12 +172,12 @@ fun LogInEmployeeScreen(
                             )
                         },
                         leadingIcon = {
-                            Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = StaffPortalButtonBlue)
+                            Icon(imageVector = Icons.Outlined.Email, contentDescription = null, tint = GasTrackBlue)
                         },
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color(0xFFE9ECEF),
-                            focusedBorderColor = StaffPortalButtonBlue,
+                            focusedBorderColor = GasTrackBlue,
                             unfocusedContainerColor = Color(0xFFFBFBFE),
                             focusedContainerColor = Color(0xFFFBFBFE),
                             unfocusedPlaceholderColor = Color.Black,
@@ -211,7 +189,7 @@ fun LogInEmployeeScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // --- Password Input ---
                 Column(
@@ -246,11 +224,11 @@ fun LogInEmployeeScreen(
                             )
                         },
                         leadingIcon = {
-                            Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = StaffPortalButtonBlue)
+                            Icon(imageVector = Icons.Outlined.Lock, contentDescription = null, tint = GasTrackBlue)
                         },
                         trailingIcon = {
                             val isVisible = passwordVisible
-                            val icon = if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                            val icon = if (isVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff
                             val description = if (isVisible) "Hide password" else "Show password"
                             IconButton(
                                 onClick = { passwordVisible = !passwordVisible },
@@ -259,7 +237,7 @@ fun LogInEmployeeScreen(
                                 Icon(
                                     imageVector = icon,
                                     contentDescription = description,
-                                    tint = TextGray,
+                                    tint = GasTrackBlue,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -268,7 +246,7 @@ fun LogInEmployeeScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color(0xFFE9ECEF),
-                            focusedBorderColor = StaffPortalButtonBlue,
+                            focusedBorderColor = GasTrackBlue,
                             unfocusedContainerColor = Color(0xFFFBFBFE),
                             focusedContainerColor = Color(0xFFFBFBFE),
                             unfocusedPlaceholderColor = Color.Black,
@@ -278,21 +256,19 @@ fun LogInEmployeeScreen(
                         textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Forgot Password?",
                         modifier = Modifier
                             .align(Alignment.End)
-                            .defaultMinSize(minHeight = 48.dp, minWidth = 48.dp)
-                            .clickable(onClickLabel = "Forgot Password") { showForgotPasswordDialog = true }
-                            .padding(8.dp),
-                        fontSize = 12.sp,
+                            .padding(top = 12.dp)
+                            .clickable { showForgotPasswordDialog = true },
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StaffPortalButtonBlue
+                        color = GasTrackBlue
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
                 // --- Log In Button ---
                 Button(
@@ -304,7 +280,7 @@ fun LogInEmployeeScreen(
                         .heightIn(min = 56.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = StaffPortalButtonBlue,
+                        containerColor = GasTrackBlue,
                         contentColor = Color.White,
                         disabledContainerColor = Color(0xFFCBD5E1),
                         disabledContentColor = Color(0xFF374151)
@@ -335,38 +311,28 @@ fun LogInEmployeeScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // --- Modern Footer ---
+                // --- Staff Support Footer ---
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 48.dp),
+                        .padding(top = 24.dp, bottom = 48.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "New LPG Business?",
-                        fontSize = 14.sp,
+                        text = "Need help accessing your staff account?",
+                        fontSize = 13.sp,
                         color = TextGray,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
-                    Box(
-                        modifier = Modifier
-                            .minimumInteractiveComponentSize()
-                            .clickable(onClickLabel = "Register Company") { onNavigateToSignUp() }
-                            .semantics(mergeDescendants = true) {
-                                role = Role.Button
-                                contentDescription = "Register Company"
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Register Company",
-                            fontSize = 14.sp,
-                            color = StaffPortalButtonBlue,
-                            fontWeight = FontWeight.Black,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Contact your System Administrator",
+                        fontSize = 13.sp,
+                        color = GasTrackBlue,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -416,7 +382,7 @@ fun EmployeeForgotPasswordDialog(onDismiss: () -> Unit) {
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color(0xFFE9ECEF),
-                        focusedBorderColor = StaffPortalButtonBlue,
+                        focusedBorderColor = GasTrackBlue,
                         unfocusedPlaceholderColor = Color(0xFF1F2937),
                         focusedPlaceholderColor = Color(0xFF374151)
                     )
@@ -431,7 +397,7 @@ fun EmployeeForgotPasswordDialog(onDismiss: () -> Unit) {
                         .fillMaxWidth()
                         .heightIn(min = 56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                    colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue)
                 ) {
                     Text("Request Reset", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }

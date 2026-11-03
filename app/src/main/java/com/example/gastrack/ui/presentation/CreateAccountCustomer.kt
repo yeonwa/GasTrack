@@ -447,7 +447,7 @@ fun CreateAccountCustomerScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ButtonOrange,
+                    containerColor = GasTrackRed,
                     contentColor = Color.White
                 ),
                 elevation = ButtonDefaults.buttonElevation(

@@ -39,7 +39,9 @@ data class SalesData(
     val salesDiscount: Double,
     val totalAmount: Double,
     val processedBy: String,
-    val remarks: String = ""
+    val remarks: String = "",
+    val status: String = "Completed",
+    val orderType: String = "Walk-In" // Walk-In, Delivery, Pick-up
 )
 
 @Immutable
@@ -69,10 +71,10 @@ fun SalesEmployeeScreen(
 
     // Mock Data
     val salesRecords = remember { mutableStateListOf(
-        SalesData("S-001", "O-001", "C-001", "SALE-2026-001", "2026-01-05 10:35 AM", 0.0, 950.0, "EMP-001", "Regular customer"),
-        SalesData("S-002", "O-002", "C-002", "SALE-2026-002", "2026-01-05 10:22 AM", 50.0, 1000.0, "EMP-002"),
-        SalesData("S-003", "O-003", "C-003", "SALE-2026-003", "2026-01-04 03:30 PM", 0.0, 550.0, "EMP-001"),
-        SalesData("S-004", "O-004", "C-004", "SALE-2026-004", "2026-01-03 10:35 AM", 0.0, 105.0, "EMP-003")
+        SalesData("S-001", "O-001", "C-001", "SALE-2026-001", "2026-01-05 10:35 AM", 0.0, 950.0, "EMP-001", "Regular customer", "Completed", "Walk-In"),
+        SalesData("S-002", "O-002", "C-002", "SALE-2026-002", "2026-01-05 10:22 AM", 50.0, 1000.0, "EMP-002", "", "Preparing", "Delivery"),
+        SalesData("S-003", "O-003", "C-003", "SALE-2026-003", "2026-01-04 03:30 PM", 0.0, 550.0, "EMP-001", "", "Unclaimed", "Pick-up"),
+        SalesData("S-004", "O-004", "C-004", "SALE-2026-004", "2026-01-03 10:35 AM", 0.0, 105.0, "EMP-003", "", "Completed", "Walk-In")
     ) }
 
     val paymentRecords = remember { mutableStateListOf(
@@ -89,7 +91,7 @@ fun SalesEmployeeScreen(
         val payment = paymentRecords.find { it.saleId == sale.salesId }
         val matchesSearch = sale.saleNo.contains(searchQuery, ignoreCase = true)
         val matchesCashier = selectedCashier == "All Cashier" || sale.processedBy == selectedCashier
-        val matchesStatus = selectedStatus == "All Status" || payment?.paymentMethod == selectedStatus
+        val matchesStatus = selectedStatus == "All Status" || sale.status == selectedStatus || payment?.paymentMethod == selectedStatus
         matchesSearch && matchesCashier && matchesStatus
     }
 
@@ -143,7 +145,7 @@ fun SalesEmployeeScreen(
                             modifier = Modifier.weight(1f)
                         )
                         FilterDropdown(
-                            options = listOf("All Status", "Cash", "GCash", "Card"), // Payment method mock
+                            options = listOf("All Status", "Completed", "Preparing", "Unclaimed"),
                             selectedOption = selectedStatus,
                             onOptionSelected = { selectedStatus = it },
                             modifier = Modifier.weight(1f)
@@ -253,39 +255,42 @@ fun SalesEmployeeScreen(
 @Composable
 fun SalesStatCard(label: String, value: String, icon: ImageVector, accentColor: Color, modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier.shadow(3.dp, RoundedCornerShape(16.dp)),
+        modifier = modifier.shadow(2.dp, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        color = Color.White
+        color = Color.White,
+        border = BorderStroke(1.dp, Color(0xFFF0F0F0))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 16.dp),
+                .padding(horizontal = 10.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(42.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.size(36.dp),
+                shape = RoundedCornerShape(10.dp),
                 color = accentColor.copy(alpha = 0.12f)
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = accentColor, modifier = Modifier.padding(10.dp))
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(imageVector = icon, contentDescription = null, tint = accentColor, modifier = Modifier.size(18.dp))
+                }
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label, 
-                    fontSize = 10.sp, 
+                    fontSize = 9.sp, 
                     fontWeight = FontWeight.Bold, 
                     color = TextDark, 
-                    letterSpacing = 0.5.sp, 
+                    letterSpacing = 0.3.sp, 
                     maxLines = 2, 
                     overflow = TextOverflow.Ellipsis,
-                    lineHeight = 12.sp
+                    lineHeight = 11.sp
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = value, 
-                    fontSize = 15.sp, 
+                    fontSize = 13.sp, 
                     fontWeight = FontWeight.Black, 
                     color = accentColor, 
                     maxLines = 1,
@@ -315,10 +320,16 @@ fun SalesRecordCard(
                     Text(text = sale.saleDate, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextDark, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
+                Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1.2f)) {
                     Text(text = String.format(Locale.US, "₱%,.2f", sale.totalAmount), fontWeight = FontWeight.Black, fontSize = 17.sp, color = StaffPortalButtonBlue, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Surface(color = Color(0xFFF1F3F4), shape = RoundedCornerShape(4.dp)) {
-                        Text(text = paymentMethod.uppercase(), color = TextDark, fontSize = 8.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Surface(color = Color(0xFFE8F5E9), shape = RoundedCornerShape(4.dp)) {
+                            Text(text = sale.orderType.uppercase(), color = Color(0xFF2E7D32), fontSize = 8.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        Surface(color = Color(0xFFF1F3F4), shape = RoundedCornerShape(4.dp)) {
+                            Text(text = paymentMethod.uppercase(), color = TextDark, fontSize = 8.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
             }
@@ -339,6 +350,14 @@ fun SalesRecordCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("ORDER TYPE", fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                        Text(sale.orderType, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = StaffPortalButtonBlue, textAlign = TextAlign.Center)
+                    }
+                    VerticalDivider(modifier = Modifier.height(16.dp), color = Color(0xFFE9ECEF))
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -396,6 +415,7 @@ fun SalesDetailDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 DetailValueRow("Sale No", sale.saleNo, isBold = true, color = StaffPortalButtonBlue)
+                DetailValueRow("Order Type", sale.orderType, isBold = true, color = StaffPortalButtonBlue)
                 DetailValueRow("Order ID", sale.orderId)
                 DetailValueRow("Customer ID", sale.customerId)
                 DetailValueRow("Processed By", sale.processedBy)

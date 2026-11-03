@@ -49,7 +49,8 @@ data class InventoryTransactionData(
     val quantity: Int,
     val reference: String, // Supplier, POS, etc.
     val transactionDate: String,
-    val processedBy: String
+    val processedBy: String,
+    val reason: String = ""
 )
 
 @Composable
@@ -60,7 +61,7 @@ fun InventoryEmployeeScreen(
     var showStockInForm by remember { mutableStateOf(false) }
     var showStockOutForm by remember { mutableStateOf(false) }
     var showAdjustmentForm by remember { mutableStateOf(false) }
-    
+
     var showSuccessDialog by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf("") }
     var showQuickActionMenu by remember { mutableStateOf(false) }
@@ -71,19 +72,19 @@ fun InventoryEmployeeScreen(
     var itemToDelete by remember { mutableStateOf<InventoryItemData?>(null) }
 
     val inventoryItems = remember { mutableStateListOf(
-        InventoryItemData("INV-001", "P-001", "Gasul LPG 2.7 kg", "Pasig", 50, 10, 10, true, "Normal"),
-        InventoryItemData("INV-002", "P-002", "Gasul LPG 7 kg", "San Juan", 100, 20, 10, true, "Normal"),
-        InventoryItemData("INV-003", "P-003", "LPG Hose Clamp", "Pasig", 20, 0, 20, false, "Critical"),
-        InventoryItemData("INV-004", "P-004", "Gasul LPG 11 kg", "San Juan", 34, 15, 10, true, "Normal"),
-        InventoryItemData("INV-005", "P-005", "POL Regulator", "San Juan", 60, 0, 20, false, "Low Stock")
+        InventoryItemData("INV-001", "P-D2N7X4KP", "Petron Gasul LPG 2.7 kg", "San Juan Warehouse", 20, 10, 30, true, "Critical"),
+        InventoryItemData("INV-002", "P-BX6T9R4N", "Petron Gasul LPG 7 kg", "San Juan Warehouse", 40, 15, 20, true, "Normal"),
+        InventoryItemData("INV-003", "P-P3N8XK5T", "Petron Gasul LPG 11 kg Elite", "San Juan Warehouse", 17, 8, 40, true, "Critical"),
+        InventoryItemData("INV-004", "P-M7Q2Z9LR", "Petron Gasul LPG 11 kg", "San Juan Warehouse", 90, 25, 50, true, "Normal"),
+        InventoryItemData("INV-005", "P-H4V8TN2W", "Petron Gasul LPG 22 kg", "San Juan Warehouse", 36, 12, 15, true, "Normal")
     ) }
 
     val transactions = remember { mutableStateListOf(
-        InventoryTransactionData("T-001", "P-001", "Gas LPG 2.7kg", "Pasig", "In", 10, "Supplier", "01/15/2026", "U-001"),
-        InventoryTransactionData("T-002", "P-002", "Gas LPG 7kg", "San Juan", "Out", 2, "POS", "01/06/2026", "U-003"),
-        InventoryTransactionData("T-003", "P-003", "Gas LPG 11kg", "Pasig", "Adjust", 30, "Supplier", "01/03/2026", "U-002"),
-        InventoryTransactionData("T-004", "P-004", "Cylinder 2.7kg", "San Juan", "Out", 5, "POS", "01/02/2026", "U-003"),
-        InventoryTransactionData("T-005", "P-005", "Cylinder 7kg", "San Juan", "Out", 20, "POS", "01/01/2026", "U-003")
+        InventoryTransactionData("T-059", "P-M7Q2Z9LR", "Petron Gasul LPG 11 kg", "Pasig Warehouse", "Out", 1, "ORD-2026-194", "11/3/2026, 2:07:53 PM", "U-001", "Sale"),
+        InventoryTransactionData("T-058", "P-D2N7X4KP", "Petron Gasul LPG 2.7 kg", "Pasig Warehouse", "In", 50, "REF-634576", "11/3/2026, 2:02:06 PM", "U-001", "Supplier Delivery"),
+        InventoryTransactionData("T-057", "P-WBV5VFLQ", "Petron Cylinder 11 kg", "Pasig Warehouse", "Out", 1, "ORD-2026-193", "11/3/2026, 1:26:24 PM", "U-003", "Sale"),
+        InventoryTransactionData("T-056", "P-JPKXQF8B", "POL Regulator", "San Juan Warehouse", "Out", 6, "—", "11/2/2026, 8:48:50 PM", "U-002", "Damaged"),
+        InventoryTransactionData("T-055", "P-D2N7X4KP", "Petron Gasul LPG 2.7 kg", "San Juan Warehouse", "In", 9, "REF-3478234", "11/2/2026, 8:47:10 PM", "U-001", "Supplier Delivery")
     ) }
 
     // Inventory Filter States
@@ -184,7 +185,7 @@ fun InventoryEmployeeScreen(
                         InventoryQuickAction("Stock In", Icons.Default.Add, modifier = Modifier.weight(1f)) { showStockInForm = true }
                         InventoryQuickAction("Stock Out", Icons.Default.Remove, modifier = Modifier.weight(1f)) { showStockOutForm = true }
                         InventoryQuickAction("Transfer", Icons.Default.SwapHoriz, modifier = Modifier.weight(1f)) { showAdjustmentForm = true }
-                        
+
                         Box {
                             IconButton(onClick = { showQuickActionMenu = true }) {
                                 Icon(Icons.Default.MoreVert, contentDescription = "More actions", tint = TextDark)
@@ -213,9 +214,9 @@ fun InventoryEmployeeScreen(
                         }
                     }
                 }
-                
+
                 val filteredInventory = inventoryItems.filter {
-                    val matchesSearch = it.productName.contains(searchQuery, ignoreCase = true) || 
+                    val matchesSearch = it.productName.contains(searchQuery, ignoreCase = true) ||
                                         it.productID.contains(searchQuery, ignoreCase = true)
                     val matchesWarehouse = selectedWarehouse == "All Warehouse" || it.warehouseName == selectedWarehouse
                     val matchesStatus = selectedStatus == "Inventory Status" || it.status == selectedStatus
@@ -257,7 +258,7 @@ fun InventoryEmployeeScreen(
                         onTypeChange = { selectedTrxType = it }
                     )
                 }
-                
+
                 items(filteredTransactions) { trx ->
                     TransactionCardMobile(trx)
                 }
@@ -511,9 +512,9 @@ fun InventoryDetailDialog(item: InventoryItemData, onDismiss: () -> Unit) {
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = onDismiss, 
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), 
-                    shape = RoundedCornerShape(8.dp), 
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E7EB), contentColor = Color(0xFF111827))
                 ) {
                     Text("Close", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -690,17 +691,22 @@ fun TransactionCardMobile(trx: InventoryTransactionData) {
                     Text(text = trx.quantity.toString(), fontSize = 12.sp, fontWeight = FontWeight.Black, color = StaffPortalButtonBlue)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Reference", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
-                    Text(text = trx.reference, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Text(text = "Reference / Reason", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    val refText = when {
+                        trx.reason.isNotBlank() && trx.reference != "—" -> "${trx.reference} (${trx.reason})"
+                        trx.reason.isNotBlank() -> trx.reason
+                        else -> trx.reference
+                    }
+                    Text(text = refText, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(text = "Date", fontSize = 9.sp, color = TextGray, fontWeight = FontWeight.Bold)
                     Text(text = trx.transactionDate, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(10.dp))
-            
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Text(text = "By: ${trx.processedBy}", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
             }

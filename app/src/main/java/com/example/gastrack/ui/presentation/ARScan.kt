@@ -261,7 +261,7 @@ fun ARStatusDialog(
                 .padding(16.dp),
             shape = RoundedCornerShape(24.dp),
             color = Color.White,
-            border = BorderStroke(2.dp, ButtonOrange)
+            border = BorderStroke(2.dp, GasTrackRed)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -287,7 +287,7 @@ fun ARStatusDialog(
                         .fillMaxWidth()
                         .height(54.dp),
                     shape = RoundedCornerShape(27.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange)
+                    colors = ButtonDefaults.buttonColors(containerColor = GasTrackRed)
                 ) {
                     Text(
                         text = buttonText,

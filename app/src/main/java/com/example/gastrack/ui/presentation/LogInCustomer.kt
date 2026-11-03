@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -27,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -39,6 +41,17 @@ import androidx.compose.ui.window.Dialog
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 
+private fun isValidEmailOrPhone(input: String): Boolean {
+    val trimmed = input.trim()
+    if (trimmed.isEmpty()) return false
+    if (trimmed.contains("@")) {
+        val emailRegex = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$")
+        return emailRegex.matches(trimmed)
+    }
+    val digitsOnly = trimmed.filter { it.isDigit() }
+    return digitsOnly.length >= 7
+}
+
 @Composable
 fun LogInCustomerScreen(
     onBack: () -> Unit = {},
@@ -49,6 +62,10 @@ fun LogInCustomerScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
+
+    val isEmailOrPhoneValid = remember(emailOrPhone) { isValidEmailOrPhone(emailOrPhone) }
+    val isPasswordValid = remember(password) { password.isNotEmpty() }
+    val isFormValid = isEmailOrPhoneValid && isPasswordValid
 
     Box(
         modifier = Modifier
@@ -84,7 +101,7 @@ fun LogInCustomerScreen(
         ) {
             Spacer(modifier = Modifier.height(72.dp))
 
-            // --- Logo Section (Maintained from previous design) ---
+            // --- Logo Section ---
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -133,7 +150,7 @@ fun LogInCustomerScreen(
 
             Spacer(modifier = Modifier.height(44.dp))
 
-            // --- Email or Phone Number Input (Modernized Card Style) ---
+            // --- Email or Phone Number Input ---
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "EMAIL OR PHONE NUMBER",
@@ -149,11 +166,11 @@ fun LogInCustomerScreen(
                     modifier = Modifier
                         .widthIn(max = 488.dp)
                         .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(16.dp))
+                        .shadow(4.dp, RoundedCornerShape(16.dp))
                         .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
                     placeholder = { Text("Email or Phone Number", color = TextGray) },
                     leadingIcon = {
-                        Icon(imageVector = Icons.Outlined.Email, contentDescription = null, tint = StaffPortalBlue)
+                        Icon(imageVector = Icons.Outlined.Email, contentDescription = null, tint = GasTrackBlue)
                     },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -162,7 +179,7 @@ fun LogInCustomerScreen(
                         unfocusedContainerColor = Color.Transparent,
                         focusedContainerColor = Color.Transparent
                     ),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     singleLine = true,
                     textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 )
@@ -170,7 +187,7 @@ fun LogInCustomerScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- Password Input (Modernized) ---
+            // --- Password Input ---
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "PASSWORD",
@@ -190,7 +207,7 @@ fun LogInCustomerScreen(
                         .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
                     placeholder = { Text("Password", color = TextGray) },
                     leadingIcon = {
-                        Icon(imageVector = Icons.Outlined.Lock, contentDescription = null, tint = StaffPortalBlue)
+                        Icon(imageVector = Icons.Outlined.Lock, contentDescription = null, tint = GasTrackBlue)
                     },
                     trailingIcon = {
                         val icon = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff
@@ -198,12 +215,11 @@ fun LogInCustomerScreen(
                         Icon(
                             imageVector = icon, 
                             contentDescription = desc, 
-                            tint = TextDark,
+                            tint = GasTrackBlue,
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .clickable { passwordVisible = !passwordVisible }
-                                .padding(12.dp)
-                                .minimumInteractiveComponentSize()
+                                .padding(8.dp)
                         )
                     },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -214,25 +230,31 @@ fun LogInCustomerScreen(
                         unfocusedContainerColor = Color.Transparent,
                         focusedContainerColor = Color.Transparent
                     ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (isFormValid) {
+                            onNavigateToHome()
+                        }
+                    }),
                     singleLine = true
                 )
                 Text(
                     text = "Forgot Password?",
                     modifier = Modifier
                         .align(Alignment.End)
-                        .padding(top = 12.dp)
+                        .padding(top = 12.dp, bottom = 4.dp)
                         .clickable { showForgotPasswordDialog = true },
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = GasTrackBlue
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // --- Log In Button (Modern Premium Pill) ---
+            // --- Log In Button ---
             Button(
-                enabled = emailOrPhone.isNotEmpty() && password.isNotEmpty(),
+                enabled = isFormValid,
                 onClick = onNavigateToHome,
                 modifier = Modifier
                         .widthIn(max = 320.dp)
@@ -240,10 +262,10 @@ fun LogInCustomerScreen(
                         .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ButtonOrange,
+                    containerColor = GasTrackRed,
                     contentColor = Color.White,
                     disabledContainerColor = Color(0xFFE0E0E0),
-                    disabledContentColor = Color(0xFF595959)
+                    disabledContentColor = Color(0xFF888888)
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 6.dp,
@@ -271,7 +293,7 @@ fun LogInCustomerScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // --- Modern Footer ---
+            // --- Footer ---
             Row(
                 modifier = Modifier.padding(bottom = 32.dp),
                 verticalAlignment = Alignment.CenterVertically
