@@ -12,6 +12,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Work
@@ -26,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +49,7 @@ fun AddressesScreen(
     onBack: () -> Unit
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
+    var addressToEdit by remember { mutableStateOf<AddressItem?>(null) }
     val addresses = remember { mutableStateListOf(
         AddressItem(1, "Home", "45 Mabini St, Brgy. Concepcion, Malabon City", Icons.Default.Home, true),
         AddressItem(2, "Work", "GasTrack HQ, Bonifacio Global City, Taguig", Icons.Default.Work),
@@ -72,7 +77,7 @@ fun AddressesScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                     Text(
-                        text = "Saved Address",
+                        text = "Saved Addresses",
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
                         color = Color.White
@@ -81,13 +86,15 @@ fun AddressesScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = ButtonOrange,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Address")
+            if (!showAddDialog && addressToEdit == null) {
+                FloatingActionButton(
+                    onClick = { showAddDialog = true },
+                    containerColor = GasTrackBlue,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Address")
+                }
             }
         }
     ) { paddingValues ->
@@ -109,31 +116,62 @@ fun AddressesScreen(
                             addresses.clear()
                             addresses.addAll(newList)
                         }
+                    },
+                    onEdit = {
+                        addressToEdit = address
+                    },
+                    onDelete = {
+                        addresses.remove(address)
                     }
                 )
             }
         }
     }
 
-    if (showAddDialog) {
+    if (showAddDialog || addressToEdit != null) {
+        val isEdit = addressToEdit != null
         AddAddressDialog(
-            onDismiss = { showAddDialog = false },
-            onAdd = { label, location, type ->
+            initialLabel = addressToEdit?.label ?: "",
+            initialLocation = addressToEdit?.address ?: "",
+            initialType = when(addressToEdit?.icon) {
+                Icons.Default.Home -> "Home"
+                Icons.Default.Work -> "Work"
+                else -> "Other"
+            },
+            isEditMode = isEdit,
+            onDismiss = { 
+                showAddDialog = false
+                addressToEdit = null
+            },
+            onSave = { label, location, type ->
                 val icon = when(type) {
                     "Home" -> Icons.Default.Home
                     "Work" -> Icons.Default.Work
                     else -> Icons.Default.LocationOn
                 }
-                val newId = (addresses.maxOfOrNull { it.id } ?: 0) + 1
-                addresses.add(AddressItem(newId, label, location, icon))
+                if (isEdit) {
+                    val index = addresses.indexOfFirst { it.id == addressToEdit!!.id }
+                    if (index != -1) {
+                        addresses[index] = addressToEdit!!.copy(label = label, address = location, icon = icon)
+                    }
+                } else {
+                    val newId = (addresses.maxOfOrNull { it.id } ?: 0) + 1
+                    addresses.add(AddressItem(newId, label, location, icon, addresses.isEmpty()))
+                }
                 showAddDialog = false
+                addressToEdit = null
             }
         )
     }
 }
 
 @Composable
-fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
+fun AddressCard(
+    address: AddressItem,
+    onSelect: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -206,24 +244,32 @@ fun AddressCard(address: AddressItem, onSelect: () -> Unit) {
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            RadioButton(
-                selected = address.isPrimary,
-                onClick = null,
-                colors = RadioButtonDefaults.colors(selectedColor = StaffPortalButtonBlue)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = TextGray, modifier = Modifier.size(18.dp))
+                }
+                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                }
+            }
         }
     }
 }
 
 @Composable
 fun AddAddressDialog(
+    initialLabel: String = "",
+    initialLocation: String = "",
+    initialType: String = "Home",
+    isEditMode: Boolean = false,
     onDismiss: () -> Unit,
-    onAdd: (String, String, String) -> Unit
+    onSave: (String, String, String) -> Unit
 ) {
-    var label by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf("Home") }
+    var label by remember { mutableStateOf(initialLabel) }
+    var location by remember { mutableStateOf(initialLocation) }
+    var selectedType by remember { mutableStateOf(initialType) }
     
     val types = listOf("Home", "Work", "Other")
 
@@ -238,12 +284,21 @@ fun AddAddressDialog(
                     .padding(24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Text(
-                    text = "Add New Address",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
-                    color = TextDark
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isEditMode) "Edit Address" else "Add New Address",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextDark
+                    )
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextGray)
+                    }
+                }
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
@@ -259,6 +314,7 @@ fun AddAddressDialog(
                     value = label,
                     onValueChange = { label = it },
                     modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
                     placeholder = { Text("e.g. My Apartment", color = BorderColor) },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -280,10 +336,9 @@ fun AddAddressDialog(
                 OutlinedTextField(
                     value = location,
                     onValueChange = { location = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
                     placeholder = { Text("Complete address here...", color = BorderColor) },
                     shape = RoundedCornerShape(16.dp),
-                    minLines = 3,
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color(0xFFE9ECEF),
                         focusedBorderColor = GasTrackBlue
@@ -318,14 +373,14 @@ fun AddAddressDialog(
                                     RoundedCornerShape(10.dp)
                                 ),
                             shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) StaffPortalBlue.copy(alpha = 0.05f) else Color.Transparent
+                            color = if (isSelected) GasTrackBlue.copy(alpha = 0.15f) else Color.Transparent
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = type,
                                     fontSize = 12.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) StaffPortalBlue else TextGray
+                                    color = if (isSelected) GasTrackBlue else TextGray
                                 )
                             }
                         }
@@ -334,23 +389,20 @@ fun AddAddressDialog(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f).height(50.dp),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Text("Cancel", color = TextDark)
-                    }
-                    Button(
-                        enabled = label.isNotEmpty() && location.isNotEmpty(),
-                        onClick = { onAdd(label, location, selectedType) },
-                        modifier = Modifier.weight(1f).height(50.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange)
-                    ) {
-                        Text("Save Address", fontWeight = FontWeight.Bold)
-                    }
+                Button(
+                    enabled = label.isNotEmpty() && location.isNotEmpty(),
+                    onClick = { onSave(label, location, selectedType) },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = if (isEditMode) "Save Changes" else "Save Address",
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
