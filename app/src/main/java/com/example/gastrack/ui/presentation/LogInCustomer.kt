@@ -12,10 +12,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,14 +55,24 @@ fun LogInCustomerScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Decorative background blur element
+        // --- Fixed Top Bar (Back Button) ---
         Box(
             modifier = Modifier
-                .size(300.dp)
-                .offset(x = 150.dp, y = (-50).dp)
-                .clip(CircleShape)
-                .background(GasTrackBlue.copy(alpha = 0.05f))
-        )
+                .fillMaxWidth()
+                .systemBarsPadding()
+                .padding(top = 16.dp, start = 16.dp)
+                .align(Alignment.TopStart)
+        ) {
+            IconButton(
+                onClick = onBack
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = TextDark
+                )
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -72,24 +82,7 @@ fun LogInCustomerScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- Top Bar (Back Button) ---
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            ) {
-                IconButton(
-                    onClick = onBack
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = TextDark
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(72.dp))
 
             // --- Logo Section (Maintained from previous design) ---
             Row(
@@ -160,7 +153,7 @@ fun LogInCustomerScreen(
                         .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
                     placeholder = { Text("Email or Phone Number", color = TextGray) },
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = StaffPortalBlue)
+                        Icon(imageVector = Icons.Outlined.Email, contentDescription = null, tint = StaffPortalBlue)
                     },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -197,10 +190,10 @@ fun LogInCustomerScreen(
                         .background(Color(0xFFFBFBFE), RoundedCornerShape(16.dp)),
                     placeholder = { Text("Password", color = TextGray) },
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = StaffPortalBlue)
+                        Icon(imageVector = Icons.Outlined.Lock, contentDescription = null, tint = StaffPortalBlue)
                     },
                     trailingIcon = {
-                        val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        val icon = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff
                         val desc = if (passwordVisible) "Hide password" else "Show password"
                         Icon(
                             imageVector = icon, 
@@ -227,7 +220,7 @@ fun LogInCustomerScreen(
                     text = "Forgot Password?",
                     modifier = Modifier
                         .align(Alignment.End)
-                        .padding(top = 8.dp)
+                        .padding(top = 12.dp)
                         .clickable { showForgotPasswordDialog = true },
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
@@ -235,7 +228,7 @@ fun LogInCustomerScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(56.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // --- Log In Button (Modern Premium Pill) ---
             Button(
@@ -370,8 +363,10 @@ fun ForgotPasswordDialog(onDismiss: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LogInCustomerScreenPreview() {
-    LogInCustomerScreen(onNavigateToSignUp = {}, onNavigateToHome = {})
+    GasTrackTheme {
+        LogInCustomerScreen(onNavigateToSignUp = {}, onNavigateToHome = {})
+    }
 }
