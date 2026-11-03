@@ -108,48 +108,54 @@ fun CartScreen(
             }
         },
         bottomBar = {
-            if (currentCartItems.isNotEmpty()) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shadowElevation = 16.dp,
-                    color = Color.White
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shadowElevation = 16.dp,
+                color = Color.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
                 ) {
-                    Column(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp)
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "Grand Total", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
-                            Text(
-                                text = "₱${String.format(Locale.US, "%,d", totalAmount)}",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Black,
-                                color = GasTrackBlue
-                            )
-                        }
-                        Button(
-                            onClick = onNavigateToCheckout,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(60.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
-                        ) {
-                            Text(
-                                text = "Proceed to Checkout",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Black,
-                                color = Color.White
-                            )
-                        }
+                        Text(text = "Total Amount", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextDark)
+                        Text(
+                            text = "₱${String.format(Locale.US, "%,d", totalAmount)}",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Black,
+                            color = if (currentCartItems.isNotEmpty()) GasTrackBlue else TextGray
+                        )
+                    }
+                    Button(
+                        onClick = onNavigateToCheckout,
+                        enabled = currentCartItems.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GasTrackBlue,
+                            disabledContainerColor = Color(0xFFE0E0E0),
+                            disabledContentColor = Color(0xFF9E9E9E)
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = if (currentCartItems.isNotEmpty()) 8.dp else 0.dp,
+                            disabledElevation = 0.dp
+                        )
+                    ) {
+                        Text(
+                            text = "Proceed to Checkout",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = if (currentCartItems.isNotEmpty()) Color.White else Color(0xFF9E9E9E)
+                        )
                     }
                 }
             }
