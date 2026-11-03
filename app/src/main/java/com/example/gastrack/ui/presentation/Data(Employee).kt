@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -45,10 +46,7 @@ fun DataModuleEmployeeScreen(
             .background(Color(0xFFF3F5F8))
     ) {
         EmployeePortalHeader(
-            title = when (selectedTab) {
-                "Export", "Export Logs" -> "Data Export"
-                else -> "Data Import"
-            },
+            title = "Data Management",
             onBack = onBack
         )
 
@@ -203,11 +201,20 @@ fun ExportTab(
                 } else {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Note: Inventory Data, Products Data, and Supplier Records export as full current snapshot; date range filters Sales and Restocking logs.",
+                        "Note: Inventory Data, Products Data, and Supplier Records are always exported as a full current snapshot — the date range above only filters Sales Data, Sales Line Items, and Restocking Logs.",
                         fontSize = 11.sp,
                         color = TextGray,
                         modifier = Modifier.widthIn(max = 500.dp)
                     )
+                    if (exportDataType.startsWith("Sales Data")) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "This is a summary report (one row per sale) for record-keeping — it can't be re-imported. Use \"Sales Line Items\" above if you need a re-importable CSV.",
+                            fontSize = 11.sp,
+                            color = TextGray,
+                            modifier = Modifier.widthIn(max = 500.dp)
+                        )
+                    }
                 }
 
                 if (isReimportable) {
@@ -264,7 +271,8 @@ fun ExportTab(
                             modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(46.dp),
                             shape = RoundedCornerShape(12.dp),
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = StaffPortalButtonBlue)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextDark),
+                            border = BorderStroke(1.dp, Color.LightGray)
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(2.dp))
@@ -277,7 +285,8 @@ fun ExportTab(
                             modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(46.dp),
                             shape = RoundedCornerShape(12.dp),
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = TextDark)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextDark),
+                            border = BorderStroke(1.dp, Color.LightGray)
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(2.dp))
@@ -383,8 +392,6 @@ fun ImportTab() {
 
 @Composable
 fun LogsTab(activityType: String) {
-    var selectedLogId by remember { mutableStateOf<String?>(null) }
-
     val logs = remember {
         mutableStateListOf(
             DataActivityData("ACT-552", "EMP-001", "Export", "Sales Data", "sales_may_2026.pdf", "PDF", "2026-05-01", "2026-05-15", "Successful", "2026-05-15 10:30 AM"),
@@ -398,102 +405,124 @@ fun LogsTab(activityType: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Surface(
-            modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
-            shape = RoundedCornerShape(16.dp),
-            color = Color.White,
-            border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column {
-                // Header
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = StaffPortalBlue.copy(alpha = 0.1f),
+                modifier = Modifier.size(36.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null, tint = StaffPortalBlue, modifier = Modifier.size(20.dp))
+                }
+            }
+            Text(
+                text = if (activityType == "Export") "Data Export History" else "Data Import History",
+                fontWeight = FontWeight.Black,
+                fontSize = 18.sp,
+                color = TextDark,
+                letterSpacing = (-0.1).sp
+            )
+        }
+
+        if (filteredLogs.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.History, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("No $activityType history yet.", color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                filteredLogs.forEach { log ->
+                    LogRecordCard(log = log)
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun LogRecordCard(log: DataActivityData) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().shadow(2.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = log.fileName, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextDark, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    Text(text = log.activityDate, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextGray, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(horizontalAlignment = Alignment.End) {
+                    Surface(
+                        color = if (log.status == "Successful") Color(0xFF22C55E) else Color(0xFFEF4444),
+                        shape = RoundedCornerShape(50)
+                    ) {
+                        Text(
+                            text = log.status,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            maxLines = 1
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(color = Color(0xFFF1F3F4), shape = RoundedCornerShape(4.dp)) {
+                        Text(text = log.fileFormat.uppercase(), color = TextDark, fontSize = 9.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Surface(
+                color = Color(0xFFFBFBFE),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, Color(0xFFF1F3F4)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFFFEF3C7),
-                        modifier = Modifier.size(36.dp)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(20.dp))
-                        }
+                        Text("DATA TYPE", fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Text(log.dataType, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     }
-                    Text(
-                        text = if (activityType == "Export") "Data Export History" else "Data Import History",
-                        fontWeight = FontWeight.Black,
-                        fontSize = 18.sp,
-                        color = TextDark,
-                        letterSpacing = (-0.1).sp
-                    )
-                }
-
-                HorizontalDivider(color = Color(0xFFF3F4F6))
-
-                // Table Layout
-                if (filteredLogs.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.History, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("No $activityType history yet.", color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                        }
-                    }
-                } else {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFF1E3A5F))
-                                .padding(vertical = 14.dp, horizontal = 24.dp)
+                    
+                    if (log.dateFrom != "N/A") {
+                        VerticalDivider(modifier = Modifier.height(16.dp), color = Color(0xFFE9ECEF))
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("File", modifier = Modifier.weight(1.5f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("Type", modifier = Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("Format", modifier = Modifier.weight(0.8f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("Status", modifier = Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                            Text("Date", modifier = Modifier.weight(1.2f), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                        }
-
-                        filteredLogs.forEachIndexed { index, log ->
-                            val isSelected = selectedLogId == log.id
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(if (isSelected) Color(0xFFF0F7FF) else Color.White)
-                                    .clickable { selectedLogId = log.id }
-                                    .padding(vertical = 16.dp, horizontal = 24.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(log.fileName, modifier = Modifier.weight(1.5f), color = TextDark, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1)
-                                Text(log.dataType, modifier = Modifier.weight(1f), color = TextGray, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 1)
-                                Text(log.fileFormat, modifier = Modifier.weight(0.8f), color = TextGray, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 1)
-                                
-                                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                                    Surface(
-                                        color = if (log.status == "Successful") Color(0xFF22C55E) else Color(0xFFEF4444),
-                                        shape = RoundedCornerShape(50)
-                                    ) {
-                                        Text(
-                                            text = log.status,
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.sp,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                                        )
-                                    }
-                                }
-                                
-                                Text(log.activityDate, modifier = Modifier.weight(1.2f), color = TextGray, fontWeight = FontWeight.Medium, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1)
-                            }
-                            if (index < filteredLogs.size - 1) {
-                                HorizontalDivider(color = Color(0xFFF3F4F6))
-                            }
+                            Text("DATE RANGE", fontSize = 8.sp, color = TextGray, fontWeight = FontWeight.Black, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            Text("${log.dateFrom} - ${log.dateTo}", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextDark, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
                     }
                 }
