@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">GasTrack</string>
+
+    <plurals name="days_overdue">
+        <item quantity="one">%d day overdue</item>
+        <item quantity="other">%d days overdue</item>
+    </plurals>
+
+    <plurals name="days_due">
+        <item quantity="one">Due in %d day</item>
+        <item quantity="other">Due in %d days</item>
+    </plurals>
 </resources>
