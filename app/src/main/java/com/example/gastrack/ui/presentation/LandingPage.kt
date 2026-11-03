@@ -209,7 +209,7 @@ fun StartUpHomeContent(
                 overlineText = "I'm a",
                 titleText = "Customer",
                 subtitleText = "Order refills, track deliveries & check status",
-                accentColor = Color(0xFFE5383B),
+                accentColor = GasTrackRed,
                 onClick = onNavigateToCustomer
             )
 
@@ -233,7 +233,7 @@ fun StartUpHomeContent(
                     .shadow(4.dp, RoundedCornerShape(14.dp))
                     .clickable { onNavigateToRegisterCompany() },
                 shape = RoundedCornerShape(14.dp),
-                color = Color(0xFFE5383B)
+                color = GasTrackRed
             ) {
                 Row(
                     modifier = Modifier
@@ -358,7 +358,7 @@ fun StartUpAboutContent() {
                     text = "ABOUT GASTRACK",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
-                    color = Color(0xFFFF4D4D),
+                    color = GasTrackRed,
                     letterSpacing = 1.2.sp
                 )
 
@@ -367,7 +367,7 @@ fun StartUpAboutContent() {
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(color = Color.White)) { append("Managing LPG inventory ") }
-                        withStyle(style = SpanStyle(color = Color(0xFFFF4D4D))) { append("smarter, ") }
+                        withStyle(style = SpanStyle(color = GasTrackRed)) { append("smarter, ") }
                         withStyle(style = SpanStyle(color = Color.White)) { append("not harder.") }
                     },
                     fontSize = 22.sp,
@@ -423,7 +423,7 @@ fun AboutStatBox(value: String, label: String, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF2B4C7E)
+        color = GasTrackBlue
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -433,7 +433,7 @@ fun AboutStatBox(value: String, label: String, modifier: Modifier = Modifier) {
                 text = value,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Black,
-                color = Color(0xFFFF4D4D)
+                color = GasTrackRed
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -693,7 +693,7 @@ fun ContactInfoItem(icon: ImageVector, title: String, value: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
-        color = Color(0xFF2B4C7E)
+        color = GasTrackBlue
     ) {
         Row(
             modifier = Modifier.padding(10.dp),
@@ -702,12 +702,12 @@ fun ContactInfoItem(icon: ImageVector, title: String, value: String) {
             Surface(
                 modifier = Modifier.size(32.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = Color(0xFFFF4D4D).copy(alpha = 0.2f)
+                color = GasTrackRed.copy(alpha = 0.2f)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color(0xFFFF4D4D),
+                    tint = GasTrackRed,
                     modifier = Modifier.padding(6.dp)
                 )
             }
@@ -751,7 +751,7 @@ fun LogoSection() {
                 withStyle(style = SpanStyle(color = GasTrackBlue, fontWeight = FontWeight.Black)) {
                     append("Gas")
                 }
-                withStyle(style = SpanStyle(color = Color(0xFFE5383B), fontWeight = FontWeight.Black)) {
+                withStyle(style = SpanStyle(color = GasTrackRed, fontWeight = FontWeight.Black)) {
                     append("Track")
                 }
             },
