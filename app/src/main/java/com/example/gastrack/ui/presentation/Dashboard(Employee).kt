@@ -8,7 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,7 +17,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -66,18 +64,14 @@ fun DashboardEmployeeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard(
-                        label = "SALES (TODAY)",
+                        label = "Sales Today",
                         value = "₱48,250.00",
-                        icon = Icons.AutoMirrored.Filled.TrendingUp,
-                        accentColor = StaffPortalButtonBlue,
                         badgeText = "+14.5%",
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        label = "TRANSACTIONS",
+                        label = "Transactions",
                         value = "34",
-                        icon = Icons.AutoMirrored.Filled.ReceiptLong,
-                        accentColor = Color(0xFF4CAF50),
                         badgeText = "+2",
                         modifier = Modifier.weight(1f)
                     )
@@ -90,19 +84,15 @@ fun DashboardEmployeeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard(
-                        label = "STOCK ATTENTION",
+                        label = "Stock Attention",
                         value = "3",
-                        icon = Icons.Default.Warning,
-                        accentColor = GasTrackRed,
                         badgeText = "View",
                         onBadgeClick = { showLowStock = true },
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        label = "BEST SELLER (30d)",
-                        value = "11kg Refill",
-                        icon = Icons.Default.Star,
-                        accentColor = ButtonOrange,
+                        label = "Best Seller",
+                        value = "Gasul LPG 11kg",
                         badgeText = "View",
                         onBadgeClick = { showTopProducts = true },
                         modifier = Modifier.weight(1f)
@@ -161,8 +151,6 @@ fun SectionHeader(text: String) {
 fun StatCard(
     label: String, 
     value: String, 
-    icon: ImageVector, 
-    accentColor: Color, 
     modifier: Modifier = Modifier,
     badgeText: String? = null,
     onBadgeClick: (() -> Unit)? = null
@@ -173,27 +161,53 @@ fun StatCard(
         color = Color.White
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                Surface(
-                    modifier = Modifier.size(36.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    color = accentColor.copy(alpha = 0.1f)
-                ) {
-                    Icon(imageVector = icon, contentDescription = null, tint = accentColor, modifier = Modifier.padding(8.dp))
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextGray,
+                    letterSpacing = 0.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
                 if (badgeText != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    val isPercentage = badgeText.contains("%") || badgeText.startsWith("+")
+                    val badgeBg = if (badgeText.contains("-")) Color(0xFF263238) else if (isPercentage) Color(0xFFDCFCE7) else Color(0xFFF1F3F4)
+                    val badgeTextCol = if (badgeText.contains("-")) Color.White else if (isPercentage) Color(0xFF166534) else TextDark
                     Surface(
-                        color = Color(0xFFF1F3F4),
+                        color = badgeBg,
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text(badgeText, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            text = badgeText,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = badgeTextCol,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Black, letterSpacing = 0.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = value,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Black,
+                color = Color.Black,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 20.sp,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -206,36 +220,121 @@ fun SalesTrendGraphCard() {
         color = Color.White
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                val width = size.width
-                val height = size.height
-                val points = listOf(0.2f, 0.4f, 0.35f, 0.7f, 0.55f, 0.85f, 0.9f)
-                val path = Path().apply {
-                    moveTo(0f, height - (points[0] * height))
-                    for (i in 1 until points.size) {
-                        val x = (width / (points.size - 1)) * i
-                        val y = height - (points[i] * height)
-                        lineTo(x, y)
-                    }
-                }
-                drawPath(
-                    path = path,
-                    color = StaffPortalButtonBlue,
-                    style = Stroke(width = 4.dp.toPx())
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                days.forEach { day ->
-                    Text(text = day, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                // Y-axis labels column
+                Column(
+                    modifier = Modifier
+                        .width(42.dp)
+                        .height(120.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text("16000", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text("12000", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text("8000", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text("4000", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                    Text("0", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Canvas with grid lines, smooth red trend curve, and green data points
+                Canvas(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(120.dp)
+                ) {
+                    val width = size.width
+                    val height = size.height
+                    val points = listOf(0.28f, 0.96f, 0.02f, 0.02f, 0.02f, 0.06f, 0.02f)
+                    val stepX = width / (points.size - 1)
+
+                    // Draw vertical grid lines for each day point
+                    for (i in points.indices) {
+                        val x = stepX * i
+                        drawLine(
+                            color = Color(0xFFF1F3F4),
+                            start = androidx.compose.ui.geometry.Offset(x, 0f),
+                            end = androidx.compose.ui.geometry.Offset(x, height),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+
+                    // Draw horizontal grid lines (4 intervals: 16k, 12k, 8k, 4k, 0 -> 4 lines)
+                    val gridLinesCount = 4
+                    for (i in 0..gridLinesCount) {
+                        val y = (height / gridLinesCount) * i
+                        drawLine(
+                            color = Color(0xFFF1F3F4),
+                            start = androidx.compose.ui.geometry.Offset(0f, y),
+                            end = androidx.compose.ui.geometry.Offset(width, y),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+
+                    // Draw smooth cubic bezier path (Red line)
+                    val path = Path().apply {
+                        moveTo(0f, height - (points[0] * height))
+                        for (i in 0 until points.size - 1) {
+                            val x1 = stepX * i
+                            val y1 = height - (points[i] * height)
+                            val x2 = stepX * (i + 1)
+                            val y2 = height - (points[i + 1] * height)
+                            val cx1 = x1 + (x2 - x1) / 2f
+                            val cx2 = x1 + (x2 - x1) / 2f
+                            cubicTo(cx1, y1, cx2, y2, x2, y2)
+                        }
+                    }
+                    drawPath(
+                        path = path,
+                        color = Color(0xFFE53935),
+                        style = Stroke(width = 2.5.dp.toPx())
+                    )
+
+                    // Draw green data points
+                    points.forEachIndexed { i, pt ->
+                        val x = stepX * i
+                        val y = height - (pt * height)
+                        drawCircle(
+                            color = Color(0xFF2E7D32),
+                            radius = 4.dp.toPx(),
+                            center = androidx.compose.ui.geometry.Offset(x, y)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(modifier = Modifier.width(42.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                androidx.compose.ui.layout.Layout(
+                    content = {
+                        val days = listOf("Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue")
+                        days.forEach { day ->
+                            Text(text = day, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) { measurables, constraints ->
+                    val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
+                    layout(constraints.maxWidth, placeables.maxOfOrNull { it.height } ?: 0) {
+                        val totalPoints = placeables.size
+                        if (totalPoints > 1) {
+                            val availableWidth = constraints.maxWidth
+                            placeables.forEachIndexed { index, placeable ->
+                                val fraction = index.toFloat() / (totalPoints - 1)
+                                val x = (availableWidth - placeable.width) * fraction
+                                placeable.placeRelative(x.toInt(), 0)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -283,17 +382,17 @@ fun RestockRow(name: String, stock: Int, reorderLevel: Int, status: String, onRe
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                color = if (status == "Critical") Color(0xFF990000) else Color(0xFFF59E0B),
+                color = if (status == "Critical") Color(0xFFE53935) else Color(0xFFFF9800),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(status, color = if (status == "Critical") Color.White else Color(0xFF451A03), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                Text(status, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
             }
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(
                 onClick = onReorderClick,
                 modifier = Modifier.size(48.dp)
             ) {
-                Icon(Icons.Default.ShoppingCart, contentDescription = "Reorder $name", tint = StaffPortalButtonBlue, modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.ShoppingCart, contentDescription = "Reorder $name", tint = Color(0xFF595959), modifier = Modifier.size(24.dp))
             }
         }
     }
@@ -329,15 +428,13 @@ fun ActivityTimelineCard(onViewLogsClick: () -> Unit) {
 
 @Composable
 fun ActivityRow(user: String, text: String, time: String) {
-    Row(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(buildAnnotatedString {
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = TextDark)) { append("$user ") }
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium, color = TextDark)) { append("— $text") }
-            }, fontSize = 13.sp, lineHeight = 18.sp)
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(time, fontSize = 11.sp, color = TextGray, fontWeight = FontWeight.Medium)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(buildAnnotatedString {
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = TextDark)) { append("$user ") }
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium, color = TextDark)) { append("— $text") }
+        }, fontSize = 13.sp, lineHeight = 18.sp)
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(time, fontSize = 11.sp, color = Color(0xFF6B7280), fontWeight = FontWeight.Normal)
     }
 }
 
@@ -374,10 +471,10 @@ fun ModalLowStockRow(name: String, stock: Int, limit: Int, status: String) {
             Text("Stock: $stock / Reorder at: $limit", fontSize = 11.sp, color = TextGray)
         }
         Surface(
-            color = if (status == "Critical") StatusInactive else Color(0xFFF59E0B),
+            color = if (status == "Critical") Color(0xFFE53935) else Color(0xFFFF9800),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(status, color = if (status == "Critical") Color.White else Color(0xFF451A03), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+            Text(status, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
         }
     }
 }
@@ -453,7 +550,7 @@ fun ModalActivityRow(user: String, text: String, time: String) {
             withStyle(style = SpanStyle(fontWeight = FontWeight.Medium, color = TextDark)) { append("— $text") }
         }, fontSize = 13.sp, lineHeight = 18.sp)
         Spacer(modifier = Modifier.height(2.dp))
-        Text(time, fontSize = 11.sp, color = TextGray)
+        Text(time, fontSize = 11.sp, color = Color(0xFF6B7280), fontWeight = FontWeight.Normal)
     }
 }
 
