@@ -86,7 +86,7 @@ fun OrderSuccessScreen(
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Total", fontSize = 16.sp, fontWeight = FontWeight.Black, color = TextDark)
-                    Text("₱1,200", fontSize = 22.sp, fontWeight = FontWeight.Black, color = ButtonOrange)
+                    Text("₱1,200", fontSize = 22.sp, fontWeight = FontWeight.Black, color = GasTrackBlue)
                 }
             }
         }
@@ -97,7 +97,7 @@ fun OrderSuccessScreen(
             onClick = onNavigateToOrders,
             modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange)
+            colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue)
         ) {
             Text("View Order Details", fontWeight = FontWeight.Black, fontSize = 16.sp)
         }
