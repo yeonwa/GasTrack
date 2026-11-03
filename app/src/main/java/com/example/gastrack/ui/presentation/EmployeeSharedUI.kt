@@ -31,6 +31,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import com.example.gastrack.R
 import com.example.gastrack.ui.theme.*
 import kotlinx.coroutines.delay
@@ -49,9 +50,12 @@ fun EmployeePortalHeader(
     rightContent: @Composable (() -> Unit)? = null,
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .zIndex(1f)
+            .shadow(6.dp),
         color = backgroundColor,
-        shadowElevation = 4.dp
+        shadowElevation = 6.dp
     ) {
         Column(
             modifier = Modifier
@@ -127,7 +131,7 @@ fun EmployeePortalHeader(
                 Text(
                     text = subtitle, 
                     fontSize = 11.sp, 
-                    color = if (backgroundColor == GasTrackBlue) Color(0xFFFF99A8) else GasTrackRed, 
+                    color = if (backgroundColor == GasTrackBlue) Color.White.copy(alpha = 0.7f) else GasTrackRed, 
                     fontWeight = FontWeight.Black, 
                     letterSpacing = 1.sp, 
                     maxLines = 1, 
