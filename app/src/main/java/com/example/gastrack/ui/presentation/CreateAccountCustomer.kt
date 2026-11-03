@@ -11,8 +11,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -106,20 +106,23 @@ fun CreateAccountCustomerScreen(
     val customerTypes = listOf("Residential", "Commercial")
     
     var showOtpDialog by remember { mutableStateOf(false) }
+    var showValidationErrors by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .systemBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
         // --- Header Section ---
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
             IconButton(
                 onClick = onBack,
                 modifier = Modifier.offset(x = (-12).dp)
@@ -130,103 +133,89 @@ fun CreateAccountCustomerScreen(
                     tint = TextDark
                 )
             }
-            
-            // Side-by-side Logo Section (Faithful to Reference)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.favicon),
-                    contentDescription = "GasTrack Logo",
-                    modifier = Modifier.size(60.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
+        }
+        
+        // Side-by-side Logo Section (Faithful to Reference)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.favicon),
+                contentDescription = "GasTrack Logo",
+                modifier = Modifier.size(60.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(style = SpanStyle(color = GasTrackBlue, fontWeight = FontWeight.Black)) {
-                                append("Gas")
-                            }
-                            withStyle(style = SpanStyle(color = GasTrackRed, fontWeight = FontWeight.Black)) {
-                                append("Track")
-                            }
-                        },
-                        fontSize = 30.sp,
-                        letterSpacing = (-1).sp
-                    )
-                    Text(
-                        text = "Optimize Your LPG, Effortlessly.",
-                        fontSize = 10.sp,
-                        color = GasTrackBlue,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
-                }
+            Column {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(color = GasTrackBlue, fontWeight = FontWeight.Black)) {
+                            append("Gas")
+                        }
+                        withStyle(style = SpanStyle(color = Color(0xFFE5383B), fontWeight = FontWeight.Black)) {
+                            append("Track")
+                        }
+                    },
+                    fontSize = 30.sp,
+                    letterSpacing = (-1).sp
+                )
+                Text(
+                    text = "Optimize Your LPG, Effortlessly.",
+                    fontSize = 10.sp,
+                    color = GasTrackBlue,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                )
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 28.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Create Your GasTrack Account",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = TextDark
-            )
-  
-            Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Create Your GasTrack Account",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Black,
+            color = TextDark
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
 
             // --- Form Fields ---
-            
-            Text(
-                text = "BASIC INFORMATION",
-                modifier = Modifier.fillMaxWidth(),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Black,
-                color = TextGray,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
 
             // First Name
             CustomerInputField(
                 label = "FIRST NAME",
                 value = firstName,
                 onValueChange = { firstName = it },
-                placeholder = "e.g. Juan"
+                placeholder = "e.g. Juan",
+                isError = showValidationErrors && firstName.isEmpty()
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Last Name
             CustomerInputField(
                 label = "LAST NAME",
                 value = lastName,
                 onValueChange = { lastName = it },
-                placeholder = "e.g. Dela Cruz"
+                placeholder = "e.g. Dela Cruz",
+                isError = showValidationErrors && lastName.isEmpty()
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Email Address
             CustomerInputField(
                 label = "EMAIL ADDRESS",
                 value = email,
                 onValueChange = { email = it },
-                placeholder = "e.g. juan@email.com"
+                placeholder = "e.g. juan@email.com",
+                isError = showValidationErrors && email.isEmpty()
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Customer Type Dropdown
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -236,9 +225,8 @@ fun CreateAccountCustomerScreen(
                     fontWeight = FontWeight.Black,
                     color = TextGray,
                     letterSpacing = 1.sp,
-                    modifier = Modifier.clearAndSetSemantics { }
+                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
                 ExposedDropdownMenuBox(
                     expanded = expandedType,
                     onExpandedChange = { expandedType = !expandedType }
@@ -278,15 +266,16 @@ fun CreateAccountCustomerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Mobile Number (Modern Classic Style)
+            val isMobileError = showValidationErrors && mobileNumber.isEmpty()
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "MOBILE NUMBER",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
-                    color = TextGray,
+                    color = if (isMobileError) GasTrackRed else TextGray,
                     letterSpacing = 1.sp,
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
                 )
@@ -294,7 +283,7 @@ fun CreateAccountCustomerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
+                        .border(1.dp, if (isMobileError) GasTrackRed else Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -302,17 +291,13 @@ fun CreateAccountCustomerScreen(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         color = TextDark,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    VerticalDivider(
-                        modifier = Modifier.fillMaxHeight(0.6f).width(1.dp),
-                        color = Color.LightGray.copy(alpha = 0.5f)
+                        modifier = Modifier.padding(start = 16.dp, end = 8.dp)
                     )
                     TextField(
                         value = mobileNumber,
                         onValueChange = { if (it.length <= 10) mobileNumber = it },
                         modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Mobile Number" },
-                        placeholder = { Text("987 654 321", color = TextGray) },
+                        placeholder = { Text("912 345 6789", color = Color(0xFF6B7280)) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -326,7 +311,7 @@ fun CreateAccountCustomerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(36.dp))
             
             Text(
                 text = "DELIVERY ADDRESS",
@@ -353,7 +338,7 @@ fun CreateAccountCustomerScreen(
 
             // Province (Only appears when the region has multiple provinces to choose from)
             if (availableProvinces.size > 1) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 CustomerDropdownField(
                     label = "PROVINCE",
                     selectedOption = province,
@@ -366,7 +351,7 @@ fun CreateAccountCustomerScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // City / Municipality
             CustomerDropdownField(
@@ -376,10 +361,11 @@ fun CreateAccountCustomerScreen(
                 onSelect = { 
                     city = it
                     barangay = ""
-                }
+                },
+                isError = showValidationErrors && city.isEmpty()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Barangay
             CustomerDropdownField(
@@ -388,10 +374,11 @@ fun CreateAccountCustomerScreen(
                 options = CustomerDropdownOptions(availableBarangays),
                 onSelect = { 
                     barangay = it
-                }
+                },
+                isError = showValidationErrors && barangay.isEmpty()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // House No. / Street
             CustomerInputField(
@@ -401,15 +388,16 @@ fun CreateAccountCustomerScreen(
                 placeholder = "e.g. 45 Mabini St."
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Create Password
+            val isPasswordError = showValidationErrors && password.isEmpty()
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "CREATE PASSWORD",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
-                    color = TextGray,
+                    color = if (isPasswordError) GasTrackRed else TextGray,
                     letterSpacing = 1.sp,
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
                 )
@@ -417,11 +405,11 @@ fun CreateAccountCustomerScreen(
                     value = password,
                     onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Set a secure password", color = TextGray) },
+                    placeholder = { Text("Set a secure password", color = Color(0xFF6B7280)) },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
-                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                imageVector = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
                                 tint = TextGray
                             )
@@ -429,11 +417,14 @@ fun CreateAccountCustomerScreen(
                     },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     shape = RoundedCornerShape(16.dp),
+                    isError = isPasswordError,
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
-                        focusedBorderColor = GasTrackBlue,
+                        unfocusedBorderColor = if (isPasswordError) GasTrackRed else Color.LightGray.copy(alpha = 0.5f),
+                        focusedBorderColor = if (isPasswordError) GasTrackRed else GasTrackBlue,
+                        errorBorderColor = GasTrackRed,
                         unfocusedContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent
+                        focusedContainerColor = Color.Transparent,
+                        errorContainerColor = Color.Transparent
                     )
                 )
             }
@@ -442,22 +433,26 @@ fun CreateAccountCustomerScreen(
 
             // Create Account Button
             Button(
-                enabled = firstName.isNotEmpty() && lastName.isNotEmpty() && email.isNotEmpty() && mobileNumber.isNotEmpty() && password.isNotEmpty() && city.isNotEmpty() && barangay.isNotEmpty(),
-                onClick = { showOtpDialog = true },
+                enabled = true,
+                onClick = {
+                    val isValid = firstName.isNotEmpty() && lastName.isNotEmpty() && email.isNotEmpty() && mobileNumber.isNotEmpty() && password.isNotEmpty() && city.isNotEmpty() && barangay.isNotEmpty()
+                    if (isValid) {
+                        showOtpDialog = true
+                    } else {
+                        showValidationErrors = true
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonOrange,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFE0E0E0),
-                    disabledContentColor = Color.White
+                    contentColor = Color.White
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 6.dp,
-                    pressedElevation = 2.dp,
-                    disabledElevation = 0.dp
+                    pressedElevation = 2.dp
                 )
             ) {
                 Row(
@@ -480,7 +475,6 @@ fun CreateAccountCustomerScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
         }
-    }
 
     if (showOtpDialog) {
         EmailVerificationDialog(
@@ -533,7 +527,7 @@ fun EmailVerificationDialog(
                     value = otpCode,
                     onValueChange = { if (it.length <= 6) otpCode = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("0 0 0 0 0 0", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                    placeholder = { Text("0 0 0 0 0 0", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = Color(0xFF6B7280)) },
                     textStyle = LocalTextStyle.current.copy(
                         textAlign = TextAlign.Center,
                         fontSize = 24.sp,
@@ -579,14 +573,15 @@ fun CustomerInputField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    minLines: Int = 1
+    minLines: Int = 1,
+    isError: Boolean = false
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
             fontSize = 11.sp,
             fontWeight = FontWeight.Black,
-            color = TextGray,
+            color = if (isError) GasTrackRed else TextGray,
             letterSpacing = 1.sp,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
         )
@@ -594,14 +589,17 @@ fun CustomerInputField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
-            placeholder = { Text(placeholder, color = TextGray) },
+            placeholder = { Text(placeholder, color = Color(0xFF6B7280)) },
             shape = RoundedCornerShape(16.dp),
             minLines = minLines,
+            isError = isError,
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
-                focusedBorderColor = GasTrackBlue,
+                unfocusedBorderColor = if (isError) GasTrackRed else Color.LightGray.copy(alpha = 0.5f),
+                focusedBorderColor = if (isError) GasTrackRed else GasTrackBlue,
+                errorBorderColor = GasTrackRed,
                 unfocusedContainerColor = Color.Transparent,
-                focusedContainerColor = Color.Transparent
+                focusedContainerColor = Color.Transparent,
+                errorContainerColor = Color.Transparent
             )
         )
     }
@@ -616,7 +614,8 @@ fun CustomerDropdownField(
     label: String,
     selectedOption: String,
     options: CustomerDropdownOptions,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
+    isError: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -624,7 +623,7 @@ fun CustomerDropdownField(
             text = label,
             fontSize = 11.sp,
             fontWeight = FontWeight.Black,
-            color = TextGray,
+            color = if (isError) GasTrackRed else TextGray,
             letterSpacing = 1.sp,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp).clearAndSetSemantics { }
         )
@@ -637,15 +636,18 @@ fun CustomerDropdownField(
                 onValueChange = {},
                 readOnly = true,
                 textStyle = LocalTextStyle.current.copy(color = TextDark),
-                placeholder = { Text("Select $label", color = TextGray) },
+                placeholder = { Text("Select ${label.lowercase()}", color = Color(0xFF6B7280)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth().semantics { contentDescription = label },
                 shape = RoundedCornerShape(16.dp),
+                isError = isError,
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
-                    focusedBorderColor = GasTrackBlue,
+                    unfocusedBorderColor = if (isError) GasTrackRed else Color.LightGray.copy(alpha = 0.5f),
+                    focusedBorderColor = if (isError) GasTrackRed else GasTrackBlue,
+                    errorBorderColor = GasTrackRed,
                     unfocusedContainerColor = Color.Transparent,
                     focusedContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
                     unfocusedTextColor = TextDark,
                     focusedTextColor = TextDark,
                     disabledTextColor = TextDark
