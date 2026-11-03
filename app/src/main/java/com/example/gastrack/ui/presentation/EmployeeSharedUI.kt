@@ -91,10 +91,9 @@ fun EmployeePortalHeader(
                         Image(painter = painterResource(id = R.drawable.favicon), contentDescription = null, modifier = Modifier.size(28.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = buildAnnotatedString {
-                                withStyle(style = SpanStyle(color = Color.White, fontWeight = FontWeight.Black)) { append("Gas") }
-                                withStyle(style = SpanStyle(color = Color(0xFFFF99A8), fontWeight = FontWeight.Black)) { append("Track") }
-                            },
+                            text = "GasTrack",
+                            color = if (backgroundColor == GasTrackBlue) Color.White else StaffPortalButtonBlue,
+                            fontWeight = FontWeight.Black,
                             fontSize = 18.sp,
                             letterSpacing = (-0.5).sp,
                             maxLines = 1,
