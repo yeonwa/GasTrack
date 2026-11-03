@@ -3,8 +3,8 @@ package com.example.gastrack.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Branding Colors
-val GasTrackBlue = Color(0xFF1E3A5F)
-val GasTrackRed = Color(0xFF9B0000) // Darkened for better contrast
+val GasTrackBlue = Color(0xFF1E3A5F) // Navy Blue from logo
+val GasTrackRed = Color(0xFFE5383B) // Vibrant Red from logo
 val ButtonOrange = Color(0xFFA64A00)
 val TextDark = Color(0xFF111827)
 val TextGray = Color(0xFF374151)
