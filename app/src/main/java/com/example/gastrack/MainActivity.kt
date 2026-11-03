@@ -18,10 +18,20 @@ import androidx.navigation.navArgument
 import com.example.gastrack.ui.presentation.*
 import com.example.gastrack.ui.theme.GasTrackTheme
 
+import androidx.activity.SystemBarStyle
+import android.graphics.Color as AndroidColor
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(
+                AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.light(
+                AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT
+            )
+        )
         setContent {
             GasTrackTheme {
                 Surface(
