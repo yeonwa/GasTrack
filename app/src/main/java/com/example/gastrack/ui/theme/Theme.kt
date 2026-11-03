@@ -16,7 +16,6 @@ import androidx.core.view.WindowCompat
 
 import androidx.compose.ui.graphics.Color
 
-import androidx.compose.ui.graphics.luminance
 
 private val DarkColorScheme = darkColorScheme(
     primary = GasTrackBlue,
@@ -54,8 +53,9 @@ fun GasTrackTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            val isBackgroundLight = colorScheme.background.luminance() > 0.5f
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = isBackgroundLight
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !darkTheme
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 
