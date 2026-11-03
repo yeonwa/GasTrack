@@ -243,17 +243,17 @@ fun CheckoutScreen(
                             .semantics(mergeDescendants = true) { contentDescription = "Delivery Order Type" }
                             .clickable { orderType = "Delivery" },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isDelivery) ButtonOrange.copy(alpha = 0.08f) else Color.White,
-                        border = BorderStroke(1.5.dp, if (isDelivery) ButtonOrange else Color.Transparent)
+                        color = if (isDelivery) GasTrackBlue.copy(alpha = 0.08f) else Color.White,
+                        border = BorderStroke(1.5.dp, if (isDelivery) GasTrackBlue else Color.Transparent)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(Icons.Default.LocalShipping, contentDescription = null, tint = if (isDelivery) ButtonOrange else TextGray)
+                            Icon(Icons.Default.LocalShipping, contentDescription = null, tint = if (isDelivery) GasTrackBlue else TextGray)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Delivery", fontWeight = FontWeight.Bold, color = if (isDelivery) ButtonOrange else TextDark, fontSize = 15.sp)
+                            Text("Delivery", fontWeight = FontWeight.Bold, color = if (isDelivery) GasTrackBlue else TextDark, fontSize = 15.sp)
                         }
                     }
 
@@ -265,17 +265,17 @@ fun CheckoutScreen(
                             .semantics(mergeDescendants = true) { contentDescription = "Pickup Order Type" }
                             .clickable { orderType = "Pickup" },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isPickup) ButtonOrange.copy(alpha = 0.08f) else Color.White,
-                        border = BorderStroke(1.5.dp, if (isPickup) ButtonOrange else Color.Transparent)
+                        color = if (isPickup) GasTrackBlue.copy(alpha = 0.08f) else Color.White,
+                        border = BorderStroke(1.5.dp, if (isPickup) GasTrackBlue else Color.Transparent)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(Icons.Default.Storefront, contentDescription = null, tint = if (isPickup) ButtonOrange else TextGray)
+                            Icon(Icons.Default.Storefront, contentDescription = null, tint = if (isPickup) GasTrackBlue else TextGray)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Pickup", fontWeight = FontWeight.Bold, color = if (isPickup) ButtonOrange else TextDark, fontSize = 15.sp)
+                            Text("Pickup", fontWeight = FontWeight.Bold, color = if (isPickup) GasTrackBlue else TextDark, fontSize = 15.sp)
                         }
                     }
                 }
@@ -349,7 +349,7 @@ fun CheckoutScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("Total Amount", fontWeight = FontWeight.Black, fontSize = 17.sp, color = TextDark)
-                            Text("₱${String.format(Locale.US, "%,d", totalAmount)}", fontWeight = FontWeight.Black, fontSize = 22.sp, color = ButtonOrange)
+                            Text("₱${String.format(Locale.US, "%,d", totalAmount)}", fontWeight = FontWeight.Black, fontSize = 22.sp, color = GasTrackBlue)
                         }
                     }
                 }
@@ -409,7 +409,7 @@ fun CheckoutScreen(
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ButtonOrange)
+                        colors = ButtonDefaults.buttonColors(containerColor = GasTrackBlue)
                     ) {
                         Text("Place Order", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Color.White)
                     }
@@ -461,7 +461,7 @@ fun CheckoutPaymentRow(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
-        border = BorderStroke(1.5.dp, if (isSelected) ButtonOrange else Color.Transparent)
+        border = BorderStroke(1.5.dp, if (isSelected) GasTrackBlue else Color.Transparent)
     ) {
         Row(
             modifier = Modifier
@@ -495,7 +495,7 @@ fun CheckoutPaymentRow(
                 selected = isSelected,
                 onClick = null,
                 modifier = Modifier.clearAndSetSemantics { },
-                colors = RadioButtonDefaults.colors(selectedColor = ButtonOrange)
+                colors = RadioButtonDefaults.colors(selectedColor = GasTrackBlue)
             )
         }
     }
